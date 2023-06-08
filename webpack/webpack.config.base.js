@@ -1,5 +1,4 @@
 const path = require('path-browserify');
-// const { CleanWebpackPlugin } = require('clean-webpack-plugin');
 const CopyWebpackPlugin = require('copy-webpack-plugin');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const HtmlWebpackTagsPlugin = require('html-webpack-tags-plugin');
@@ -216,10 +215,17 @@ module.exports = {
       patterns: [
         { from: 'public', to: 'public' },
         { from: 'config/env.config.js', to: 'config/env.config.js' },
-        { from: 'favicon.ico', to: 'favicon.ico' }
+        { from: 'favicon.ico', to: 'favicon.ico' },
+        {
+          from: 'node_modules/three/examples/js/libs/draco/',
+          to: 'static/three/draco'
+        },
+        {
+          from: 'node_modules/three/examples/js/libs/basis/',
+          to: 'static/three/basis'
+        }
       ]
     }),
-    // new CleanWebpackPlugin(),
     !isDev &&
       new MiniCssExtractPlugin({
         filename: 'css/[name].[chunkhash].css'
