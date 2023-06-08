@@ -38,4 +38,10 @@ a 3dtool for web base three
 	]
    	 vite：同理
 
+## Update Versions log
 
+1.0.0 1.0.1 1.0.2 更新日志
+ 1）threejs版本发布
+
+1.0.3
+1）优化模型加载处理

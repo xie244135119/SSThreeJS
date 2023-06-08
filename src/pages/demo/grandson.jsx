@@ -1,12 +1,12 @@
 /*
  * Author  Murphy.xie
  * Date  2023-04-11 18:00:50
- * LastEditors  Murphy.xie
- * LastEditTime  2023-06-08 18:03:19
+ * LastEditors  Kayson.Wan
+ * LastEditTime  2023-06-08 18:21:52
  * Description
  */
 import React, { useEffect } from 'react';
-import SSThreejs from 'ss-threejs';
+import SSThreejs from '../../../core/index';
 
 export default function ParentIndex(props) {
   // eslint-disable-next-line react/prop-types

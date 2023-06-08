@@ -1,6 +1,6 @@
 {
   "name": "ss-threejs",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "a 3d tool base threejs",
   "main": "core/index.js",
   "module": "core/index.js",
@@ -63,7 +63,6 @@
     "react-svg": "15.1.7",
     "sass": "1.56.2",
     "sass-loader": "13.2.0",
-    "ss-threejs": "1.0.1",
     "style-loader": "3.3.1",
     "style-resources-loader": "1.5.0",
     "stylelint": "14.10.0",

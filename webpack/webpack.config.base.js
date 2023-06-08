@@ -215,7 +215,6 @@ module.exports = {
       patterns: [
         { from: 'public', to: 'public' },
         { from: 'config/env.config.js', to: 'config/env.config.js' },
-        { from: 'favicon.ico', to: 'favicon.ico' },
         {
           from: 'node_modules/three/examples/js/libs/draco/',
           to: 'static/three/draco'
@@ -252,7 +251,6 @@ module.exports = {
       },
       showErrors: true,
       scriptLoading: 'blocking',
-      favicon: path.resolve('favicon.ico'),
       minify: isDev
         ? false
         : {
