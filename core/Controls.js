@@ -186,9 +186,12 @@ export default class ThreeControls {
    */
   removeTransformControl = (control) => {
     if (control instanceof TransformControls) {
-      // ThreeLoop.removeId('transformControls render');
       control.reset();
       control.dispose();
+    } else {
+      this.threeScene?.remove(
+        ...this.threeScene.children.filter((item) => item instanceof TransformControls)
+      );
     }
   };
 }

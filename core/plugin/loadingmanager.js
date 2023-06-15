@@ -1,8 +1,8 @@
 /*
  * Author  xie244135119
  * Date  2022-10-07 13:23:44
- * LastEditors  xie244135119
- * LastEditTime  2023-03-30 13:17:14
+ * LastEditors  Murphy.xie
+ * LastEditTime  2023-06-09 17:39:50
  * Description three.js
  */
 import * as THREE from 'three';
@@ -211,7 +211,7 @@ export default class LoadManager {
     if (aUrl.startsWith('data:') || aUrl.startsWith('blob:')) {
       return Promise.resolve(aUrl);
     }
-    return DB.shareInstance.getModelByFullPath(aUrl).then((res) => {
+    return DB.shareInstance.getModel(aUrl).then((res) => {
       // console.log(' getModelFilePathByUrl 获取到的数据信息 ', res);
       if (res) {
         const blobUrl = URL.createObjectURL(new Blob([res?.data]));
@@ -227,7 +227,7 @@ export default class LoadManager {
    * @returns
    */
   getModelDataByUrl = (aUrl) =>
-    DB.shareInstance.getModelByFullPath(aUrl).then((res) => {
+    DB.shareInstance.getModel(aUrl).then((res) => {
       if (res) {
         return res.data;
       }

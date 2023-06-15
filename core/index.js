@@ -45,25 +45,37 @@ class ThreeJs {
   // html container
   threeContainer = null;
 
-  // scene
+  /**
+   * @type THREE.Scene
+   */
   threeScene = null;
 
-  // camera
+  /**
+   * @type THREE.Camera
+   */
   threeCamera = null;
 
   // render
   threeRenderer = null;
 
-  // direction light
+  /**
+   * @type THREE.DirectionalLight direction light
+   */
   threeDirectionLight = null;
 
-  // ambient light
+  /**
+   * @type THREE.AmbientLight  ambient light
+   */
   threeAmbientLight = null;
 
-  // camera control
+  /**
+   * @type OrbitControls control
+   */
   threeOrbitControl = null;
 
-  // three custom control
+  /**
+   * @type ThreeControls three custom control
+   */
   threeControls = new ThreeControls();
 
   // gui
@@ -80,9 +92,6 @@ class ThreeJs {
 
   // three event
   threeEvent = new ThreeEvent();
-
-  // loading
-  // #loadingManager = LoadingManager.shareInstance;
 
   // stats js
   #statsJs = new Stats();
