@@ -232,9 +232,15 @@ export default class LoadManager {
         return res.data;
       }
       return this.downloadUrl2(aUrl, (percent) => {
-        this.#progressBgElement.style.opacity = 1;
-        this.#progressTextElement.innerText = '模型下载中...';
-        this.#progressElement.style.width = `${percent * 100}%`;
+        if (this.#progressBgElement) {
+          this.#progressBgElement.style.opacity = 1;
+        }
+        if (this.#progressTextElement) {
+          this.#progressTextElement.innerText = '模型下载中...';
+        }
+        if (this.#progressElement) {
+          this.#progressElement.style.width = `${percent * 100}%`;
+        }
       }).then((datares) => {
         DB.shareInstance.insertModel(aUrl, datares);
         return datares;

@@ -28,9 +28,6 @@ import { SSRPass } from 'three/examples/jsm/postprocessing/SSRPass';
 import { ReflectorForSSRPass } from 'three/examples/jsm/objects/ReflectorForSSRPass';
 
 export default class PostProcessUtil {
-  // 是否打开GUI调试
-  isOpenPostEffectGui = false;
-
   _scene = null;
 
   _camera = null;
@@ -604,9 +601,10 @@ export default class PostProcessUtil {
 
   /**
    * 初始化后处理效果
+   * @param {boolean} isOpenPostEffectGui 是否调试
    * @returns {effectComposer: EffectComposer, outlinePass: (*|null)}
    */
-  initPostProcess = () => {
+  initPostProcess = (openGui = false) => {
     const _pixelRatio = window.devicePixelRatio;
     const _effectComposer = new EffectComposer(this._render);
     _effectComposer.renderTarget1.texture.encoding = THREE.sRGBEncoding;
@@ -856,7 +854,7 @@ export default class PostProcessUtil {
     gui.load(this._postSetting);
 
     if (gui) {
-      if (this.isOpenPostEffectGui) {
+      if (openGui) {
         gui.show();
       } else {
         // gui & gui.hide();
