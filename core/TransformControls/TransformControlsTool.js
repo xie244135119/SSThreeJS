@@ -6,7 +6,7 @@
  */
 import * as THREE from 'three';
 import { TransformControls } from 'three/examples/jsm/controls/TransformControls';
-import { GUI } from 'three/examples/jsm/libs/dat.gui.module';
+import { GUI } from 'lil-gui';
 import { Vector3 } from 'three';
 
 export default class TransformControlTool {
@@ -74,31 +74,31 @@ export default class TransformControlTool {
           this.transformControl.setMode('scale');
           break;
 
-          // case 67: // C
-          //     const position = this.camera.position.clone();
-          //
-          //     currentCamera = currentCamera.isPerspectiveCamera ? cameraOrtho : cameraPersp;
-          //     currentCamera.position.copy( position );
-          //
-          //     orbit.object = currentCamera;
-          //     control.camera = currentCamera;
-          //
-          //     currentCamera.lookAt( orbit.target.x, orbit.target.y, orbit.target.z );
-          //     onWindowResize();
-          //     break;
+        // case 67: // C
+        //     const position = this.camera.position.clone();
+        //
+        //     currentCamera = currentCamera.isPerspectiveCamera ? cameraOrtho : cameraPersp;
+        //     currentCamera.position.copy( position );
+        //
+        //     orbit.object = currentCamera;
+        //     control.camera = currentCamera;
+        //
+        //     currentCamera.lookAt( orbit.target.x, orbit.target.y, orbit.target.z );
+        //     onWindowResize();
+        //     break;
 
-          // case 86: // V
-          //     const randomFoV = Math.random() + 0.1;
-          //     const randomZoom = Math.random() + 0.1;
-          //
-          //     cameraPersp.fov = randomFoV * 160;
-          //     cameraOrtho.bottom = - randomFoV * 500;
-          //     cameraOrtho.top = randomFoV * 500;
-          //
-          //     cameraPersp.zoom = randomZoom * 5;
-          //     cameraOrtho.zoom = randomZoom * 5;
-          //     onWindowResize();
-          //     break;
+        // case 86: // V
+        //     const randomFoV = Math.random() + 0.1;
+        //     const randomZoom = Math.random() + 0.1;
+        //
+        //     cameraPersp.fov = randomFoV * 160;
+        //     cameraOrtho.bottom = - randomFoV * 500;
+        //     cameraOrtho.top = randomFoV * 500;
+        //
+        //     cameraPersp.zoom = randomZoom * 5;
+        //     cameraOrtho.zoom = randomZoom * 5;
+        //     onWindowResize();
+        //     break;
 
         case 187:
         case 107: // +, =, num+

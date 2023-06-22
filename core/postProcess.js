@@ -6,7 +6,7 @@
  * Description  2.0版本后处理封装
  */
 import * as THREE from 'three';
-import { GUI } from 'three/examples/jsm/libs/dat.gui.module';
+// import GUI from 'lil-gui';
 // 后处理
 import { CSS2DRenderer } from 'three/examples/jsm/renderers/CSS2DRenderer';
 import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer';
@@ -23,7 +23,7 @@ import { ColorifyShader } from 'three/examples/jsm/shaders/ColorifyShader';
 import { ColorCorrectionShader } from 'three/examples/jsm/shaders/ColorCorrectionShader';
 import { GammaCorrectionShader } from 'three/examples/jsm/shaders/GammaCorrectionShader';
 import { HueSaturationShader } from 'three/examples/jsm/shaders/HueSaturationShader';
-import { PixelShader } from 'three/examples/jsm/shaders/PixelShader';
+// import { PixelShader } from 'three/examples/jsm/shaders/PixelShader';
 import { RGBShiftShader } from 'three/examples/jsm/shaders/RGBShiftShader';
 import { SepiaShader } from 'three/examples/jsm/shaders/SepiaShader';
 import { VignetteShader } from 'three/examples/jsm/shaders/VignetteShader';

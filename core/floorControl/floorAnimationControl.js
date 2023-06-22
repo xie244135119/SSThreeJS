@@ -6,7 +6,7 @@
  * Description
  */
 import * as THREE from 'three';
-import { GUI } from 'three/examples/jsm/libs/dat.gui.module';
+import { GUI } from 'lil-gui';
 import { Mesh, Scene } from 'three';
 import TWEEN from '@tweenjs/tween.js';
 import ThreeLoop from '../threeLoop';

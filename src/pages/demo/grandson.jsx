@@ -15,6 +15,7 @@ export default function ParentIndex(props) {
   useEffect(() => {
     const js = new SSThreejs();
     js.setup('threecontainer');
+    js.addDymaicDebug();
 
     return () => {
       js.destroy();

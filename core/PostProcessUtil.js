@@ -1,5 +1,6 @@
 import * as THREE from 'three';
-import { GUI } from 'three/examples/jsm/libs/dat.gui.module';
+// import { GUI } from 'three/examples/jsm/libs/dat.gui.module';
+import GUI from 'lil-gui';
 // 后处理
 import { CSS2DRenderer } from 'three/examples/jsm/renderers/CSS2DRenderer';
 import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer';
@@ -10,12 +11,13 @@ import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPa
 import { OutlinePass } from 'three/examples/jsm/postprocessing/OutlinePass';
 import { CopyShader } from 'three/examples/jsm/shaders/CopyShader';
 import { FXAAShader } from 'three/examples/jsm/shaders/FXAAShader';
+import { SMAAPass } from 'three/examples/jsm/postprocessing/SMAAPass';
 import { BrightnessContrastShader } from 'three/examples/jsm/shaders/BrightnessContrastShader';
 import { ColorifyShader } from 'three/examples/jsm/shaders/ColorifyShader';
 import { ColorCorrectionShader } from 'three/examples/jsm/shaders/ColorCorrectionShader';
 import { GammaCorrectionShader } from 'three/examples/jsm/shaders/GammaCorrectionShader';
 import { HueSaturationShader } from 'three/examples/jsm/shaders/HueSaturationShader';
-import { PixelShader } from 'three/examples/jsm/shaders/PixelShader';
+// import { PixelShader } from 'three/examples/jsm/shaders/PixelShader';
 import { RGBShiftShader } from 'three/examples/jsm/shaders/RGBShiftShader';
 import { SepiaShader } from 'three/examples/jsm/shaders/SepiaShader';
 import { VignetteShader } from 'three/examples/jsm/shaders/VignetteShader';
@@ -24,7 +26,6 @@ import { LuminosityShader } from 'three/examples/jsm/shaders/LuminosityShader';
 import { BleachBypassShader } from 'three/examples/jsm/shaders/BleachBypassShader';
 import { SSRPass } from 'three/examples/jsm/postprocessing/SSRPass';
 import { ReflectorForSSRPass } from 'three/examples/jsm/objects/ReflectorForSSRPass';
-import ThreeLoop from './threeLoop';
 
 export default class PostProcessUtil {
   // 是否打开GUI调试
@@ -40,146 +41,180 @@ export default class PostProcessUtil {
 
   // GUI 属性配置文件
   _postSetting = null;
+  // _defaultSetting = {
+  //   preset: 'Default',
+  //   closed: false,
+  //   remembered: {
+  //     Default: {
+  //       0: {
+  //         strength: 0.001,
+  //         threshold: 1,
+  //         radius: 0
+  //       },
+  //       1: {
+  //         enabled: false
+  //       },
+  //       2: {
+  //         opacity: 0
+  //       },
+  //       3: {
+  //         enabled: false
+  //       },
+  //       4: {
+  //         brightness: 0
+  //       },
+  //       5: {
+  //         contrast: 0
+  //       },
+  //       6: {
+  //         enabled: false
+  //       },
+  //       7: {
+  //         color: {
+  //           r: 255,
+  //           g: 255,
+  //           b: 255
+  //         }
+  //       },
+  //       8: {
+  //         enabled: false
+  //       },
+  //       9: {
+  //         powRGB_x: 2,
+  //         powRGB_y: 2,
+  //         powRGB_z: 2
+  //       },
+  //       10: {
+  //         mulRGB_x: 1,
+  //         mulRGB_y: 1,
+  //         mulRGB_z: 1
+  //       },
+  //       11: {
+  //         addRGB_x: 0,
+  //         addRGB_y: 0,
+  //         addRGB_z: 0
+  //       },
+  //       12: {
+  //         enabled: false
+  //       },
+  //       13: {
+  //         enabled: true
+  //       },
+  //       14: {
+  //         hue: 0
+  //       },
+  //       15: {
+  //         saturation: 0.29
+  //       },
+  //       16: {
+  //         enabled: false
+  //       },
+  //       17: {
+  //         enabled: false
+  //       },
+  //       18: {
+  //         angle: 0
+  //       },
+  //       19: {
+  //         amount: 0
+  //       },
+  //       20: {
+  //         enabled: false
+  //       },
+  //       21: {
+  //         offset: 1.2
+  //       },
+  //       22: {
+  //         darkness: 0
+  //       }
+  //     }
+  //   },
+  //   folders: {
+  //     '辉光-BloomPass': {
+  //       preset: 'Default',
+  //       closed: true,
+  //       folders: {}
+  //     },
+  //     '镀银-BleachBypass': {
+  //       preset: 'Default',
+  //       closed: true,
+  //       folders: {}
+  //     },
+  //     '亮度/对比度-BrightnessContrast': {
+  //       preset: 'Default',
+  //       closed: true,
+  //       folders: {}
+  //     },
+  //     '颜色覆盖-Colorify': {
+  //       preset: 'Default',
+  //       closed: true,
+  //       folders: {}
+  //     },
+  //     '颜色分布-ColorCorrection': {
+  //       preset: 'Default',
+  //       closed: true,
+  //       folders: {}
+  //     },
+  //     'GammaCorrection': {
+  //       preset: 'Default',
+  //       closed: true,
+  //       folders: {}
+  //     },
+  //     '色调/饱和度-HueSaturation': {
+  //       preset: 'Default',
+  //       closed: true,
+  //       folders: {}
+  //     },
+  //     '亮度-Luminosity': {
+  //       preset: 'Default',
+  //       closed: true,
+  //       folders: {}
+  //     },
+  //     'rgb颜色分离-rgbShift': {
+  //       preset: 'Default',
+  //       closed: true,
+  //       folders: {}
+  //     },
+  //     '晕映-vignette': {
+  //       preset: 'Default',
+  //       closed: true,
+  //       folders: {}
+  //     }
+  //   }
+  // };
 
   _defaultSetting = {
-    preset: 'Default',
-    closed: false,
-    remembered: {
-      Default: {
-        0: {
-          strength: 0.001,
-          threshold: 1,
-          radius: 0
-        },
-        1: {
-          enabled: false
-        },
-        2: {
-          opacity: 0
-        },
-        3: {
-          enabled: false
-        },
-        4: {
-          brightness: 0
-        },
-        5: {
-          contrast: 0
-        },
-        6: {
-          enabled: false
-        },
-        7: {
-          color: {
-            r: 255,
-            g: 255,
-            b: 255
-          }
-        },
-        8: {
-          enabled: false
-        },
-        9: {
+    controllers: { 输出设置: '' },
+    folders: {
+      '辉光-BloomPass': {
+        controllers: { enabled: false, strength: 0.001, threshold: 1, radius: 0 },
+        folders: {}
+      },
+      '亮度/对比度-BrightnessContrast': {
+        controllers: { enabled: true, brightness: 0, contrast: 0 },
+        folders: {}
+      },
+      '颜色分布-ColorCorrection': {
+        controllers: {
+          enabled: false,
           powRGB_x: 2,
           powRGB_y: 2,
-          powRGB_z: 2
-        },
-        10: {
+          powRGB_z: 2,
           mulRGB_x: 1,
           mulRGB_y: 1,
-          mulRGB_z: 1
-        },
-        11: {
+          mulRGB_z: 1,
           addRGB_x: 0,
           addRGB_y: 0,
           addRGB_z: 0
         },
-        12: {
-          enabled: false
-        },
-        13: {
-          enabled: true
-        },
-        14: {
-          hue: 0
-        },
-        15: {
-          saturation: 0.29
-        },
-        16: {
-          enabled: false
-        },
-        17: {
-          enabled: false
-        },
-        18: {
-          angle: 0
-        },
-        19: {
-          amount: 0
-        },
-        20: {
-          enabled: true
-        },
-        21: {
-          offset: 1.37
-        },
-        22: {
-          darkness: 0
-        }
-      }
-    },
-    folders: {
-      '辉光-BloomPass': {
-        preset: 'Default',
-        closed: true,
         folders: {}
       },
-      '镀银-BleachBypass': {
-        preset: 'Default',
-        closed: true,
-        folders: {}
-      },
-      '亮度/对比度-BrightnessContrast': {
-        preset: 'Default',
-        closed: true,
-        folders: {}
-      },
-      '颜色覆盖-Colorify': {
-        preset: 'Default',
-        closed: true,
-        folders: {}
-      },
-      '颜色分布-ColorCorrection': {
-        preset: 'Default',
-        closed: true,
-        folders: {}
-      },
-      GammaCorrection: {
-        preset: 'Default',
-        closed: true,
-        folders: {}
-      },
+      GammaCorrection: { controllers: { enabled: true }, folders: {} },
       '色调/饱和度-HueSaturation': {
-        preset: 'Default',
-        closed: true,
+        controllers: { enabled: true, hue: 0, saturation: 0.29 },
         folders: {}
       },
-      '亮度-Luminosity': {
-        preset: 'Default',
-        closed: true,
-        folders: {}
-      },
-      'rgb颜色分离-rgbShift': {
-        preset: 'Default',
-        closed: true,
-        folders: {}
-      },
-      '晕映-vignette': {
-        preset: 'Default',
-        closed: true,
-        folders: {}
-      }
+      '晕映-vignette': { controllers: { enabled: true, offset: 1.52, darkness: 1 }, folders: {} }
     }
   };
 
@@ -203,17 +238,34 @@ export default class PostProcessUtil {
     controls.scanlinesCount = 256;
 
     controls.updateFilmPass = () => {
-      if (controls.grayScale !== undefined) effectFilm.uniforms.grayscale.value = controls.grayScale;
-      if (controls.noiseIntensity !== undefined) effectFilm.uniforms.nIntensity.value = controls.noiseIntensity;
-      if (controls.scanlinesIntensity !== undefined) effectFilm.uniforms.sIntensity.value = controls.scanlinesIntensity;
-      if (controls.scanlinesCount !== undefined) effectFilm.uniforms.sCount.value = controls.scanlinesCount;
+      if (controls.grayScale !== undefined) {
+        effectFilm.uniforms.grayscale.value = controls.grayScale;
+      }
+      if (controls.noiseIntensity !== undefined) {
+        effectFilm.uniforms.nIntensity.value = controls.noiseIntensity;
+      }
+      if (controls.scanlinesIntensity !== undefined) {
+        effectFilm.uniforms.sIntensity.value = controls.scanlinesIntensity;
+      }
+      if (controls.scanlinesCount !== undefined) {
+        effectFilm.uniforms.sCount.value = controls.scanlinesCount;
+      }
     };
 
     const filmFolder = gui.addFolder('FilmPass');
-    filmFolder.add(controls, 'grayScale').onChange(controls.updateFilmPass);
-    filmFolder.add(controls, 'noiseIntensity', 0, 1, 0.01).onChange(controls.updateFilmPass);
-    filmFolder.add(controls, 'scanlinesIntensity', 0, 1, 0.01).onChange(controls.updateFilmPass);
-    filmFolder.add(controls, 'scanlinesCount', 0, 500, 1).onChange(controls.updateFilmPass);
+    filmFolder.add(controls, 'grayScale').onChange(controls.updateFilmPass).listen();
+    filmFolder
+      .add(controls, 'noiseIntensity', 0, 1, 0.01)
+      .onChange(controls.updateFilmPass)
+      .listen();
+    filmFolder
+      .add(controls, 'scanlinesIntensity', 0, 1, 0.01)
+      .onChange(controls.updateFilmPass)
+      .listen();
+    filmFolder
+      .add(controls, 'scanlinesCount', 0, 500, 1)
+      .onChange(controls.updateFilmPass)
+      .listen();
   };
 
   // bloom辉光效果
@@ -221,30 +273,42 @@ export default class PostProcessUtil {
     // Bloom通道创建
     // let bloomPass = new UnrealBloomPass( new THREE.Vector2( window.innerWidth, window.innerHeight ), 1.5, 0.4, 0.85 );
     bloomPass.renderToScreen = true;
-    gui.remember(controls);
+    // gui.remember(controls);
     const bloomFolder = gui.addFolder('辉光-BloomPass');
-    bloomFolder.add(bloomPass, 'enabled', false).onChange((boolean) => {
-      bloomPass.enabled = boolean;
-      gui.updateDisplay();
-      callback?.();
-    });
+    bloomFolder
+      .add(bloomPass, 'enabled', false)
+      .onChange((boolean) => {
+        bloomPass.enabled = boolean;
+        // gui.updateDisplay();
+        callback?.();
+      })
+      .listen();
     if (controls.strength) bloomPass.strength = controls.strength;
-    bloomFolder.add(controls, 'strength', 0.001, 5, 0.001).onChange((v) => {
-      bloomPass.strength = v;
-      gui.updateDisplay();
-    });
+    bloomFolder
+      .add(controls, 'strength', 0.001, 5, 0.001)
+      .onChange((v) => {
+        bloomPass.strength = v;
+        // gui.updateDisplay();
+      })
+      .listen();
     if (controls.threshold) bloomPass.threshold = controls.threshold;
-    bloomFolder.add(controls, 'threshold', 0, 1, 0.001).onChange((v) => {
-      bloomPass.threshold = v;
-      gui.updateDisplay();
-      callback?.();
-    });
+    bloomFolder
+      .add(controls, 'threshold', 0, 1, 0.001)
+      .onChange((v) => {
+        bloomPass.threshold = v;
+        // gui.updateDisplay();
+        callback?.();
+      })
+      .listen();
     if (controls.radius) bloomPass.radius = controls.radius;
-    bloomFolder.add(controls, 'radius', 0, 10, 0.1).onChange((v) => {
-      bloomPass.radius = v;
-      gui.updateDisplay();
-      callback?.();
-    });
+    bloomFolder
+      .add(controls, 'radius', 0, 10, 0.1)
+      .onChange((v) => {
+        bloomPass.radius = v;
+        // gui.updateDisplay();
+        callback?.();
+      })
+      .listen();
   };
 
   addDotScreenPassControls(gui, controls, dotscreen) {
@@ -260,18 +324,21 @@ export default class PostProcessUtil {
     };
 
     const dsFolder = gui.addFolder('DotScreenPass');
-    dsFolder.add(controls, 'centerX', 0, 5, 0.01).onChange(controls.updateDotScreen);
-    dsFolder.add(controls, 'centerY', 0, 5, 0.01).onChange(controls.updateDotScreen);
-    dsFolder.add(controls, 'angle', 0, 3.14, 0.01).onChange(controls.updateDotScreen);
-    dsFolder.add(controls, 'scale', 0, 10).onChange(controls.updateDotScreen);
+    dsFolder.add(controls, 'centerX', 0, 5, 0.01).onChange(controls.updateDotScreen).listen();
+    dsFolder.add(controls, 'centerY', 0, 5, 0.01).onChange(controls.updateDotScreen).listen();
+    dsFolder.add(controls, 'angle', 0, 3.14, 0.01).onChange(controls.updateDotScreen).listen();
+    dsFolder.add(controls, 'scale', 0, 10).onChange(controls.updateDotScreen).listen();
   }
 
   addGlitchPassControls = (gui, controls, glitchPass, callback) => {
     controls.dtsize = 64;
     const gpFolder = gui.addFolder('GlitchPass');
-    gpFolder.add(controls, 'dtsize', 0, 1024).onChange((e) => {
-      // callback(new THREE.GlitchPass(e));
-    });
+    gpFolder
+      .add(controls, 'dtsize', 0, 1024)
+      .onChange((e) => {
+        callback(new THREE.GlitchPass(e));
+      })
+      .listen();
   };
 
   addHalftonePassControls = (gui, controls, htshader, callback) => {
@@ -305,13 +372,7 @@ export default class PostProcessUtil {
     htFolder.add(controls, 'height', 0, 15, 0.1).onChange(applyParams);
     htFolder.add(controls, 'blending', 0, 2, 0.01).onChange(applyParams);
     htFolder
-      .add(controls, 'blendingMode', {
-        linear: 1,
-        multiply: 2,
-        add: 3,
-        lighter: 4,
-        darker: 5
-      })
+      .add(controls, 'blendingMode', { linear: 1, multiply: 2, add: 3, lighter: 4, darker: 5 })
       .onChange(applyParams);
     htFolder.add(controls, 'greyscale').onChange(applyParams);
   };
@@ -400,13 +461,13 @@ export default class PostProcessUtil {
       const localControls = {};
       // localControls[key] = uniformOrDefault(shader.uniforms, key, 0);
       localControls[key] = uniformOrDefault(shader.uniforms, key, value);
-      this._gui.remember(localControls);
+      // this._gui.remember(localControls);
       if (localControls[key]) {
         shader.uniforms[key].value = localControls[key];
       }
       folder.add(localControls, key).onChange((v) => {
         shader.uniforms[key].value = v;
-        gui.updateDisplay();
+        // gui.updateDisplay();
       });
     };
 
@@ -414,13 +475,13 @@ export default class PostProcessUtil {
       const localControls = {};
       // localControls[key] = uniformOrDefault(shader.uniforms, key, 0);
       localControls[key] = uniformOrDefault(shader.uniforms, key, value);
-      this._gui.remember(localControls);
+      // this._gui.remember(localControls);
       if (localControls[key]) {
         shader.uniforms[key].value = localControls[key];
       }
       folder.add(localControls, key, from, to, step).onChange((v) => {
         shader.uniforms[key].value = v;
-        gui.updateDisplay();
+        // gui.updateDisplay();
       });
     };
 
@@ -428,7 +489,7 @@ export default class PostProcessUtil {
       const localControls = {};
       // localControls[key] = uniformOrDefault(shader.uniforms, key, new THREE.Color(0xffffff));
       localControls[key] = uniformOrDefault(shader.uniforms, key, value);
-      this._gui.remember(localControls);
+      // this._gui.remember(localControls);
       if (localControls[key]) {
         shader.uniforms[key].value = localControls[key];
       }
@@ -438,7 +499,7 @@ export default class PostProcessUtil {
           value.g / 255,
           value.b / 255
         );
-        gui.updateDisplay();
+        // gui.updateDisplay();
       });
     };
 
@@ -453,7 +514,7 @@ export default class PostProcessUtil {
       localControls[keyX] = startValue.x;
       localControls[keyY] = startValue.y;
       localControls[keyZ] = startValue.z;
-      this._gui.remember(localControls);
+      // this._gui.remember(localControls);
       if (localControls[keyX]) {
         // shader.uniforms[key].value = localControls[key];
         shader.uniforms[key].value.x = localControls[keyX];
@@ -461,17 +522,16 @@ export default class PostProcessUtil {
         shader.uniforms[key].value.z = localControls[keyZ];
       }
       folder.add(localControls, keyX, from.x, to.x, step.x).onChange((v) => {
-        console.log(shader.uniforms[key].value);
         shader.uniforms[key].value.x = v;
-        gui.updateDisplay();
+        // gui.updateDisplay();
       });
       folder.add(localControls, keyY, from.x, to.x, step.x).onChange((v) => {
         shader.uniforms[key].value.y = v;
-        gui.updateDisplay();
+        // gui.updateDisplay();
       });
       folder.add(localControls, keyZ, from.x, to.x, step.x).onChange((v) => {
         shader.uniforms[key].value.z = v;
-        gui.updateDisplay();
+        // gui.updateDisplay();
       });
     };
 
@@ -486,17 +546,16 @@ export default class PostProcessUtil {
       const localControls = {};
       localControls[keyX] = startValue.x;
       localControls[keyY] = startValue.y;
-      this._gui.remember(localControls);
       if (localControls[key]) {
         shader.uniforms[key].value = localControls[key];
       }
       folder.add(localControls, keyX, from.x, to.x, step.x).onChange((v) => {
         shader.uniforms[key].value.x = v;
-        gui.updateDisplay();
+        // gui.updateDisplay();
       });
       folder.add(localControls, keyY, from.y, to.y, step.y).onChange((v) => {
         shader.uniforms[key].value.y = v;
-        gui.updateDisplay();
+        // gui.updateDisplay();
       });
     };
 
@@ -504,9 +563,8 @@ export default class PostProcessUtil {
     const folder = gui.addFolder(folderName);
     if (toSet.setEnabled !== undefined ? toSet.setEnabled : true) {
       shaderPass.enabled = enabled !== undefined ? enabled : false;
-      this._gui.remember(shaderPass);
-      folder.add(shaderPass, 'enabled');
-      gui.updateDisplay();
+      folder.add(shaderPass, 'enabled').listen();
+      // gui.updateDisplay();
     }
 
     if (toSet.floats !== undefined) {
@@ -548,35 +606,33 @@ export default class PostProcessUtil {
    * 初始化后处理效果
    * @returns {effectComposer: EffectComposer, outlinePass: (*|null)}
    */
-  initPostProcess = (_effectComposer) => {
-    // const _pixelRatio = window.devicePixelRatio;
-    // let _effectComposer = new EffectComposer(this._render);
-    // _effectComposer.renderTarget1.texture.encoding = THREE.sRGBEncoding;
-    // _effectComposer.renderTarget2.texture.encoding = THREE.sRGBEncoding;
-    // _effectComposer.setSize(
-    //   this._container.clientWidth * _pixelRatio,
-    //   this._container.clientHeight * _pixelRatio
-    // );
-
+  initPostProcess = () => {
+    const _pixelRatio = window.devicePixelRatio;
+    const _effectComposer = new EffectComposer(this._render);
+    _effectComposer.renderTarget1.texture.encoding = THREE.sRGBEncoding;
+    _effectComposer.renderTarget2.texture.encoding = THREE.sRGBEncoding;
+    _effectComposer.setSize(
+      this._container.clientWidth * _pixelRatio,
+      this._container.clientHeight * _pixelRatio
+    );
     const renderPass = new RenderPass(this._scene, this._camera);
     const effectCopy = new ShaderPass(CopyShader);
     effectCopy.renderToScreen = true;
 
-    // _effectComposer.removePass();
     // 1.描边通道---------------------
     // 物体边缘发光通道
-    // let _outlinePass = new OutlinePass(
-    //   new THREE.Vector2(window.innerWidth, window.innerHeight),
-    //   this._scene,
-    //   this._camera
-    // );
-    // _outlinePass.edgeStrength = Number(10); //边缘长度
-    // _outlinePass.edgeGlow = Number(1); //边缘辉光
-    // _outlinePass.edgeThickness = Number(0.5); //边缘厚度 值越小越明显
-    // _outlinePass.pulsePeriod = Number(0); //一闪一闪周期
-    // _outlinePass.visibleEdgeColor.set(0xffff00); //没有被遮挡的outline的颜色
-    // _outlinePass.hiddenEdgeColor.set(0xff0000); //被遮挡的outline的颜色
-    // this._outlinePass = _outlinePass;
+    const _outlinePass = new OutlinePass(
+      new THREE.Vector2(window.innerWidth, window.innerHeight),
+      this._scene,
+      this._camera
+    );
+    _outlinePass.edgeStrength = Number(10); // 边缘长度
+    _outlinePass.edgeGlow = Number(1); // 边缘辉光
+    _outlinePass.edgeThickness = Number(0.5); // 边缘厚度 值越小越明显
+    _outlinePass.pulsePeriod = Number(0); // 一闪一闪周期
+    _outlinePass.visibleEdgeColor.set(0xffff00); // 没有被遮挡的outline的颜色
+    _outlinePass.hiddenEdgeColor.set(0xff0000); // 被遮挡的outline的颜色
+    this._outlinePass = _outlinePass;
 
     // bloom pass
     const bloomPass = new UnrealBloomPass(
@@ -592,60 +648,46 @@ export default class PostProcessUtil {
     fxaaPass.material.uniforms.resolution.value.x = 1 / (this._container.offsetWidth * pixelRatio);
     fxaaPass.material.uniforms.resolution.value.y = 1 / (this._container.offsetHeight * pixelRatio);
 
-    const bleachByPassFilter = new ShaderPass(BleachBypassShader);
+    // let bleachByPassFilter = new ShaderPass(BleachBypassShader);
     const brightnessContrastShader = new ShaderPass(BrightnessContrastShader);
-    const colorifyShader = new ShaderPass(ColorifyShader);
+    // let colorifyShader = new ShaderPass(ColorifyShader);
     const colorCorrectionShader = new ShaderPass(ColorCorrectionShader);
     const gammaCorrectionShader = new ShaderPass(GammaCorrectionShader);
     const hueSaturationShader = new ShaderPass(HueSaturationShader);
-    // let luminosityHighPassShader = new ShaderPass(LuminosityHighPassShader);
-    const luminosityShader = new ShaderPass(LuminosityShader);
-    // let mirrorShader = new ShaderPass(MirrorShader)
-    const pixelShader = new ShaderPass(PixelShader);
-    pixelShader.uniforms.resolution.value = new THREE.Vector2(256, 256);
-    const rgbShiftShader = new ShaderPass(RGBShiftShader);
-    // let sepiaShader = new ShaderPass(SepiaShader);
+    // let pixelShader = new ShaderPass(PixelShader);
+    // pixelShader.uniforms.resolution.value = new THREE.Vector2(256, 256);
+    // let rgbShiftShader = new ShaderPass(RGBShiftShader);
     const vignetteShader = new ShaderPass(VignetteShader);
 
-    // let ssrPass = new SSRPass({
-    //   renderer: this._render,
-    //   scene: this._scene,
-    //   camera: this._camera,
-    //   width: innerWidth,
-    //   height: innerHeight,
-    //   // groundReflector: null,
-    //   // selects: null
-    // });
-
     _effectComposer.addPass(renderPass);
-    // _effectComposer.addPass(_outlinePass);
+    _effectComposer.addPass(_outlinePass);
     _effectComposer.addPass(bloomPass);
 
-    _effectComposer.addPass(bleachByPassFilter);
+    // _effectComposer.addPass(bleachByPassFilter);
     _effectComposer.addPass(brightnessContrastShader);
-    _effectComposer.addPass(colorifyShader);
+    // _effectComposer.addPass(colorifyShader);
     _effectComposer.addPass(colorCorrectionShader);
     _effectComposer.addPass(gammaCorrectionShader);
     _effectComposer.addPass(hueSaturationShader);
-    // _effectComposer.addPass(luminosityHighPassShader);--
-    _effectComposer.addPass(luminosityShader);
-    // _effectComposer.addPass(pixelShader);--
-    _effectComposer.addPass(rgbShiftShader);
-    // _effectComposer.addPass(sepiaShader);--
+    // _effectComposer.addPass(luminosityShader);
+    // _effectComposer.addPass(rgbShiftShader);
     _effectComposer.addPass(vignetteShader);
     _effectComposer.addPass(fxaaPass);
-    // _effectComposer.addPass(ssrPass);--
 
-    _effectComposer.addPass(effectCopy);
+    const smaaPass = new SMAAPass(window.innerWidth, window.height);
+    window.smaaPass = smaaPass;
+    _effectComposer.addPass(smaaPass);
+
+    // _effectComposer.addPass(effectCopy);
     this._effectComposer = _effectComposer;
-    if (window.ENV.DEBUG) {
-      window.effect = this._effectComposer;
-    }
+
+    window.effect = this._effectComposer;
 
     // setup controls
     const gui = new GUI({
-      load: this._postSetting
+      // load: this._postSetting
     });
+    // gui.load(this._postSetting);
     // let gui = new GUI();
     gui.domElement.style.position = 'absolute';
     gui.domElement.style.top = '1.5rem';
@@ -653,48 +695,59 @@ export default class PostProcessUtil {
     gui.name = '后处理效果调试配置';
     gui.width = 300;
     gui.zIndex = 1000;
-    gui.closed = true;
-    gui.updateDisplay();
+    gui.closed = false;
+    // gui.updateDisplay();
     // var controls = {};
+    const params = {
+      savePreset() {
+        this._postSetting = gui.save();
+        console.log('this._postSetting:', JSON.stringify(this._postSetting));
+        params.outPutSetting = JSON.stringify(this._postSetting);
+      },
+      outPutSetting: ''
+    };
+    gui.add(params, 'savePreset').name('保存设置');
+    gui.add(params, 'outPutSetting').name('输出设置').listen();
+
     // 辉光效果
     const bloomControls = {
-      strength: this._postSetting.remembered.Default['0'].strength,
-      threshold: this._postSetting.remembered.Default['0'].threshold,
-      radius: this._postSetting.remembered.Default['0'].radius
+      strength: this._postSetting.folders['辉光-BloomPass'].controllers.strength,
+      threshold: this._postSetting.folders['辉光-BloomPass'].controllers.threshold,
+      radius: this._postSetting.folders['辉光-BloomPass'].controllers.radius
     };
     this.addUnrealBloom(gui, bloomControls, bloomPass);
 
-    // 镀银的效果
-    this.addShaderControl(
-      gui,
-      '镀银-BleachBypass',
-      bleachByPassFilter,
-      {
-        floats: [
-          {
-            key: 'opacity',
-            value: this._postSetting.remembered.Default['2'].opacity,
-            from: 0,
-            to: 1,
-            step: 0.01
-          }
-        ]
-      },
-      true
-    );
+    // // 镀银的效果
+    // this.addShaderControl(
+    //   gui,
+    //   '镀银-BleachBypass',
+    //   bleachByPassFilter,
+    //   {
+    //     floats: [
+    //       {
+    //         key: 'opacity',
+    //         value: this._postSetting.remembered.Default['2'].opacity,
+    //         from: 0,
+    //         to: 1,
+    //         step: 0.01
+    //       }
+    //     ]
+    //   },
+    //   true
+    // );
     // 改变亮度和对比度
     this.addShaderControl(gui, '亮度/对比度-BrightnessContrast', brightnessContrastShader, {
       floats: [
         {
           key: 'brightness',
-          value: this._postSetting.remembered.Default['4'].brightness,
+          value: this._postSetting.folders['亮度/对比度-BrightnessContrast'].controllers.brightness,
           from: 0,
           to: 1,
           step: 0.01
         },
         {
           key: 'contrast',
-          value: this._postSetting.remembered.Default['5'].contrast,
+          value: this._postSetting.folders['亮度/对比度-BrightnessContrast'].controllers.contrast,
           from: 0,
           to: 1,
           step: 0.01
@@ -702,18 +755,18 @@ export default class PostProcessUtil {
       ]
     });
     // 将某种颜色覆盖到整个屏幕
-    this.addShaderControl(gui, '颜色覆盖-Colorify', colorifyShader, {
-      colors: [{ key: 'color', value: this._postSetting.remembered.Default['7'].color }]
-    });
+    // this.addShaderControl(gui, '颜色覆盖-Colorify', colorifyShader, {
+    //   colors: [{ key: 'color', value: this._postSetting.remembered.Default['7'].color }]
+    // });
     // 调整颜色的分布
     this.addShaderControl(gui, '颜色分布-ColorCorrection', colorCorrectionShader, {
       vector3: [
         {
           key: 'powRGB',
           value: {
-            x: this._postSetting.remembered.Default['9'].powRGB_x,
-            y: this._postSetting.remembered.Default['9'].powRGB_y,
-            z: this._postSetting.remembered.Default['9'].powRGB_z
+            x: this._postSetting.folders['颜色分布-ColorCorrection'].controllers.powRGB_x,
+            y: this._postSetting.folders['颜色分布-ColorCorrection'].controllers.powRGB_y,
+            z: this._postSetting.folders['颜色分布-ColorCorrection'].controllers.powRGB_z
           },
           from: { x: 0, y: 0, z: 0 },
           to: { x: 5, y: 5, z: 5 },
@@ -722,9 +775,9 @@ export default class PostProcessUtil {
         {
           key: 'mulRGB',
           value: {
-            x: this._postSetting.remembered.Default['10'].mulRGB_x,
-            y: this._postSetting.remembered.Default['10'].mulRGB_y,
-            z: this._postSetting.remembered.Default['10'].mulRGB_z
+            x: this._postSetting.folders['颜色分布-ColorCorrection'].controllers.mulRGB_x,
+            y: this._postSetting.folders['颜色分布-ColorCorrection'].controllers.mulRGB_y,
+            z: this._postSetting.folders['颜色分布-ColorCorrection'].controllers.mulRGB_z
           },
           from: { x: 0, y: 0, z: 0 },
           to: { x: 5, y: 5, z: 5 },
@@ -733,9 +786,9 @@ export default class PostProcessUtil {
         {
           key: 'addRGB',
           value: {
-            x: this._postSetting.remembered.Default['11'].addRGB_x,
-            y: this._postSetting.remembered.Default['11'].addRGB_y,
-            z: this._postSetting.remembered.Default['11'].addRGB_z
+            x: this._postSetting.folders['颜色分布-ColorCorrection'].controllers.addRGB_x,
+            y: this._postSetting.folders['颜色分布-ColorCorrection'].controllers.addRGB_y,
+            z: this._postSetting.folders['颜色分布-ColorCorrection'].controllers.addRGB_z
           },
           from: { x: 0, y: 0, z: 0 },
           to: { x: 1, y: 1, z: 1 },
@@ -745,19 +798,20 @@ export default class PostProcessUtil {
     });
     // sRGB 颜色空间
     this.addShaderControl(gui, 'GammaCorrection', gammaCorrectionShader, {});
+
     // 改变颜色的色调和饱和度
     this.addShaderControl(gui, '色调/饱和度-HueSaturation', hueSaturationShader, {
       floats: [
         {
           key: 'hue',
-          value: this._postSetting.remembered.Default['14'].hue,
+          value: this._postSetting.folders['色调/饱和度-HueSaturation'].controllers.hue,
           from: -1,
           to: 1,
           step: 0.01
         },
         {
           key: 'saturation',
-          value: this._postSetting.remembered.Default['15'].saturation,
+          value: this._postSetting.folders['色调/饱和度-HueSaturation'].controllers.saturation,
           from: -1,
           to: 1,
           step: 0.01
@@ -773,21 +827,21 @@ export default class PostProcessUtil {
     //         {key: 'defaultOpacity', from: 0, to: 1, step: 0.01}
     //     ]
     // });
-    // 提高亮度
-    this.addShaderControl(gui, '亮度-Luminosity', luminosityShader, {});
-    // rgb颜色分离
-    this.addShaderControl(gui, 'rgb颜色分离-rgbShift', rgbShiftShader, {
-      floats: [
-        { key: 'angle', from: 0, to: 6.28, step: 0.001 },
-        { key: 'amount', from: 0, to: 0.5, step: 0.001 }
-      ]
-    });
+    // // 提高亮度
+    // this.addShaderControl(gui, '亮度-Luminosity', luminosityShader, {});
+    // // rgb颜色分离
+    // this.addShaderControl(gui, 'rgb颜色分离-rgbShift', rgbShiftShader, {
+    //   floats: [
+    //     { key: 'angle', from: 0, to: 6.28, step: 0.001 },
+    //     { key: 'amount', from: 0, to: 0.5, step: 0.001 }
+    //   ]
+    // });
     // 添加晕映效果，四角压边
     this.addShaderControl(gui, '晕映-vignette', vignetteShader, {
       floats: [
         {
           key: 'offset',
-          value: this._postSetting.remembered.Default['21'].offset,
+          value: this._postSetting.folders['晕映-vignette'].controllers.offset,
           from: 0,
           to: 10,
           step: 0.01
@@ -795,119 +849,119 @@ export default class PostProcessUtil {
         // { key: 'offset', from: 0, to: 10, step: 0.01 },
         {
           key: 'darkness',
-          value: this._postSetting.remembered.Default['22'].darkness,
+          value: this._postSetting.folders['晕映-vignette'].controllers.darkness,
           from: 0,
           to: 10,
           step: 0.01
         }
       ]
     });
+    gui.load(this._postSetting);
 
-    if (this.isOpenPostEffectGui) {
-      gui.show();
-    } else {
-      gui.hide();
+    if (gui) {
+      if (this.isOpenPostEffectGui) {
+        gui.show();
+      } else {
+        // gui & gui.hide();
+        gui.destroy();
+      }
     }
+
     // 查找outline通道
     // let outlinePass = this._findPass(this._outlinePass);
     return {
-      effectComposer: _effectComposer
-      // outlinePass: outlinePass
+      effectComposer: _effectComposer,
+      outlinePass: _outlinePass
     };
   };
-  // /**
-  //  * 局部辉光
-  //  */
+  /**
+   * 局部辉光
+   */
 
-  // _BloomPass = (obj) => {
-  //   let materials = {};
+  _BloomPass = (obj) => {
+    const materials = {};
 
-  //   const BLOOM_LAYER = 1;
-  //   const bloomLayer = new THREE.Layers();
-  //   bloomLayer.set(BLOOM_LAYER);
-  //   let renderPass = new RenderPass(this._scene, this._camera);
-  //   let unrealBloomComposer = new EffectComposer(this._render);
-  //   unrealBloomComposer.renderToScreen = false; // 不渲染到屏幕上
-  //   unrealBloomComposer.addPass(renderPass);
-  //   // 最终真正渲染到屏幕上的效果合成器 finalComposer
-  //   const finalComposer = new EffectComposer(this._render);
-  //   finalComposer.addPass(renderPass);
-  //   // 创建unreal辉光通道
-  //   const unrealBloomPass = new UnrealBloomPass();
-  //   unrealBloomPass.threshold = 0.0; // 阈值，
-  //   unrealBloomPass.strength = 3; // 强度
-  //   unrealBloomPass.radius = 0.01; // 范围
-  //   unrealBloomComposer.addPass(unrealBloomPass);
-  //   const shaderPass = new ShaderPass(
-  //     new THREE.ShaderMaterial({
-  //       uniforms: {
-  //         baseTexture: { value: null },
-  //         bloomTexture: { value: unrealBloomComposer.renderTarget2.texture }
-  //       },
-  //       vertexShader: `
-  //       varying vec2 vUv;
-  //       void main() {
-  //         vUv = uv;
-  //         gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );
-  //       }
-  //     `,
-  //       fragmentShader: `
-  //       uniform sampler2D baseTexture;
-  //       uniform sampler2D bloomTexture;
-  //       varying vec2 vUv;
-  //       void main() {
-  //         gl_FragColor = ( texture2D( baseTexture, vUv ) + vec4( 1.0 ) * texture2D( bloomTexture, vUv ) );
-  //       }
-  //     `,
-  //       defines: {}
-  //     }),
-  //     'baseTexture'
-  //   );
-  //   shaderPass.needsSwap = true;
-  //   finalComposer.addPass(shaderPass);
+    const BLOOM_LAYER = 1;
+    const bloomLayer = new THREE.Layers();
+    bloomLayer.set(BLOOM_LAYER);
+    const renderPass = new RenderPass(this._scene, this._camera);
+    const unrealBloomComposer = new EffectComposer(this._render);
+    unrealBloomComposer.renderToScreen = false; // 不渲染到屏幕上
+    unrealBloomComposer.addPass(renderPass);
+    // 最终真正渲染到屏幕上的效果合成器 finalComposer
+    const finalComposer = new EffectComposer(this._render);
+    finalComposer.addPass(renderPass);
+    // 创建unreal辉光通道
+    const unrealBloomPass = new UnrealBloomPass();
+    unrealBloomPass.threshold = 0.0; // 阈值，
+    unrealBloomPass.strength = 3; // 强度
+    unrealBloomPass.radius = 0.01; // 范围
+    unrealBloomComposer.addPass(unrealBloomPass);
+    const shaderPass = new ShaderPass(
+      new THREE.ShaderMaterial({
+        uniforms: {
+          baseTexture: { value: null },
+          bloomTexture: { value: unrealBloomComposer.renderTarget2.texture }
+        },
+        vertexShader: `
+        varying vec2 vUv;
+        void main() {
+          vUv = uv;
+          gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );
+        }
+      `,
+        fragmentShader: `
+        uniform sampler2D baseTexture;
+        uniform sampler2D bloomTexture;
+        varying vec2 vUv;
+        void main() {
+          gl_FragColor = ( texture2D( baseTexture, vUv ) + vec4( 1.0 ) * texture2D( bloomTexture, vUv ) );
+        }
+      `,
+        defines: {}
+      }),
+      'baseTexture'
+    );
+    shaderPass.needsSwap = true;
+    finalComposer.addPass(shaderPass);
 
-  //   //将选中以外的模型材质转为黑色
-  //   let _darkenNonBloomed = (obj) => {
-  //     const darkMaterial = new THREE.MeshBasicMaterial({ color: 'black' }); //黑色材质
-  //     if (obj.isMesh && bloomLayer.test(obj.layers) === false) {
-  //       materials[obj.uuid] = obj.material;
-  //       obj.material = darkMaterial;
-  //     }
-  //   };
+    // 将选中以外的模型材质转为黑色
+    const _darkenNonBloomed = (obj) => {
+      const darkMaterial = new THREE.MeshBasicMaterial({ color: 'black' }); // 黑色材质
+      if (obj.isMesh && bloomLayer.test(obj.layers) === false) {
+        materials[obj.uuid] = obj.material;
+        obj.material = darkMaterial;
+      }
+    };
 
-  //   //再将黑色材质转为原始材质
-  //   let _restoreMaterial = (obj) => {
-  //     if (materials[obj.uuid]) {
-  //       obj.material = materials[obj.uuid];
-  //       bloomLayer.set(31);
-  //       delete materials[obj.uuid];
-  //     }
-  //   };
-  //   // 利用 darkenNonBloomed 函数将除辉光物体外的其他物体的材质转成黑色
+    // 再将黑色材质转为原始材质
+    const _restoreMaterial = (obj) => {
+      if (materials[obj.uuid]) {
+        obj.material = materials[obj.uuid];
+        bloomLayer.set(31);
+        delete materials[obj.uuid];
+      }
+    };
+    // 利用 darkenNonBloomed 函数将除辉光物体外的其他物体的材质转成黑色
 
-  //   let bloomLight = () => {
-  //     this._scene.traverse(_darkenNonBloomed);
-  //     unrealBloomComposer.render();
-  //     //将转成黑色材质的物体还原成初始材质
-  //     this._scene.traverse(_restoreMaterial);
-  //     finalComposer.render();
-  //   };
-  //   // let frameRender = () => {
-  //   //   window.requestAnimationFrame(() => {
-  //   //     bloomLight();
-  //   //     bloomLayer.set(BLOOM_LAYER);
-  //   //     console.log('执行辉光');
-  //   //     // _BloomPass(obj);
-  //   //     frameRender();
-  //   //   });
-  //   // };
-  //   // frameRender();
-
-  //   ThreeLoop.add(()=>{
-  //     bloomLight();
-  //       bloomLayer.set(BLOOM_LAYER);
-  //   }, '辉光 render')
-  // };
+    const bloomLight = () => {
+      this._scene.traverse(_darkenNonBloomed);
+      unrealBloomComposer.render();
+      // 将转成黑色材质的物体还原成初始材质
+      this._scene.traverse(_restoreMaterial);
+      finalComposer.render();
+    };
+    const frameRender = () => {
+      window.requestAnimationFrame(() => {
+        bloomLight();
+        bloomLayer.set(BLOOM_LAYER);
+        console.log('执行辉光');
+        // _BloomPass(obj);
+        frameRender();
+      });
+    };
+    frameRender();
+  };
 
   // 查找通道
   _findPass = (pass) => {
@@ -922,17 +976,17 @@ export default class PostProcessUtil {
    * 移除 调试工具gui,释放内存
    */
   destroy = () => {
-    // console.log(' 后处理 移除处理 ', this._effectComposer.passes);
-    // this._effectComposer.passes = [];
-    // this._effectComposer.renderTarget1.dispose();
-    // this._effectComposer.renderTarget2.dispose();
-    // this._effectComposer.writeBuffer = null;
-    // this._effectComposer.readBuffer = null;
-    // this._effectComposer.copyPass = null;
-    // this._effectComposer = null;
-    window.effect = null;
+    if (this._effectComposer) {
+      this._effectComposer.passes = [];
+      this._effectComposer.renderTarget1.dispose();
+      this._effectComposer.renderTarget2.dispose();
+      this._effectComposer.writeBuffer = null;
+      this._effectComposer.readBuffer = null;
+      this._effectComposer.copyPass = null;
+      this._effectComposer = null;
+    }
     if (this._gui !== null) {
-      this._gui.destroy();
+      // this._gui?.destroy();
       this._gui = null;
     }
   };

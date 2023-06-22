@@ -39,8 +39,8 @@ export default class ThreeLoop {
 
   /**
    * add new event
-   * @param {*} fn render fps
-   * @param {*} identifier identifer
+   * @param {func} fn render fps
+   * @param {string} identifier identifer
    * @returns
    */
   static add = (fn = () => {}, identifier = '') => {

@@ -216,11 +216,11 @@ module.exports = {
         { from: 'public', to: 'public' },
         { from: 'config/env.config.js', to: 'config/env.config.js' },
         {
-          from: 'node_modules/three/examples/js/libs/draco/',
+          from: 'node_modules/three/examples/jsm/libs/draco/',
           to: 'static/three/draco'
         },
         {
-          from: 'node_modules/three/examples/js/libs/basis/',
+          from: 'node_modules/three/examples/jsm/libs/basis/',
           to: 'static/three/basis'
         }
       ]

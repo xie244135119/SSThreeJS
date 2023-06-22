@@ -1,5 +1,5 @@
 import { Group, TextureLoader } from 'three';
-import { GUI } from 'three/examples/jsm/libs/dat.gui.module';
+import { GUI } from 'lil-gui';
 import { DepthRender } from './DepthRender';
 import { ColorRender } from './ColorRender';
 import { BlendRender } from './BlendRender';
@@ -22,10 +22,10 @@ class VideoSceneViewer {
   }
 
   /**
-     * @constructor
-     * @param {HTMLDivElement} container
-     * @param {Object} options
-     */
+   * @constructor
+   * @param {HTMLDivElement} container
+   * @param {Object} options
+   */
   constructor({ scene, camera, renderer }) {
     this.scene = scene;
     this.camera = camera;
@@ -104,11 +104,7 @@ class VideoSceneViewer {
         item.camera.rotation.z
       );
       if (item.camera.target) {
-        camera.camera.lookAt(
-          item.camera.target.x,
-          item.camera.target.y,
-          item.camera.target.z
-        );
+        camera.camera.lookAt(item.camera.target.x, item.camera.target.y, item.camera.target.z);
       }
       camera.camera.updateProjectionMatrix();
       // HTMLVideoElement
@@ -125,8 +121,8 @@ class VideoSceneViewer {
 
     for (let i = 0; i < n; i++) {
       /**
-             * @type {VideoCamera}
-             */
+       * @type {VideoCamera}
+       */
       const camera = this.cameras[i];
 
       // CameraHelper
@@ -230,8 +226,8 @@ class VideoSceneViewer {
   }
 
   /**
-     * 添加相机
-     */
+   * 添加相机
+   */
   addCamera(data) {
     // ------------------------------------
     const i = this.cameras.length;
@@ -286,13 +282,13 @@ class VideoSceneViewer {
   }
 
   /**
-     * 移除相机
-     */
+   * 移除相机
+   */
   removeCamera(cameraName) {
     // const i = 0;
     /**
-         * @type {VideoCamera}
-         */
+     * @type {VideoCamera}
+     */
 
     for (let i = 0; i < this.cameras.length; i++) {
       const camera = this.cameras[i];
@@ -358,14 +354,14 @@ class VideoSceneViewer {
   };
 
   /**
-     * 更新相机
-     */
+   * 更新相机
+   */
   updateCamera() {
     const i = 0;
 
     /**
-         * @type {VideoCamera}
-         */
+     * @type {VideoCamera}
+     */
     const camera = this.cameras[i];
     // PerspectiveCamera
     camera.camera.fov = 50;
@@ -382,8 +378,8 @@ class VideoSceneViewer {
   }
 
   /**
-     * 更新相机 GUI
-     */
+   * 更新相机 GUI
+   */
   updateCamera2 = ({
     fov,
     aspect,
@@ -399,8 +395,8 @@ class VideoSceneViewer {
   }) => {
     const i = 0;
     /**
-         * @type {VideoCamera}
-         */
+     * @type {VideoCamera}
+     */
     const camera = this.cameras[i];
     // PerspectiveCamera
     camera.camera.fov = fov || camera.camera.fov;
@@ -440,8 +436,8 @@ class VideoSceneViewer {
   };
 
   /**
-     * 更新融合混合度
-     */
+   * 更新融合混合度
+   */
   updateMixing({ mixing }) {
     // const data = {
     //   mixing: 0.1
@@ -455,8 +451,8 @@ class VideoSceneViewer {
     const i = 0;
 
     /**
-         * @type {VideoCamera}
-         */
+     * @type {VideoCamera}
+     */
     const camera = this.cameras[i];
     camera.video.muted = !camera.video.muted;
   }
@@ -465,8 +461,8 @@ class VideoSceneViewer {
     const i = 0;
 
     /**
-         * @type {VideoCamera}
-         */
+     * @type {VideoCamera}
+     */
     const camera = this.cameras[i];
     camera.video.pause();
   }
@@ -475,8 +471,8 @@ class VideoSceneViewer {
     const i = 0;
 
     /**
-         * @type {VideoCamera}
-         */
+     * @type {VideoCamera}
+     */
     const camera = this.cameras[i];
     if (camera.video.paused) {
       camera.video.play().then().catch();
@@ -520,8 +516,8 @@ class VideoSceneViewer {
   };
 
   /**
-     * 添加调试GUI
-     */
+   * 添加调试GUI
+   */
   _addGui = () => {
     // const gui = new GUI();
     const foldergui = this.gui.addFolder('视频融合');

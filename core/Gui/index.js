@@ -7,13 +7,15 @@
  */
 
 import * as THREE from 'three';
-import { GUI } from 'three/examples/jsm/libs/dat.gui.module';
+import GUI from 'lil-gui';
 import { TransformControls } from 'three/examples/jsm/controls/TransformControls';
 import ThreeTool from '../tool';
 import ThreeEvent from '../Event';
 
 class GuiIndex {
-  // gui instance
+  /**
+   * @type {GUI} gui调试
+   */
   guiInstance = null;
 
   // threejs
@@ -56,9 +58,8 @@ class GuiIndex {
    */
   setup() {
     this.guiInstance = new GUI();
+    // this.guiInstance.
     this.guiInstance.domElement.style.position = 'absolute';
-    this.guiInstance.domElement.style.top = '1.5rem';
-    this.guiInstance.domElement.style.right = '1.2rem';
     this.guiInstance.name = 'debug';
     this.guiInstance.width = 300;
     this.guiInstance.closed = false;

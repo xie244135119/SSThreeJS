@@ -22,7 +22,7 @@ import { HDRCubeTextureLoader } from 'three/examples/jsm/loaders/HDRCubeTextureL
 import { MeshoptDecoder } from 'three/examples/jsm/libs/meshopt_decoder.module';
 import { CSS2DObject } from 'three/examples/jsm/renderers/CSS2DRenderer';
 import { CSS3DObject } from 'three/examples/jsm/renderers/CSS3DRenderer';
-import { WEBGL } from 'three/examples/jsm/WebGL';
+import WEBGL from 'three/examples/jsm/capabilities/WebGL';
 // import { DebugEnvironment } from 'three/examples/jsm/environments/DebugEnvironment';
 // import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer';
 import ThreeLoop from './threeLoop';
@@ -127,7 +127,7 @@ class ThreeJs {
       ThreeLoop.destory();
     }
     // if (window.ENV.DEBUG) {
-    this.#removeDymaicDebug();
+    this.removeDymaicDebug();
     // }
     this.#removeResizeOBserver();
     this.#removeOrbitControl();
@@ -221,11 +221,6 @@ class ThreeJs {
     this.#effectComposer = this.threePostProcess.getEffectComposer();
     //
     ThreeLoop.setup();
-
-    // dynamic debug
-    // if (window.ENV.DEBUG) {
-    this.#addDymaicDebug(camera);
-    // }
 
     ThreeLoop.add(() => {
       // if (this.isRender) {
@@ -408,22 +403,18 @@ class ThreeJs {
    * gui debug
    * @param {*} aCamera
    */
-  addGui = () => {
+  #addGui = () => {
     this.threeGUI.bindThreeJs(this);
     this.threeGUI.setup();
   };
 
   /**
-   * remove gui
-   * @param {*} aCamera
-   */
-
-  /**
    * dynamic debug
    */
-  #addDymaicDebug = (aCamera = this.threeCamera) => {
+  addDymaicDebug = (aCamera = this.threeCamera) => {
     this.#addAxisControl(this.threeScene, this.threeCamera);
     this.#addStatAnalyse();
+    this.#addGui();
     window.threeJs = this;
     window.threeCamera = this.threeCamera;
     window.THREE = THREE;
@@ -461,7 +452,7 @@ class ThreeJs {
   /**
    * remove debug
    */
-  #removeDymaicDebug = () => {
+  removeDymaicDebug = () => {
     this.#removeStatAnalyse();
     this.#removeAxisControl();
     if (this.threeGUI) {
