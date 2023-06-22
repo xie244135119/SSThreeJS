@@ -29,7 +29,7 @@ import { ReflectorForSSRPass } from 'three/examples/jsm/objects/ReflectorForSSRP
 
 export default class PostProcessUtil {
   // 是否打开GUI调试
-  isOpenPostEffectGui = window.ENV.DEBUG;
+  isOpenPostEffectGui = false;
 
   _scene = null;
 
@@ -675,13 +675,10 @@ export default class PostProcessUtil {
     _effectComposer.addPass(fxaaPass);
 
     const smaaPass = new SMAAPass(window.innerWidth, window.height);
-    window.smaaPass = smaaPass;
     _effectComposer.addPass(smaaPass);
 
     // _effectComposer.addPass(effectCopy);
     this._effectComposer = _effectComposer;
-
-    window.effect = this._effectComposer;
 
     // setup controls
     const gui = new GUI({

@@ -420,7 +420,7 @@ export default class BaseLightSetting {
       }
     });
     // gui销毁
-    if (!window.ENV.DEBUG) {
+    if (!false) {
       gui.destroy();
     }
   };

@@ -100,7 +100,6 @@ class ThreePath {
     material.map = texture;
     const mesh = new THREE.Mesh(geometry, material);
     threeScene.add(mesh);
-    // window.pathMat = material;
 
     const playing = true;
     const params = {
@@ -215,7 +214,6 @@ class ThreePath {
       depthTest
     });
     material.map = texture;
-    window.pathMat = material;
 
     const mesh = new THREE.Mesh(geometry, material);
     threeScene.add(mesh);

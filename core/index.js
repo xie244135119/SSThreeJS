@@ -126,9 +126,6 @@ class ThreeJs {
     if (loop) {
       ThreeLoop.destory();
     }
-    // if (window.ENV.DEBUG) {
-    this.removeDymaicDebug();
-    // }
     this.#removeResizeOBserver();
     this.#removeOrbitControl();
     this.threePostProcess.destroy();

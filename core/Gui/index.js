@@ -671,7 +671,6 @@ class GuiIndex {
    */
   addAnimateView = (object3d, aAnimationClips = []) => {
     const mixer = new THREE.AnimationMixer(object3d);
-    window.mixer = mixer;
     const actionMap = {};
     const guiParams = {
       playSpeed: 1
