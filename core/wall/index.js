@@ -17,16 +17,7 @@ export default class WallMesh extends THREE.Mesh {
    * @param {{ wallHeight: number, bgTextureUrl: string, flowTextureUrl: string, flowTextureUrl2: string, bgColor: THREE.Color  }} options 墙体高度
    * @returns
    */
-  static fromPaths = (
-    paths = [],
-    options = {
-      wallHeight: 10,
-      bgTextureUrl: jianbian,
-      flowTextureUrl: flow,
-      flowTextureUrl2: flow,
-      bgColor: new THREE.Color(0 / 255, 68 / 255, 176 / 255)
-    }
-  ) => {
+  static fromPaths = (paths, options) => {
     const newOptions = {
       bgTextureUrl: jianbian,
       flowTextureUrl: flow,
@@ -172,7 +163,7 @@ export default class WallMesh extends THREE.Mesh {
       .fill(0)
       .map((item, i) => verticesByThree.slice(i * 3 * 6, (i + 1) * 3 * 6));
     // 5.2 按uv周期分组
-    const pointsGroupBy63 = pointsGroupBy18.map((item, i) =>
+    const pointsGroupBy63 = pointsGroupBy18.map((item) =>
       new Array(item.length / 3).fill(0).map((it, i) => item.slice(i * 3, (i + 1) * 3))
     );
     // 5.3根据BoundingBox确定uv平铺范围

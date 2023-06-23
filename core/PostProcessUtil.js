@@ -1,5 +1,4 @@
 import * as THREE from 'three';
-// import { GUI } from 'three/examples/jsm/libs/dat.gui.module';
 import GUI from 'lil-gui';
 // 后处理
 import { CSS2DRenderer } from 'three/examples/jsm/renderers/CSS2DRenderer';
@@ -26,6 +25,7 @@ import { LuminosityShader } from 'three/examples/jsm/shaders/LuminosityShader';
 import { BleachBypassShader } from 'three/examples/jsm/shaders/BleachBypassShader';
 import { SSRPass } from 'three/examples/jsm/postprocessing/SSRPass';
 import { ReflectorForSSRPass } from 'three/examples/jsm/objects/ReflectorForSSRPass';
+import ThreeLoop from './threeLoop';
 
 export default class PostProcessUtil {
   _scene = null;
@@ -228,6 +228,12 @@ export default class PostProcessUtil {
    */
   _gui = null;
 
+  /**
+   * gui 调试
+   * @param {GUI} gui
+   * @param {*} controls
+   * @param {*} effectFilm
+   */
   addFilmPassControls = (gui, controls, effectFilm) => {
     controls.grayScale = false;
     controls.noiseIntensity = 0.8;
@@ -265,7 +271,13 @@ export default class PostProcessUtil {
       .listen();
   };
 
-  // bloom辉光效果
+  /**
+   * bloom
+   * @param {GUI} gui
+   * @param {*} controls
+   * @param {*} bloomPass
+   * @param {*} callback
+   */
   addUnrealBloom = (gui, controls, bloomPass, callback) => {
     // Bloom通道创建
     // let bloomPass = new UnrealBloomPass( new THREE.Vector2( window.innerWidth, window.innerHeight ), 1.5, 0.4, 0.85 );
@@ -275,6 +287,7 @@ export default class PostProcessUtil {
     bloomFolder
       .add(bloomPass, 'enabled', false)
       .onChange((boolean) => {
+        // console.log('xxx', boolean);
         bloomPass.enabled = boolean;
         // gui.updateDisplay();
         callback?.();
@@ -660,23 +673,31 @@ export default class PostProcessUtil {
     _effectComposer.addPass(renderPass);
     _effectComposer.addPass(_outlinePass);
     _effectComposer.addPass(bloomPass);
-
-    // _effectComposer.addPass(bleachByPassFilter);
     _effectComposer.addPass(brightnessContrastShader);
-    // _effectComposer.addPass(colorifyShader);
     _effectComposer.addPass(colorCorrectionShader);
+    // reduce 20 fps
     _effectComposer.addPass(gammaCorrectionShader);
     _effectComposer.addPass(hueSaturationShader);
-    // _effectComposer.addPass(luminosityShader);
-    // _effectComposer.addPass(rgbShiftShader);
     _effectComposer.addPass(vignetteShader);
     _effectComposer.addPass(fxaaPass);
 
-    const smaaPass = new SMAAPass(window.innerWidth, window.height);
-    _effectComposer.addPass(smaaPass);
+    // 老版
+    // _effectComposer.addPass(bleachByPassFilter);
+    // _effectComposer.addPass(colorifyShader);
+    // _effectComposer.addPass(luminosityShader);
+    // _effectComposer.addPass(rgbShiftShader);
 
-    // _effectComposer.addPass(effectCopy);
+    // reduce 30 fps
+    // const smaaPass = new SMAAPass(window.innerWidth, window.height);
+    // _effectComposer.addPass(smaaPass);
+
+    _effectComposer.addPass(effectCopy);
     this._effectComposer = _effectComposer;
+    // window.effectComposer = this._effectComposer;
+
+    ThreeLoop.add(() => {
+      _effectComposer.render();
+    }, 'PostProcessUtil update');
 
     // setup controls
     const gui = new GUI({
@@ -984,5 +1005,6 @@ export default class PostProcessUtil {
       // this._gui?.destroy();
       this._gui = null;
     }
+    ThreeLoop.removeId('PostProcessUtil update');
   };
 }

@@ -6,7 +6,9 @@
  * Description
  */
 import React, { useEffect } from 'react';
-import SSThreejs from '../../../core/index';
+import BaseLightSetting from '../../../core/baseLightSetting/BaseLightSetting';
+import SSThreejs, { THREE } from '../../../core/index';
+import PostProcessUtil from '../../../core/PostProcessUtil';
 
 export default function ParentIndex(props) {
   // eslint-disable-next-line react/prop-types
@@ -15,8 +17,28 @@ export default function ParentIndex(props) {
   useEffect(() => {
     const js = new SSThreejs();
     js.setup('threecontainer');
-    js.addDymaicDebug();
+    js.threeScene.background = new THREE.Color(0, 0, 0);
+    // js.addDymaicDebug();
 
+    // 几何体
+    const geomertry = new THREE.BoxGeometry(1, 1, 1);
+    const material = new THREE.MeshStandardMaterial({
+      color: new THREE.Color(1, 1, 1)
+    });
+    const mesh = new THREE.Mesh(geomertry, material);
+    js.threeScene.add(mesh);
+
+    // js.closeWebglRender();
+    //
+    const uti = new PostProcessUtil({
+      scene: js.threeScene,
+      camera: js.threeCamera,
+      render: js.threeRenderer,
+      container: js.threeContainer
+    });
+    // uti.initPostProcess(true);
+
+    const baseSetting = new BaseLightSetting(js);
     return () => {
       js.destroy();
     };

@@ -24,25 +24,26 @@ import { CSS2DObject } from 'three/examples/jsm/renderers/CSS2DRenderer';
 import { CSS3DObject } from 'three/examples/jsm/renderers/CSS3DRenderer';
 import WEBGL from 'three/examples/jsm/capabilities/WebGL';
 // import { DebugEnvironment } from 'three/examples/jsm/environments/DebugEnvironment';
-// import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer';
 import ThreeLoop from './threeLoop';
 import ThreeDisposeQueue from './Dispose';
 import ThreeEvent from './Event';
 import ThreeControls from './Controls';
-import PostProcess from './postProcess';
+// import PostProcess from './postProcess';
 import ThreeGUI from './Gui/index';
 import ThreeTool from './tool';
 import ThreeCss2D from './css2d';
 import LoadingManager from './plugin/loadingmanager';
 
 class ThreeJs {
-  // idenitifer
+  /**
+   * idenitifer
+   * @type string
+   */
   id = '';
 
-  // if update frame
-  // isRender = true;
-
-  // html container
+  /**
+   * @type HTMLElement
+   */
   threeContainer = null;
 
   /**
@@ -81,9 +82,6 @@ class ThreeJs {
   // gui
   threeGUI = new ThreeGUI();
 
-  // postprocess
-  threePostProcess = new PostProcess(this);
-
   // threeCss2D thress3D
   threeCss2D = new ThreeCss2D(this);
 
@@ -108,9 +106,6 @@ class ThreeJs {
   // direct helper
   #directLightHelper = null;
 
-  // effectComposer
-  #effectComposer = null;
-
   // has released
   #threeJsDestoryed = false;
 
@@ -124,11 +119,12 @@ class ThreeJs {
   destroy(loop = true) {
     this.#threeJsDestoryed = true;
     if (loop) {
+      this.closeWebglRender();
       ThreeLoop.destory();
     }
+
     this.#removeResizeOBserver();
     this.#removeOrbitControl();
-    this.threePostProcess.destroy();
 
     this.threeEvent.destory();
     this.threeEvent = null;
@@ -214,24 +210,17 @@ class ThreeJs {
     this.threeEvent = new ThreeEvent(container);
     // loading manager
     LoadingManager.shareInstance.addProgressView(container);
-    // share
-    this.#effectComposer = this.threePostProcess.getEffectComposer();
     //
     ThreeLoop.setup();
 
-    ThreeLoop.add(() => {
-      // if (this.isRender) {
-      if (this.#effectComposer && this.#effectComposer.passes.length > 0) {
-        this.#effectComposer.render();
-      } else {
-        this.threeRenderer.render(scene, camera);
-      }
-      // }
+    // add webgl render
+    this.startWebglRender();
 
+    ThreeLoop.add(() => {
       if (this.threeOrbitControl.autoRotate) {
         this.threeOrbitControl.update();
       }
-    }, 'scene render');
+    }, 'control update');
 
     return scene;
   };
@@ -335,6 +324,22 @@ class ThreeJs {
     this.threeRenderer.toneMappingExposure = 1;
     this.threeRenderer.textureEncoding = THREE.sRGBEncoding; // LinearEncoding
     this.threeRenderer.outputEncoding = THREE.sRGBEncoding; // sRGBEncoding
+  };
+
+  /**
+   * start webgl render
+   */
+  startWebglRender = () => {
+    ThreeLoop.add(() => {
+      this.threeRenderer.render(this.threeScene, this.threeCamera);
+    }, 'webglrender update');
+  };
+
+  /**
+   * close webgl render
+   */
+  closeWebglRender = () => {
+    ThreeLoop.removeId('webglrender update');
   };
 
   /**

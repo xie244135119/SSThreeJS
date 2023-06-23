@@ -71,14 +71,14 @@ export default class BaseLightSetting {
     this.threeJs = threeJs;
     this.guiSetting = defaultSetting || this.defaultSetting;
     // this.addCubeMap();
-    this.shadowTest();
+    this.startShadowTest();
   }
 
   /**
    * 阴影测试
    * @param {*} directionalLight
    */
-  shadowTest = () => {
+  startShadowTest = () => {
     const ambientLight = this.threeJs.threeAmbientLight;
     const directionalLight = this.threeJs.threeDirectionLight;
     directionalLight.castShadow = true;
@@ -197,7 +197,7 @@ export default class BaseLightSetting {
     gui.domElement.style.zIndex = 100;
     gui.name = '灯光阴影效果调试配置';
     gui.width = 300;
-    gui.closed = false;
+    gui.closed = true;
     gui.load(this.guiSetting);
 
     // gui.remember(params);
@@ -234,7 +234,7 @@ export default class BaseLightSetting {
       .add(params, 'ambientIntensity', 0, 5)
       .name('环境光强度')
       .onChange((e) => {
-        // console.log("e", e);
+        console.log('ambientLight e', ambientLight, e);
         ambientLight.intensity = e;
       });
     ambientLight.color = new THREE.Color(params.ambientLightColor);
@@ -419,10 +419,10 @@ export default class BaseLightSetting {
         this.threeJs.threeScene.environment = null;
       }
     });
-    // gui销毁
-    if (!false) {
-      gui.destroy();
-    }
+  };
+
+  destory = () => {
+    //
   };
 
   /**

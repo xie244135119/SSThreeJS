@@ -26,11 +26,11 @@ a 3dtool for web base three
 				new CopyWebpackPlugin({
 				patterns: [
 					{
-						from: "node_modules/three/examples/js/libs/draco/",
+						from: "node_modules/three/examples/jsm/libs/draco/",
 						to: "static/three/draco",
 					},
 					{
-						from: "node_modules/three/examples/js/libs/basis/",
+						from: "node_modules/three/examples/jsm/libs/basis/",
 						to: "static/three/basis",
 					},
 				],
