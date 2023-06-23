@@ -1,11 +1,3 @@
-/*
- * @Author: xie244135119
- * @Date: 2022-11-15 09:33:36
- * LastEditors  xie244135119
- * LastEditTime  2023-03-30 13:24:37
- * @Description: 指哪看哪
- */
-
 import * as THREE from 'three';
 import ThreeJs, { ThreeEvent } from '../index';
 import ThreeTool from '../tool';
@@ -351,7 +343,8 @@ export default class WatchLook {
         // 指向的目标点位
         this.addEye(targetPoint);
 
-        const parentObj = this.#threeJs.getGltfParObj(model.object);
+        // const parentObj = this.#threeJs.getGltfParObj(model.object);
+        const parentObj = this.#threeJs.getOriginMesh(model.object);
         console.log(' 指哪看哪检索到的物体 ', e, model, parentObj);
 
         const list = [];

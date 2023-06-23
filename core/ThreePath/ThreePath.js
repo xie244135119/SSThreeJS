@@ -1,10 +1,3 @@
-/*
- * Author  Kayson.Wan
- * Date  2022-09-15 16:14:58
- * LastEditors  xie244135119
- * LastEditTime  2022-11-02 16:34:54
- * Description
- */
 import * as THREE from 'three';
 import ThreeJs from '../index';
 import { PathGeometry, PathTubeGeometry, PathPointList } from './three.path.module';

@@ -1,11 +1,3 @@
-/*
- * @Author: xie244135119
- * @Date: 2022-11-24 15:30:52
- * @LastEditors: xie244135119
- * @LastEditTime: 2022-11-28 16:49:20
- * @Description:
- */
-
 import * as THREE from 'three';
 import ThreeLoop from './threeLoop';
 import ThreeTool from './tool';
@@ -192,7 +184,6 @@ export default class Points {
     this.#threePointGeomtery = geometry;
     this.#pointsMesh = points;
     points.userData.vectorData = positionsData;
-    console.log(' geometry ', geometry.attributes, positionsData);
 
     const idenfiters = ThreeLoop.add(this.animate);
     this.#loopIdenfiters.push(idenfiters);

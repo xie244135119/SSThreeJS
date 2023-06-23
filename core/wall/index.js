@@ -15,9 +15,10 @@ export default class WallMesh extends THREE.Mesh {
    *
    * @param {Array<{x: number, y: number, z: number}>} paths 所有路径点
    * @param {{ wallHeight: number, bgTextureUrl: string, flowTextureUrl: string, flowTextureUrl2: string, bgColor: THREE.Color  }} options 墙体高度
+   * @param {THREE.ShaderMaterialParameters} materialOptions 材质参数信息
    * @returns
    */
-  static fromPaths = (paths, options) => {
+  static fromPaths = (paths, options, materialOptions) => {
     const newOptions = {
       bgTextureUrl: jianbian,
       flowTextureUrl: flow,
@@ -26,7 +27,7 @@ export default class WallMesh extends THREE.Mesh {
       ...options
     };
 
-    const material = WallMesh.getMaterial(newOptions);
+    const material = WallMesh.getMaterial(newOptions, materialOptions);
     const geometry = WallMesh.getGeomertry(paths, newOptions.wallHeight);
     return new THREE.Mesh(geometry, material);
   };
@@ -34,14 +35,18 @@ export default class WallMesh extends THREE.Mesh {
   /**
    * 创建流体墙体材质
    * @param {{ bgTextureUrl: string, flowTextureUrl: string, flowTextureUrl2: string, bgColor: THREE.Color  }} param0 参数信息
+   * @param {THREE.ShaderMaterialParameters} materialOptions 材质参数信息
    * @returns { THREE.ShaderMaterial } shadermaterial
    */
-  static getMaterial = ({
-    bgTextureUrl = jianbian,
-    flowTextureUrl = flow,
-    flowTextureUrl2 = flow,
-    bgColor = new THREE.Color(0 / 255, 68 / 255, 176 / 255)
-  }) => {
+  static getMaterial = (
+    {
+      bgTextureUrl = jianbian,
+      flowTextureUrl = flow,
+      flowTextureUrl2 = flow,
+      bgColor = new THREE.Color(0 / 255, 68 / 255, 176 / 255)
+    },
+    materialOptions
+  ) => {
     // 顶点
     const vertexShader = `
           varying vec2 vUv;
@@ -107,7 +112,8 @@ export default class WallMesh extends THREE.Mesh {
       depthTest: false,
       side: THREE.DoubleSide,
       vertexShader,
-      fragmentShader
+      fragmentShader,
+      ...materialOptions
     });
   };
 

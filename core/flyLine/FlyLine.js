@@ -1,11 +1,3 @@
-/*
- * @Author: Kayson.Wan
- * @Date: 2022-04-27 14:05:01
- * LastEditors  xie244135119
- * LastEditTime  2022-10-19 16:45:22
- * @FilePath: /isop-portal/src/js/ThreeJs/flyLine/FlyLine.js
- */
-
 import * as THREE from 'three';
 import { GUI } from 'lil-gui';
 import { Mesh, Scene } from 'three';

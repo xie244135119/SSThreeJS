@@ -1,11 +1,3 @@
-/*
- * Author  xie244135119
- * Date  2022-10-07 13:31:20
- * LastEditors  Murphy.xie
- * LastEditTime  2023-06-08 16:14:46
- * Description database处理
- */
-
 // max Storage 默认 1G
 // const MAX_STORAGE_USAGE = 1 * 1024 * 1024 * 1024;
 const MAX_STORAGE_USAGE = 500 * 1024 * 1024;
@@ -230,7 +222,7 @@ export default class DB {
 
   /**
    * get model by fullpath
-   * @param {*} fullPath 完整地址
+   * @param {string} aModelName 完整地址
    */
   getModel = (aModelName = '') => {
     const modelFileTableName = DATABASE_TABLES[1].name;

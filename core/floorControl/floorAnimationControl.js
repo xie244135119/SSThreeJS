@@ -1,10 +1,3 @@
-/*
- * Author  Kayson.Wan
- * Date  2022-09-15 10:51:16
- * LastEditors  xie244135119
- * LastEditTime  2022-10-07 10:52:54
- * Description
- */
 import * as THREE from 'three';
 import { GUI } from 'lil-gui';
 import { Mesh, Scene } from 'three';

@@ -1,11 +1,3 @@
-/*
- * Author  Kayson.Wan
- * Date  2022-09-08 23:28:58
- * LastEditors  Murphy.xie
- * LastEditTime  2023-06-08 16:15:23
- * Description
- */
-
 import * as THREE from 'three';
 import TWEEN from '@tweenjs/tween.js';
 import Stats from 'stats.js';
@@ -477,53 +469,53 @@ class ThreeJs {
    * @param {*} aCallBack 回调调用方法 param1：当前类型，item：
    * @returns
    */
-  loadModelByJson = (aStep, aCallBack = () => {}) => {
-    if (aStep === undefined) {
-      return;
-    }
-    const promiseall = [];
-    for (let index = 0; index < aStep.models.length; index++) {
-      const model = aStep.models[index];
-      switch (model.type) {
-        case 'obj': // obj文件
-          promiseall.push(this.loadObj(model.obj, model.mtl, false));
-          break;
-        case 'fbx': // fbx文件
-          promiseall.push(this.loadFbx(model.fbx, false));
-          break;
-        case 'gltf': // 不压缩gltf文件
-          promiseall.push(this.loadGltf(model.gltf, false));
-          break;
-        case 'draco': // draco 压缩gltf文件
-          promiseall.push(this.loadGltfDraco(model.draco, false));
-          break;
-        case 'opt': // opt ktx 压缩gltf文件
-          promiseall.push(this.loadGltfOptKTX(model.opt, false));
-          break;
-        default:
-          break;
-      }
-    }
-    Promise.all(promiseall)
-      .then((objs) => {
-        objs.forEach((e) => {
-          this.threeScene.add(e);
-        });
-        aCallBack?.(aStep, objs);
-        if (aStep.nextStep) {
-          this.loadModelByJson(aStep.nextStep, aCallBack);
-        }
-      })
-      .catch((e) => console.error(e));
-  };
+  // loadModelByJson = (aStep, aCallBack = () => {}) => {
+  //   if (aStep === undefined) {
+  //     return;
+  //   }
+  //   const promiseall = [];
+  //   for (let index = 0; index < aStep.models.length; index++) {
+  //     const model = aStep.models[index];
+  //     switch (model.type) {
+  //       case 'obj': // obj文件
+  //         promiseall.push(this.loadObj(model.obj, model.mtl, false));
+  //         break;
+  //       case 'fbx': // fbx文件
+  //         promiseall.push(this.loadFbx(model.fbx, false));
+  //         break;
+  //       case 'gltf': // 不压缩gltf文件
+  //         promiseall.push(this.loadGltf(model.gltf, false));
+  //         break;
+  //       case 'draco': // draco 压缩gltf文件
+  //         promiseall.push(this.loadGltfDraco(model.draco, false));
+  //         break;
+  //       case 'opt': // opt ktx 压缩gltf文件
+  //         promiseall.push(this.loadGltfOptKTX(model.opt, false));
+  //         break;
+  //       default:
+  //         break;
+  //     }
+  //   }
+  //   Promise.all(promiseall)
+  //     .then((objs) => {
+  //       objs.forEach((e) => {
+  //         this.threeScene.add(e);
+  //       });
+  //       aCallBack?.(aStep, objs);
+  //       if (aStep.nextStep) {
+  //         this.loadModelByJson(aStep.nextStep, aCallBack);
+  //       }
+  //     })
+  //     .catch((e) => console.error(e));
+  // };
 
   /**
    * v2.0方案 根据配置文件加载模型
-   * @param {*} list 模型配置
-   * * @param {*} complete 页面熏染完成 参数：全部模型
-   * @param {*} beforeRender 场景添加前 参数：(对象条目, 模型)
-   * @param {*} afterRender 场景添加后 参数：(对象条目, 模型)
-   * @param {*} maxQueueCount
+   * @param {Array<{type: string, obj: string, mtl: string, gltf: string, draco:string}>} list 模型配置
+   * @param {func} complete 页面熏染完成 参数：全部模型
+   * @param {func} beforeRender 场景添加前 参数：(对象条目, 模型)
+   * @param {func} afterRender 场景添加后 参数：(对象条目, 模型)
+   * @param {number} maxQueueCount min>1 , default = 3
    * @returns
    */
   loadModelQueue = (
@@ -555,19 +547,19 @@ class ThreeJs {
       const model = list[queueIndex];
       let promise = Promise.resolve();
       switch (model.type) {
-        case 'obj': // obj文件
+        case 'obj':
           promise = this.loadObj(model.obj, model.mtl, false);
           break;
-        case 'fbx': // fbx文件
+        case 'fbx':
           promise = this.loadFbx(model.fbx, false);
           break;
-        case 'gltf': // gltf
+        case 'gltf':
           promise = this.loadGltf(model.gltf, false);
           break;
-        case 'draco': // draco
+        case 'draco':
           promise = this.loadGltfDraco(model.draco, false);
           break;
-        case 'opt': // optktx
+        case 'opt':
           promise = this.loadGltfOptKTX(model.opt, false);
           break;
         default:
@@ -593,7 +585,7 @@ class ThreeJs {
           }
         })
         .catch((e) => {
-          console.log(' gltf加载出错 ', e);
+          console.error('load model error', e);
           delete modelqueue[symbol];
           if (Object.getOwnPropertyNames(modelqueue).length < maxQueueCount) {
             queueIndex += 1;
@@ -608,16 +600,15 @@ class ThreeJs {
         resuseBlock();
       }
     };
-
     resuseBlock();
   };
 
   /**
    * load obj
-   * @param {*} aObjPath obj path
-   * @param {*} aMaterialPath material path
-   * @param {*} aShadow shadow
-   * @returns
+   * @param {string} aObjPath obj path
+   * @param {string} aMaterialPath material path
+   * @param {boolean} addToScene shadow shadow
+   * @returns {Promise<THREE.Group>}
    */
   loadObj = (aObjPath = '', aMaterialPath = '', addToScene = true) => {
     const getDirectoryText = (aPath = '') => {
@@ -644,8 +635,9 @@ class ThreeJs {
 
   /**
    * load fbx
-   * @param {*} aFbxpath
-   * @returns
+   * @param {string} aFbxpath fbx path
+   * @param {string} addToScene add to scene
+   * @returns {Promise<THREE.Group>}
    */
   loadFbx = (aFbxpath = '', addToScene = true) =>
     LoadingManager.shareInstance.getModelDataByUrl(aFbxpath).then((data) => {
@@ -661,8 +653,8 @@ class ThreeJs {
 
   /**
    * load svg
-   * @param {*} aSVGpath
-   * @returns
+   * @param {string} aSVGpath svg path
+   * @returns {Promise<THREE.SVGResult>}
    */
   loadSVG = (aSVGpath = '') => {
     const svgloader = new SVGLoader(LoadingManager.shareInstance.threeLoadingManager);
@@ -683,8 +675,9 @@ class ThreeJs {
 
   /**
    * load gltf
-   * @param {*} path
-   * @returns
+   * @param {string} path model path
+   * @param {boolean} addToScene 添加到场景上
+   * @returns {Promise<GLTF>}
    */
   loadGltf = (path, addToScene = true) =>
     LoadingManager.shareInstance.getModelDataByUrl(path).then((data) => {
@@ -713,7 +706,7 @@ class ThreeJs {
    * load gltf
    * @param {ArrayBuffer} aBuffer 数据
    * @param {Boolean} addToScene 是否，默认true
-   * @returns
+   * @returns {Promise<GLTF>}
    */
   loadGltfDracoBuffer = (aBuffer, addToScene = true) => {
     const gltfLoader = new GLTFLoader(LoadingManager.shareInstance.threeLoadingManager);
@@ -721,8 +714,6 @@ class ThreeJs {
     dracoLoader.setDecoderPath('/static/three/draco/');
     dracoLoader.preload();
     gltfLoader.setDRACOLoader(dracoLoader);
-    // const baseDirectory = path.split("/");
-    // baseDirectory.pop();
     return new Promise((reslove, reject) => {
       gltfLoader.parse(
         aBuffer,
@@ -743,8 +734,9 @@ class ThreeJs {
 
   /**
    * load gltf Draco
-   * @param {*} path
-   * @returns
+   * @param {string} path model path
+   * @param {boolean} addToScene scene add
+   * @returns {Promise<GLTF>}
    */
   loadGltfDraco(path, addToScene = true) {
     return LoadingManager.shareInstance.getModelDataByUrl(path).then((data) => {
@@ -758,7 +750,6 @@ class ThreeJs {
       return new Promise((reslove, reject) => {
         gltfLoader.load(
           path,
-          // `${baseDirectory.join("/")}/`,
           (gltf) => {
             const obj = gltf.scene;
             if (addToScene) {
@@ -777,9 +768,9 @@ class ThreeJs {
 
   /**
    * load gltf ktx
-   * @param {*} _this
-   * @param {*} path
-   * @param {*} cb
+   * @param {string} path model path
+   * @param {boolean} addToScene add to
+   * @returns {Promise<GLTF>}
    */
   loadGltfOptKTX = (path, addToScene = true) =>
     LoadingManager.shareInstance.getModelDataByUrl(path).then((data) => {
@@ -809,37 +800,38 @@ class ThreeJs {
       });
     });
 
-  /**
-   * v1.0 加载sprit
-   * @param {string} path
-   * @param {回调} cb
-   */
-  loadImg = (path, cb) => {
-    const spriteMap = new THREE.TextureLoader().load(path);
-    const spriteMaterial = new THREE.SpriteMaterial({
-      map: spriteMap,
-      // sizeAttenuation: THREE.sizeAtt,
-      depthWrite: false,
-      side: THREE.DoubleSide,
-      depthTest: false
-    });
-    const sprite = new THREE.Sprite(spriteMaterial);
-    cb(sprite);
-  };
+  // /**
+  //  * v1.0 加载sprit
+  //  * @param {string} img path
+  //  * @param {func} cb
+  //  */
+  // loadImg = (path, cb) => {
+  //   const spriteMap = new THREE.TextureLoader().load(path);
+  //   const spriteMaterial = new THREE.SpriteMaterial({
+  //     map: spriteMap,
+  //     // sizeAttenuation: THREE.sizeAtt,
+  //     depthWrite: false,
+  //     side: THREE.DoubleSide,
+  //     depthTest: false
+  //   });
+  //   const sprite = new THREE.Sprite(spriteMaterial);
+  //   cb(sprite);
+  // };
 
   /**
-   * v2.0 获取 sprit
-   * @param {string} path
-   * @param {回调} cb
+   * v2.0 create Sprite
+   * @param {string} texturePath sprite texture path
+   * @return {Promise<THREE.Sprite}
    */
-  loadSprite = (path) =>
+  loadSprite = (texturePath) =>
     new Promise((reslove, reject) => {
-      const spriteMap = new THREE.TextureLoader().load(path);
+      const spriteMap = new THREE.TextureLoader().load(texturePath, null, null, (e) => {
+        reject(e);
+      });
       spriteMap.wrapS = THREE.RepeatWrapping;
       spriteMap.wrapT = THREE.RepeatWrapping;
       const spriteMaterial = new THREE.SpriteMaterial({
         map: spriteMap,
-        // sizeAttenuation: THREE.sizeAtt,
         depthWrite: false,
         side: THREE.DoubleSide,
         depthTest: false
@@ -857,16 +849,11 @@ class ThreeJs {
     const control = new OrbitControls(aCamera, aDomElement);
     this.threeOrbitControl = control;
     control.enablePan = true;
-    // control.enableZoom = true;
     control.autoRotate = false;
-    // control.maxDistance = 200;
-    // // control.maxDistance = 1000;
-    // // control.maxPolarAngle = 3.14;
-    // // control.minPolarAngle = 0.0;
   };
 
   /**
-   * 移除 orbitControl 控制器
+   * remove orbitControl
    */
   #removeOrbitControl = () => {
     if (this.threeOrbitControl !== null) {
@@ -984,8 +971,11 @@ class ThreeJs {
 
   /**
    * 根据二维坐标 拾取模型数据
-   * @param {*} aPoint 点位信息
-   * @param {*} ignoreMeshNames 忽略的材质名称
+   * @param {{x: number, y:number}} aPoint 点位信息
+   * @param {Array<string>} ignoreMeshNames 忽略的材质名称
+   * @param {Array<THREE.Object3D>} targetObject3Ds 目标模型
+   * @param {HTMLElement} domElement 画布
+   * @param {THREE.Camera} sceneCamera 场景相机
    * @returns
    */
   getModelsByPoint = (
@@ -993,15 +983,24 @@ class ThreeJs {
     ignoreMeshNames = [],
     targetObject3Ds = this.threeScene.children
   ) => {
-    const canvas = this.threeContainer;
-    if (!canvas || !this.threeCamera || !this.threeScene) {
+    if (!this.threeContainer || !this.threeCamera) {
       return [];
     }
     if (!targetObject3Ds) {
       return [];
     }
-    const x = ((aPoint.x - canvas.getBoundingClientRect().left) / canvas.offsetWidth) * 2 - 1; // 规范设施横坐标
-    const y = -((aPoint.y - canvas.getBoundingClientRect().top) / canvas.offsetHeight) * 2 + 1; // 规范设施纵坐标
+    const x =
+      ((aPoint.x - this.threeContainer.getBoundingClientRect().left) /
+        this.threeContainer.offsetWidth) *
+        2 -
+      1; // 规范设施横坐标
+    const y =
+      -(
+        (aPoint.y - this.threeContainer.getBoundingClientRect().top) /
+        this.threeContainer.offsetHeight
+      ) *
+        2 +
+      1; // 规范设施纵坐标
     const standardVector = new THREE.Vector3(x, y, 1); // 规范设施坐标
     const worldVector = standardVector.unproject(this.threeCamera);
     const ray = worldVector.sub(this.threeCamera.position).normalize();
@@ -1015,7 +1014,72 @@ class ThreeJs {
       'Line',
       'Line2',
       'Line3',
-      'TransformControls'
+      'TransformControls',
+      'DirectionalLightHelper'
+    ];
+    const commonMeshNames = ['可视域视锥体'];
+    const checkMeshNameFunc = (aMesh) => {
+      if (commonMeshNames.indexOf(aMesh.name) !== -1) {
+        return false;
+      }
+      if (ignoreMeshNames.indexOf(aMesh.name) !== -1) {
+        return false;
+      }
+      if (ignoreMeshNames.indexOf(this.getOriginMesh(aMesh)?.name) !== -1) {
+        return false;
+      }
+      return true;
+    };
+    models = models.filter(
+      (item) =>
+        commonMeshTypes.indexOf(item.object.type) === -1 &&
+        item.object.visible === true &&
+        checkMeshNameFunc(item.object)
+    );
+    return models;
+  };
+
+  /**
+   * 根据二维坐标 拾取模型数据
+   * @param {{x: number, y:number}} aPoint 点位信息
+   * @param {Array<string>} ignoreMeshNames 忽略的材质名称
+   * @param {Array<THREE.Object3D>} targetObject3Ds 目标模型
+   * @param {HTMLElement} domElement 画布
+   * @param {THREE.Camera} sceneCamera 场景相机
+   * @returns
+   */
+  static getModelsByPoint = (
+    aPoint = { x: 0, y: 0 },
+    ignoreMeshNames = [],
+    targetObject3Ds = this.threeScene.children,
+    domElement = this.threeContainer,
+    sceneCamera = this.threeCamera
+  ) => {
+    if (!domElement || !sceneCamera) {
+      return [];
+    }
+    if (!targetObject3Ds) {
+      return [];
+    }
+    const x =
+      ((aPoint.x - domElement.getBoundingClientRect().left) / domElement.offsetWidth) * 2 - 1; // 规范设施横坐标
+    const y =
+      -((aPoint.y - domElement.getBoundingClientRect().top) / domElement.offsetHeight) * 2 + 1; // 规范设施纵坐标
+    const standardVector = new THREE.Vector3(x, y, 1); // 规范设施坐标
+    const worldVector = standardVector.unproject(sceneCamera);
+    const ray = worldVector.sub(sceneCamera.position).normalize();
+    const raycaster = new THREE.Raycaster(sceneCamera.position, ray);
+    raycaster.camera = sceneCamera;
+    let models = raycaster.intersectObjects(targetObject3Ds, true);
+    //
+    const commonMeshTypes = [
+      'CameraHelper',
+      'AxesHelper',
+      'Line',
+      'Line2',
+      'Line3',
+      'TransformControls',
+      'DirectionalLightHelper'
     ];
     const commonMeshNames = ['可视域视锥体'];
     const checkMeshNameFunc = (aMesh) => {
@@ -1041,22 +1105,21 @@ class ThreeJs {
 
   /**
    * 经过拆分后的模型数据，根据子物体获取拆分前 原始物体名称
+   * @param {THREE.Object3D} obj3d object
+   * @returns
    */
-  getOriginMesh = (obj3d = {}) => {
+  getOriginMesh = (obj3d) => {
     if (!(obj3d instanceof THREE.Object3D)) {
       return null;
     }
-
     if (obj3d.name.indexOf('_') === -1) {
       return obj3d;
     }
-    // 是否为子物体
     const nameArry = obj3d.name.split('_') || [];
     const lastText = nameArry[nameArry.length - 1];
     if (!lastText) {
       return obj3d;
     }
-    // 不为数字
     if (Number.isNaN(lastText)) {
       return obj3d;
     }
@@ -1066,12 +1129,11 @@ class ThreeJs {
 
   /**
    * set mesh opacity
-   * @param {*} aOpacity opacity  range:[0,1]
-   * @param {*} meshNames material names defaut all
-   * @param {*} targetObject3D 目标object3d
+   * @param {number} aOpacity opacity  range:[0,1]
+   * @param {Array<string>} meshNames material names defaut all
+   * @param {THREE.Object3D} targetObject3D target object
    */
   setOpacity = (aOpacity = 0.5, meshNames = [], targetObject3D = this.threeScene) => {
-    // set material transpant
     const setMeshTransparent = (aMesh) => {
       if (aMesh instanceof THREE.Mesh) {
         let materialChildren = aMesh.material;
@@ -1105,9 +1167,9 @@ class ThreeJs {
 
   /**
    * set mesh visible
-   * @param {*} aVisible 可见  range:[0,1]
-   * @param {*} meshNames material names defaut all
-   * @param {*} targetObject3D 目标object3d
+   * @param {number} aVisible 可见  range:[0,1]
+   * @param {Array<string} meshNames material names defaut all
+   * @param {THREE.Object3D} targetObject3D 目标object3d
    */
   setVisible = (aVisible = true, meshNames = [], targetObject3D = this.threeScene) => {
     // set material transpant
@@ -1129,28 +1191,26 @@ class ThreeJs {
         });
       }
     };
-    //
-    if (targetObject3D instanceof THREE.Object3D) {
-      // reset obj
-      const resetAllObj = (resetVisible) => {
-        targetObject3D.traverse((e) => {
-          e.visible = resetVisible;
-        });
-      };
-      resetAllObj(meshNames.length > 0 ? !aVisible : aVisible);
-      if (meshNames.length === 0) {
-        return;
-      }
-      //
-      meshNames.forEach((e) => {
-        const obj = targetObject3D.getObjectByName(e);
-        setObjVisible(obj);
+    // reset obj
+    const resetAllObj = (resetVisible) => {
+      targetObject3D.traverse((e) => {
+        e.visible = resetVisible;
       });
+    };
+    resetAllObj(meshNames.length > 0 ? !aVisible : aVisible);
+    if (meshNames.length === 0) {
+      return;
     }
+    //
+    meshNames.forEach((e) => {
+      const obj = targetObject3D.getObjectByName(e);
+      setObjVisible(obj);
+    });
   };
 
   /**
-   * scale
+   * zoom
+   * @param {number} aValue 放大缩小的倍数
    */
   zoom = (aValue = 1) => {
     if (this.threeCamera instanceof THREE.PerspectiveCamera) {
@@ -1171,7 +1231,7 @@ class ThreeJs {
   };
 
   /**
-   * scale reset
+   * zoom reset
    * @returns
    */
   zoomReset = () => {
@@ -1196,8 +1256,8 @@ class ThreeJs {
 
   /**
    * 模型爆炸效果 ，距离中心线等距离增加长度
-   * @param {*} aNumber 爆炸比例
-   * @param {*} aReset 是否复位
+   * @param {number} aNumber 爆炸比例
+   * @param {boolean} aReset 是否复位
    */
   splitModel = (aNumber = 0.5, aReset = false) => {
     if (this.threeScene instanceof THREE.Scene) {
@@ -1276,6 +1336,9 @@ class ThreeJs {
 
   /**
    * 设置物体其他颜色
+   * @param {Array<string} meshNames 材质物体
+   * @param { string | number} materialColor color
+   * @param {THREE.Object3D} targetObject3D object
    * @returns
    */
   setMeshColorByNames = (
@@ -1308,9 +1371,6 @@ class ThreeJs {
         mesh.material = mesh.userData.changeMaterials;
       }
     };
-    if (!(targetObject3D instanceof THREE.Object3D)) {
-      return;
-    }
     for (let index = 0; index < meshNames.length; index++) {
       const meshName = meshNames[index];
       const obj3d = targetObject3D.getObjectByName(meshName);
@@ -1322,6 +1382,9 @@ class ThreeJs {
 
   /**
    * 重置物体颜色
+   * @param {Array<string} meshNames 一组meshname
+   * @param {THREE.Object3D} targetObject3D
+   * @returns
    */
   resetMeshNames = (meshNames = [], targetObject3D = this.threeScene) => {
     if (meshNames.length === 0) {
@@ -1346,36 +1409,13 @@ class ThreeJs {
     }
   };
 
-  // /**
-  //  * 加载模型时留住每个模型的 原材质
-  //  */
-  // dealMeshMaterial = () => {
-  //     const result = [];
-  //     const { children } = this.threeScene;
-  //     for (let i = 0; i < children.length; i++) {
-  //         const element = children[i];
-  //         // if (element instanceof THREE.Group) {
-  //         element.traverse((obj) => {
-  //             if (obj instanceof THREE.Mesh) {
-  //                 const promise = {
-  //                     name: obj.name,
-  //                     material: obj.material.clone()
-  //                 };
-  //                 result.push(promise);
-  //             }
-  //         });
-  //         // }
-  //     }
-  //     return result;
-  // };
-
   /**
    * 根据物体生成包围盒子
-   * @param {*} object
+   * @param {THREE.Object3D} object
+   * @param {THREE.MeshBasicMaterialParameters} materialParams 参数
    */
-  setBoundingBox = (object) => {
+  static addBoundingBoxByObject = (object, materialParams) => {
     const box = new THREE.Box3().setFromObject(object);
-    // 长、宽、高
     const v = {
       x: Math.abs(box.max.x - box.min.x),
       y: Math.abs(box.max.y - box.min.y),
@@ -1385,135 +1425,67 @@ class ThreeJs {
     const material = new THREE.MeshBasicMaterial({
       color: new THREE.Color(0, 1, 1),
       transparent: true,
-      opacity: 0.2
+      opacity: 0.2,
+      ...materialParams
     });
     const cube = new THREE.Mesh(geometry, material);
-    // cube.position.copy(this.GetCenters(object));
     cube.position.copy(ThreeTool.getObjectCenter(object));
-    this.threeScene.add(cube);
     return cube;
   };
 
-  /**
-   * 判断obj是否是gltf拆分的子物体并返回原模型obj
-   * @param {点击的obj} castObj
-   * @returns
-   */
-  getGltfParObj = (castObj) => {
-    const s = castObj.name;
-    // 后缀
-    const ext = s.substr(s.lastIndexOf('_') + 1);
-    // 判断后缀是否是数字,如果是,
-    const isNumber = !Number.isNaN(Number(ext));
-    if (isNumber) {
-      // 获取模型拆分物体的原模型
-      if (castObj.parent === null) {
-        return castObj;
-      }
-      return castObj.parent;
-    }
-    return castObj;
-  };
-
-  /**
-   * 获取列表Sprite
-   * @param {*} objList
-   * @returns
-   */
-  getSpriteByList = (objList) => {
-    const sprites = [];
-    objList.forEach((item) => {
-      if (item.object.type === 'Sprite') {
-        sprites.push(item.object);
-      }
-    });
-    return sprites;
-  };
-
   // /**
-  //  * 场景无用模型过滤
-  //  * @param {模型name列表} nameList 模型name列表
-  //  * @param {过滤name列表} castNameList 过滤name列表
+  //  * 判断obj是否是gltf拆分的子物体并返回原模型obj
+  //  * @param {点击的obj} castObj
   //  * @returns
   //  */
-  // _modelsFilter = (aNameList = [], castNameList = []) => {
-  //     if (aNameList?.length === 0) {
-  //         return [];
+  // getGltfParObj = (castObj) => {
+  //   const s = castObj.name;
+  //   // 后缀
+  //   const ext = s.substr(s.lastIndexOf('_') + 1);
+  //   // 判断后缀是否是数字,如果是,
+  //   const isNumber = !Number.isNaN(Number(ext));
+  //   if (isNumber) {
+  //     // 获取模型拆分物体的原模型
+  //     if (castObj.parent === null) {
+  //       return castObj;
   //     }
-  //     // 筛选掉可视域视锥体mesh
-  //     const nameList = aNameList.filter(
-  //         (item) => item.object.name !== '可视域视锥体' && item.object.visible === true
-  //     );
-  //     // 墙体过滤 , 不过滤地板
-  //     const newarray = [];
-  //     nameList.forEach((item) => {
-  //         if (!castNameList.includes(item.object.name)) {
-  //             newarray.push(item);
-  //         }
-  //     });
-  //     return newarray;
+  //     return castObj.parent;
+  //   }
+  //   return castObj;
   // };
 
-  // _currLineList = [];
+  // createOptions = (points = []) => {
+  //   // const points = [
+  //   //   new THREE.Vector3(0, 50, 0),
+  //   //   new THREE.Vector3(50, 50, 0),
+  //   //   new THREE.Vector3(80, 40, 0),
+  //   //   new THREE.Vector3(80, 40, -20)
+  //   //   // new Vector3(0, 40, 0),
+  //   //   // new Vector3(-40, 40, 50),
+  //   // ];
+  //   const curvePath = new THREE.CurvePath();
+  //   for (let i = 0; i < points.length - 1; i++) {
+  //     curvePath.add(new THREE.LineCurve3(points[i], points[i + 1]));
+  //   }
 
-  // /**
-  //  * 根据点数组划线 生成几何体
-  //  * @param {*} pointList  坐标点数组 [pos1,pos2, ...]
-  //  */
-  // drawLine = (pointList = []) => {
-  //     const points = pointList;
-  //     const material = new THREE.LineBasicMaterial({
-  //         color: 0x00c8be,
-  //         linewidth: 10,
-  //         depthTest: false
-  //     });
-  //     const geometry = new THREE.BufferGeometry().setFromPoints(points);
-  //     const line = new THREE.Line(geometry, material);
-  //     this.threeScene.add(line);
-  //     this._currLineList.push(line);
-  //     return line;
+  //   const options = {
+  //     steps: 1000,
+  //     bevelEnabled: false,
+  //     bevelThickness: 1,
+  //     extrudePath: curvePath
+  //   };
+  //   return { options, curvePath };
   // };
 
-  // clearLine = () => {
-  //     for (let i = 0; i < this._currLineList.length; i++) {
-  //         const line = this._currLineList[i];
-  //         this._destroyObj(line);
-  //     }
-  //     this._currLineList = [];
+  // createShapes = () => {
+  //   const points = [];
+  //   // points.push(new THREE.Vector2(+0.5, -0.5));
+  //   // points.push(new THREE.Vector2(+0.5, +0.5));
+  //   points.push(new THREE.Vector2(+0.5, +0.5));
+  //   points.push(new THREE.Vector2(-0.5, +0.5));
+  //   const shapes = new THREE.Shape(points);
+  //   return shapes;
   // };
-
-  createOptions = (points = []) => {
-    // const points = [
-    //   new THREE.Vector3(0, 50, 0),
-    //   new THREE.Vector3(50, 50, 0),
-    //   new THREE.Vector3(80, 40, 0),
-    //   new THREE.Vector3(80, 40, -20)
-    //   // new Vector3(0, 40, 0),
-    //   // new Vector3(-40, 40, 50),
-    // ];
-    const curvePath = new THREE.CurvePath();
-    for (let i = 0; i < points.length - 1; i++) {
-      curvePath.add(new THREE.LineCurve3(points[i], points[i + 1]));
-    }
-
-    const options = {
-      steps: 1000,
-      bevelEnabled: false,
-      bevelThickness: 1,
-      extrudePath: curvePath
-    };
-    return { options, curvePath };
-  };
-
-  createShapes = () => {
-    const points = [];
-    // points.push(new THREE.Vector2(+0.5, -0.5));
-    // points.push(new THREE.Vector2(+0.5, +0.5));
-    points.push(new THREE.Vector2(+0.5, +0.5));
-    points.push(new THREE.Vector2(-0.5, +0.5));
-    const shapes = new THREE.Shape(points);
-    return shapes;
-  };
 
   // 创建管道
   createOptionss = (points, material) => {
@@ -1568,38 +1540,6 @@ class ThreeJs {
     // const mesh = new THREE.Mesh(geometry, material);
     // this.threeScene.add(mesh);
     return { mesh, curvePath };
-  };
-
-  /**
-   * 阴影测试
-   * @param {*} directionalLight
-   */
-  shadowTest = () => {
-    const directionalLight = this.threeDirectionLight;
-    const geom = new THREE.BoxGeometry(0.01, 0.01, 0.01);
-    const material = new THREE.MeshLambertMaterial({ color: 0x000000 });
-    const cube = new THREE.Mesh(geom, material);
-    cube.castShadow = true;
-    cube.position.set(0, 0, 0);
-    window.cube = cube;
-    this.threeScene.add(cube);
-
-    directionalLight.position.set(-2, 10, -2);
-    directionalLight.target = cube;
-
-    directionalLight.castShadow = true;
-    directionalLight.shadow.mapSize.width = 2048;
-    directionalLight.shadow.mapSize.height = 2048;
-    directionalLight.shadow.camera.near = 0.1;
-    directionalLight.shadow.camera.far = 1000;
-
-    directionalLight.shadow.camera.top = 500;
-    directionalLight.shadow.camera.bottom = -500;
-    directionalLight.shadow.camera.left = -500;
-    directionalLight.shadow.camera.right = 500;
-    directionalLight.shadow.bias = 0.002722;
-
-    // this._initShadowGui(this.threeAmbientLight, directionalLight);
   };
 }
 

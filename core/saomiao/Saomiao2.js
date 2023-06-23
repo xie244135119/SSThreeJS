@@ -1,17 +1,3 @@
-/*
- * Author  Kayson.Wan
- * Date  2022-09-27 13:41:21
- * LastEditors  xie244135119
- * LastEditTime  2022-10-19 16:14:14
- * Description
- */
-/*
- * Author  Kayson.Wan
- * Date  2022-09-27 10:52:09
- * LastEditors  Kayson.Wan
- * LastEditTime  2022-09-27 12:19:01
- * Description
- */
 import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader';
 import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader';
 

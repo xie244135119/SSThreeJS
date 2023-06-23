@@ -1,11 +1,3 @@
-/*
- * Author  Kayson.Wan
- * Date  2022-09-16 16:22:27
- * LastEditors  xie244135119
- * LastEditTime  2022-11-02 17:03:11
- * Description request animate render
- */
-
 let renderLoopList = [];
 // is render
 let isRenderLoop = false;
@@ -45,11 +37,10 @@ export default class ThreeLoop {
    */
   static add = (fn = () => {}, identifier = '') => {
     if (isLoopDestory) {
-      return undefined;
+      return null;
     }
     if (!fn) {
-      console.error(' 循环回调参数不能为空 ');
-      return undefined;
+      return null;
     }
     const isExist = renderLoopList.find((item) => item.type === identifier);
     if (isExist) {

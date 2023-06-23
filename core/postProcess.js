@@ -1,10 +1,3 @@
-/*
- * Author  Kayson.Wan
- * Date  2022-09-08 16:20:49
- * LastEditors  xie244135119
- * LastEditTime  2023-04-11 17:32:53
- * Description  2.0版本后处理封装
- */
 import * as THREE from 'three';
 // import GUI from 'lil-gui';
 // 后处理

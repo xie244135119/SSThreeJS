@@ -1,10 +1,3 @@
-/*
- * Author  Kayson.Wan
- * Date  2022-09-27 10:52:09
- * LastEditors  xie244135119
- * LastEditTime  2022-10-19 16:17:27
- * Description
- */
 import * as THREE from 'three';
 import ThreeLoop from '../threeLoop';
 

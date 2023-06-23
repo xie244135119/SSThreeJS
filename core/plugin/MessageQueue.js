@@ -1,11 +1,3 @@
-/*
- * Author  xie244135119
- * Date  2021-09-26 11:07:13
- * LastEditors  xie244135119
- * LastEditTime  2022-11-02 11:32:03
- * Description  message queue
- */
-
 class MessageQueue {
   // 全部操作队列
   // 队列的消耗 先进先出

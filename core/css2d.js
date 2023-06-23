@@ -1,11 +1,3 @@
-/*
- * Author  xie244135119
- * Date  2022-01-07 11:18:24
- * LastEditors  Kayson.Wan
- * LastEditTime  2023-04-04 13:57:01
- * Description  css2d 渲染相关处理
- */
-
 import * as THREE from 'three';
 import { CSS2DRenderer, CSS2DObject } from 'three/examples/jsm/renderers/CSS2DRenderer';
 import { CSS3DRenderer } from 'three/examples/jsm/renderers/CSS3DRenderer';
@@ -31,19 +23,10 @@ let _css3dRender = null;
 const _svgRender = null;
 
 export default class Index {
-  // 动态监听
-  _resizeObserver = null;
+  #resizeObserver = null;
 
   //
   threeJs = null;
-
-  // #css2dFrameHandle = 0;
-
-  //
-  // #css3dFrameHandle = 0;
-
-  //
-  // #svgFrameHandle = 0;
 
   constructor(aThreeJs) {
     this.threeJs = aThreeJs;
@@ -55,12 +38,6 @@ export default class Index {
   destory = () => {
     this.removeResizeOBserver();
     ThreeLoop.removeIds(['svgFrameHandle', 'css2dFrameHandle', 'css3dFrameHandle']);
-    // if (_css2dRender !== null) {
-    //   window.cancelAnimationFrame(this.#css2dFrameHandle);
-    // }
-    // if (_css3dRender !== null) {
-    //   window.cancelAnimationFrame(this.#css3dFrameHandle);
-    // }
   };
 
   /**
@@ -70,7 +47,6 @@ export default class Index {
    * @param {*} aDomElement 标签元素
    */
   setup2D = () => {
-    console.log('setup2D');
     const { threeScene, threeCamera, threeContainer } = this.threeJs;
     this.addResizeOBserver(threeContainer);
     //
@@ -88,7 +64,6 @@ export default class Index {
       threeContainer.appendChild(labelrender.domElement);
     }
 
-    // lablerender渲染
     ThreeLoop.add(() => {
       labelrender.render(threeScene, threeCamera);
     }, 'css2dFrameHandle');
@@ -117,8 +92,6 @@ export default class Index {
       labelrender.setSize(threeContainer.offsetWidth, threeContainer.offsetHeight, true);
       threeContainer.appendChild(labelrender.domElement);
     }
-
-    // lablerender渲染
     ThreeLoop.add(() => {
       labelrender.render(threeScene, threeCamera);
     }, 'css3dFrameHandle');
@@ -147,8 +120,6 @@ export default class Index {
       labelrender.setSize(threeContainer.offsetWidth, threeContainer.offsetHeight, true);
       threeContainer.appendChild(labelrender.domElement);
     }
-
-    // // lablerender渲染
     ThreeLoop.add(() => {
       labelrender.render(threeScene, threeCamera);
     }, 'svgFrameHandle');
@@ -277,7 +248,7 @@ export default class Index {
       }
     });
     observer.observe(aContainer);
-    this._resizeObserver = observer;
+    this.#resizeObserver = observer;
   };
 
   /**
@@ -286,9 +257,9 @@ export default class Index {
    * @returns
    */
   removeResizeOBserver = () => {
-    if (this._resizeObserver !== null) {
-      this._resizeObserver.disconnect();
-      this._resizeObserver = null;
+    if (this.#resizeObserver !== null) {
+      this.#resizeObserver.disconnect();
+      this.#resizeObserver = null;
     }
   };
 
@@ -372,68 +343,4 @@ export default class Index {
       endVector
     };
   };
-
-  // //初始化要爆炸的模型,执行一次
-  // modelExplodeInit = (obj) => {
-  //     //模型包围盒
-  //     var modelBox3 = new THREE.Box3();
-  //     var meshBox3 = new THREE.Box3();
-  //     //获取模型的包围盒
-  //     modelBox3.expandByObject(obj);
-
-  //     //计算模型的中心点坐标，这个为爆炸中心
-  //     var modelWorldPs = new THREE.Vector3().addVectors(modelBox3.max, modelBox3.min).multiplyScalar(0.5);
-
-  //     obj.traverse(function (value) {
-  //         if (value.isMesh) {
-  //             meshBox3.setFromObject(value);
-
-  //             //获取每个mesh的中心点，爆炸方向为爆炸中心点指向mesh中心点
-  //             var worldPs = new THREE.Vector3().addVectors(meshBox3.max, meshBox3.min).multiplyScalar(0.5);
-  //             if (isNaN(worldPs.x)) return;
-  //             //计算爆炸方向
-  //             value.worldDir = new THREE.Vector3().subVectors(worldPs, modelWorldPs).normalize();
-  //             //保存初始坐标
-  //             value.userData.oldPs = value.getWorldPosition(new THREE.Vector3())
-  //         }
-  //     });
-  // }
-  // /**
-  //  * 模型爆炸
-  //  * @param {model} obj
-  //  * @param {范围} scalar
-  //  */
-  // modelExplode1(obj, scalar) {
-  //     // this.modelExplodeInit(obj);
-  //     obj.traverse(function (value) {
-  //         if (!value.isMesh || !value.worldDir) return;
-  //         //爆炸公式
-  //         value.position.copy(new THREE.Vector3().copy(value.userData.oldPs).add(new THREE.Vector3().copy(value.worldDir).multiplyScalar(scalar)))
-  //     });
-  // }
-
-  // worldToScreen = (worldVector) => {
-  //   const standardVector = worldVector.project(this.threeCamera);// 世界坐标转标准设备坐标
-  //   const a = window.innerWidth / 2;
-  //   const b = window.innerHeight / 2;
-  //   const x = Math.round(standardVector.x * a + a);// 标准设备坐标转屏幕坐标
-  //   const y = Math.round(-standardVector.y * b + b);// 标准设备坐标转屏幕坐标
-  //   const result = {
-  //     x, y
-  //   };
-  //   return result;
-  // };
-
-  // /**
-  //    * 隐藏线条和标签
-  //    */
-  // setLineAndLabelVisible = (show) => {
-  //   this.threeScene.traverse((aObj) => {
-  //     if (aObj instanceof THREE.Line) {
-  //       aObj.visible = show;
-  //     } else if (aObj instanceof CSS2DObject) {
-  //       aObj.visible = show;
-  //     }
-  //   });
-  // };
 }

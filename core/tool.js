@@ -1,10 +1,3 @@
-/*
- * @Author: xie244135119
- * @Date: 2022-05-18 13:23:15
- * LastEditors  xie244135119
- * LastEditTime  2022-11-02 11:26:21
- * @Description tool
- */
 import * as THREE from 'three';
 import { BufferGeometry } from 'three';
 import { Line2 } from 'three/examples/jsm/lines/Line2';

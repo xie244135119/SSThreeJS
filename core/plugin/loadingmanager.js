@@ -1,10 +1,3 @@
-/*
- * Author  xie244135119
- * Date  2022-10-07 13:23:44
- * LastEditors  Murphy.xie
- * LastEditTime  2023-06-09 17:39:50
- * Description three.js
- */
 import * as THREE from 'three';
 import DB from './db';
 import MessageQueue from './MessageQueue';
@@ -18,12 +11,6 @@ export default class LoadManager {
 
   // message queue
   #messageQueue = new MessageQueue(5 * 1000);
-
-  // cached file path
-  // #cacheFileBlobMap = {};
-
-  // downloading file path
-  // #pendingDownloadFilePaths = [];
 
   // progress html element
   #progressBgElement = null;

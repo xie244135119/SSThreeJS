@@ -1,10 +1,3 @@
-/*
- * Author  xie244135119
- * Date  2021-12-02 15:11:22
- * LastEditors  xie244135119
- * LastEditTime  2022-01-07 17:04:02
- * Description  模型控制器相关任务
- */
 import * as THREE from 'three';
 import { FlyControls } from 'three/examples/jsm/controls/FlyControls';
 import { FirstPersonControls } from 'three/examples/jsm/controls/FirstPersonControls';

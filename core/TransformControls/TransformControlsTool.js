@@ -1,9 +1,3 @@
-/*
- * @Date: 2022-06-14 14:59:41
- * LastEditors  xie244135119
- * LastEditTime  2022-10-19 16:09:32
- * @FilePath: /isop-portal/src/js/ThreeJs/TransformControls/TransformControlsTool.js
- */
 import * as THREE from 'three';
 import { TransformControls } from 'three/examples/jsm/controls/TransformControls';
 import { GUI } from 'lil-gui';
