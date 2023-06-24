@@ -6,8 +6,8 @@ import { SVGRenderer } from 'three/examples/jsm/renderers/SVGRenderer';
 import { Line2 } from 'three/examples/jsm/lines/Line2';
 import { LineGeometry } from 'three/examples/jsm/lines/LineGeometry';
 import { LineMaterial } from 'three/examples/jsm/lines/LineMaterial';
-import ThreeTool from './tool';
-import ThreeLoop from './threeLoop';
+import ThreeTool from './SSTool';
+import ThreeLoop from './SSThreeLoop';
 
 /**
  * css2d 渲染器
@@ -22,7 +22,7 @@ let _css3dRender = null;
  */
 const _svgRender = null;
 
-export default class Index {
+export default class Three2D3DRenderer {
   #resizeObserver = null;
 
   //

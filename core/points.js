@@ -1,6 +1,6 @@
 import * as THREE from 'three';
-import ThreeLoop from './threeLoop';
-import ThreeTool from './tool';
+import ThreeLoop from './SSThreeLoop';
+import ThreeTool from './SSTool';
 
 export default class Points {
   // three.js
@@ -97,7 +97,7 @@ export default class Points {
     );
     //
     const texure = new THREE.TextureLoader().load(
-      require('./assets/material_snow_transpant.png').default
+      require('./assets/textures/weather_snow_transpant.png').default
     );
     const material = new THREE.PointsMaterial({
       map: texure,
@@ -135,7 +135,9 @@ export default class Points {
       500
     );
     //
-    const texure = new THREE.TextureLoader().load(require('./assets/material_rain.png').default);
+    const texure = new THREE.TextureLoader().load(
+      require('./assets/textures/weather_rain.png').default
+    );
     const material = new THREE.PointsMaterial({
       map: texure,
       color: '#fff',
@@ -158,7 +160,7 @@ export default class Points {
   };
 
   /**
-   * create Snow points
+   * create Fog points
    */
   createFogPointsByObj = (aObj, aTotal = 100, aElevate = 0) => {
     if (!(aObj instanceof THREE.Object3D)) {
@@ -167,7 +169,9 @@ export default class Points {
     // positions
     const positionsData = this.getPointsPositions(aObj, 200, new THREE.Vector3(-0.2, 0, 0), 150);
     //
-    const texure = new THREE.TextureLoader().load(require('./assets/material_fog.png').default);
+    const texure = new THREE.TextureLoader().load(
+      require('./assets/textures/weather_fog.png').default
+    );
     const material = new THREE.PointsMaterial({
       map: texure,
       color: '#fff',

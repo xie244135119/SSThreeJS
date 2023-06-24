@@ -4,11 +4,11 @@
  * Date  2022-09-23 17:21:18
  * LastEditors  xie244135119
  * LastEditTime  2022-10-19 16:18:54
- * Description 通用光效扫描材质
+ * Description 通用光效扫描材质<未测试>
  */
 import * as THREE from 'three';
 
-export default class Material {
+export default class SSLightScanMaterial {
   /**
    * 获取光效扫描材质
    */

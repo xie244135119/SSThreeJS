@@ -7,7 +7,7 @@ import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass';
 import { BloomPass } from 'three/examples/jsm/postprocessing/BloomPass';
 import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass';
 import * as THREE from 'three';
-import ThreeLoop from '../threeLoop';
+import ThreeLoop from '../SSThreeLoop';
 
 export default class Saomiao2 {
   // scene = null;

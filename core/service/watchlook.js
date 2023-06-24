@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import ThreeJs, { ThreeEvent } from '../index';
-import ThreeTool from '../tool';
+import ThreeTool from '../SSTool';
 
 export default class WatchLook {
   //
@@ -344,7 +344,7 @@ export default class WatchLook {
         this.addEye(targetPoint);
 
         // const parentObj = this.#threeJs.getGltfParObj(model.object);
-        const parentObj = this.#threeJs.getOriginMesh(model.object);
+        const parentObj = ThreeJs.getOriginMesh(model.object);
         console.log(' 指哪看哪检索到的物体 ', e, model, parentObj);
 
         const list = [];

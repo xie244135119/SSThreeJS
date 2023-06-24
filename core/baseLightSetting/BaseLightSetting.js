@@ -67,11 +67,13 @@ export default class BaseLightSetting {
     }
   };
 
-  constructor(threeJs, defaultSetting) {
+  constructor(threeJs, defaultSetting, gui = true) {
     this.threeJs = threeJs;
     this.guiSetting = defaultSetting || this.defaultSetting;
     // this.addCubeMap();
-    this.startShadowTest();
+    if (gui) {
+      this.startShadowTest();
+    }
   }
 
   /**

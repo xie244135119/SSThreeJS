@@ -4,7 +4,7 @@ import { DepthRender } from './DepthRender';
 import { ColorRender } from './ColorRender';
 import { BlendRender } from './BlendRender';
 import { VideoCamera } from './VideoCamera';
-import ThreeLoop from '../threeLoop';
+import ThreeLoop from '../SSThreeLoop';
 
 /**
  * 视频融合

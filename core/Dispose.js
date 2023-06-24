@@ -20,8 +20,8 @@ export default class ThreeDisposeQueue {
   }
 
   /**
-   * 将
-   * @param {*} aObj
+   * add object to queue
+   * @param {THREE.Object3D} aObj
    */
   add = (aObj) => {
     this.operationQueue.add(aObj);
@@ -42,7 +42,7 @@ export default class ThreeDisposeQueue {
 
   /**
    * 2.0 dispose 元素
-   * @param {*} aObj
+   * @param {THREE.Object3D} aObj
    */
   dispose = (aObj) => {
     const disposeGeometry = (geo) => {

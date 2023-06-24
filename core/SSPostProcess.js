@@ -1,6 +1,4 @@
 import * as THREE from 'three';
-// import GUI from 'lil-gui';
-// 后处理
 import { CSS2DRenderer } from 'three/examples/jsm/renderers/CSS2DRenderer';
 import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer';
 import { FullScreenQuad, Pass } from 'three/examples/jsm/postprocessing/Pass';
@@ -25,22 +23,25 @@ import { LuminosityShader } from 'three/examples/jsm/shaders/LuminosityShader';
 import { BleachBypassShader } from 'three/examples/jsm/shaders/BleachBypassShader';
 import { SSRPass } from 'three/examples/jsm/postprocessing/SSRPass';
 import { ReflectorForSSRPass } from 'three/examples/jsm/objects/ReflectorForSSRPass';
-import ThreeLoop from './threeLoop';
+import ThreeLoop from './SSThreeLoop';
 
-export default class PostProcess {
+export default class SSPostProcess {
   //
   threeJs = null;
 
-  //
+  /**
+   * @type EffectComposer
+   */
   effectComposer = null;
 
-  // 后处理
-  effectComposerHandle = 0;
-
-  // 外轮廓
+  /**
+   * @type OutlinePass
+   */
   #outlinePass = null;
 
-  // 基础渲染画布
+  /**
+   * @type RenderPass
+   */
   #renderPass = null;
 
   constructor(aThreeJs) {
@@ -48,17 +49,16 @@ export default class PostProcess {
   }
 
   /**
-   * 移除 调试工具gui,释放内存
+   * destory
    */
   destroy = () => {
-    ThreeLoop.removeId(this.effectComposerHandle);
+    this.closeRender();
     if (this.effectComposer) {
       let effectComposer = this.getEffectComposer();
       effectComposer.passes.forEach((e) => {
         this.disposeMaterialByPass(e);
       });
       this.disposeMaterialByPass(effectComposer.copyPass);
-      // this.removeOutline();
       this.#outlinePass = null;
       effectComposer.passes = [];
       effectComposer.renderTarget1.dispose();
@@ -86,22 +86,20 @@ export default class PostProcess {
   };
 
   /**
-   * 增加模型外发光体
-   * @param {*} aModels 一组模型体
-   * @param {*} color #FFFFE0 #003354
-   * @param {*} reset 是否重置
+   * 增加模型轮廓
+   * @param {Array<THREE.Object3D} aObject3Ds 一组模型体
+   * @param {string | number} color #FFFFE0 #003354
    * @returns
    */
   addOutlineByObject3Ds = (aObject3Ds = [], color = '#003354') => {
     const effectComposer = this.getEffectComposer();
-    const { threeRenderer, threeContainer: canvas, threeScene, threeCamera } = this.threeJs;
+    const { threeContainer: canvas, threeScene, threeCamera } = this.threeJs;
     if (this.#renderPass === null) {
       this.#renderPass = new RenderPass(threeScene, threeCamera);
     }
     if (effectComposer.passes.findIndex((item) => item === this.#renderPass) === -1) {
       effectComposer.addPass(this.#renderPass);
     }
-    // 着色通道
     if (this.#outlinePass === null) {
       this.#outlinePass = new OutlinePass(
         { x: canvas.clientWidth, y: canvas.clientHeight },
@@ -119,15 +117,11 @@ export default class PostProcess {
       // 是否使用纹理
       this.#outlinePass.usePatternTexture = false;
     }
-    // 边缘可见部分发光颜色
     this.#outlinePass.visibleEdgeColor = new THREE.Color(color);
-    // 边缘遮挡部分发光颜色
     this.#outlinePass.hiddenEdgeColor = new THREE.Color(color);
-    // 添加发光通道
     if (effectComposer.passes.findIndex((item) => item === this.#outlinePass) === -1) {
       effectComposer.addPass(this.#outlinePass);
     }
-
     this.#outlinePass.selectedObjects = aObject3Ds;
   };
 
@@ -144,22 +138,21 @@ export default class PostProcess {
 
   /**
    * 增加覆盖盒
-   * @param {*} aModels 一组模型体
-   * @param {*} color #FFFFE0 #003354
-   * @param {*} reset 是否重置
+   * @param {Array<THREE.Object3D>} aModels 一组模型体
+   * @param {THREE.MeshStandardMaterialParameters} materialParams 材质配置
    * @returns
    */
-  addMaskBoxByObject3Ds = (aObject3Ds = [], color = '#00ffff') => {
+  addMaskBoxByObject3Ds = (aObject3Ds = [], materialParams = '#00ffff') => {
     const material = new THREE.MeshStandardMaterial({
       name: 'tempmask',
       transparent: true,
       opacity: 0.3,
-      // color: '#00ffff',
-      color,
+      color: '#00ffff',
       depthWrite: false,
       userData: {
         temp_isMask: true
-      }
+      },
+      ...materialParams
     });
 
     aObject3Ds.forEach((item) => {
@@ -181,7 +174,8 @@ export default class PostProcess {
   };
 
   /**
-   * 移除已添加描边
+   * 移除标记物
+   * @param {Array<THREE.Object3D} aObject3Ds
    */
   removeMaskBox = (aObject3Ds = []) => {
     aObject3Ds.forEach((item) => {
@@ -206,8 +200,8 @@ export default class PostProcess {
     const canvas = threeContainer;
     effectComposer.setSize(canvas.clientWidth, canvas.clientHeight);
     this.effectComposer = effectComposer;
-    this.effectComposer.renderTarget1.texture.encoding = THREE.sRGBEncoding;
-    this.effectComposer.renderTarget2.texture.encoding = THREE.sRGBEncoding;
+    // this.effectComposer.renderTarget1.texture.colorSpace = THREE.SRGBColorSpace;
+    // this.effectComposer.renderTarget2.texture.colorSpace = THREE.SRGBColorSpace;
     return effectComposer;
   };
 
@@ -239,5 +233,21 @@ export default class PostProcess {
         pass.dispose();
       }
     }
+  };
+
+  /**
+   * open render
+   */
+  openRender = () => {
+    ThreeLoop.add(() => {
+      this.effectComposer.render();
+    }, 'postProcess update');
+  };
+
+  /**
+   * close render
+   */
+  closeRender = () => {
+    ThreeLoop.removeId('postProcess update');
   };
 }

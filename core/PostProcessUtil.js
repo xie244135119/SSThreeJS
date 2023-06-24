@@ -25,7 +25,7 @@ import { LuminosityShader } from 'three/examples/jsm/shaders/LuminosityShader';
 import { BleachBypassShader } from 'three/examples/jsm/shaders/BleachBypassShader';
 import { SSRPass } from 'three/examples/jsm/postprocessing/SSRPass';
 import { ReflectorForSSRPass } from 'three/examples/jsm/objects/ReflectorForSSRPass';
-import ThreeLoop from './threeLoop';
+import ThreeLoop from './SSThreeLoop';
 
 export default class PostProcessUtil {
   _scene = null;

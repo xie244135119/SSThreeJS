@@ -7,7 +7,7 @@
  * Description
  */
 import * as THREE from 'three';
-import ThreeLoop from '../../threeLoop';
+import ThreeLoop from '../../SSThreeLoop';
 
 // 定义Point类
 class Point {

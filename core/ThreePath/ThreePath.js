@@ -1,7 +1,7 @@
 import * as THREE from 'three';
-import ThreeJs from '../index';
+import ThreeJs from '../SSCore';
 import { PathGeometry, PathTubeGeometry, PathPointList } from './three.path.module';
-import ThreeLoop from '../threeLoop';
+import ThreeLoop from '../SSThreeLoop';
 
 class ThreePath {
   // 创建 更新的标记
@@ -262,7 +262,7 @@ class ThreePath {
   destroy = () => {
     ThreeLoop.removeId('roadpath render');
     this.#pathDataList.forEach((data) => {
-      console.log(' data ', data);
+      // console.log(' data ', data);
       this.threeJs.threeDisposeQueue.dispose(data.mesh);
       this.threeJs.threeScene.remove(data.mesh);
     });

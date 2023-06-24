@@ -3,7 +3,7 @@ import { FlyControls } from 'three/examples/jsm/controls/FlyControls';
 import { FirstPersonControls } from 'three/examples/jsm/controls/FirstPersonControls';
 import { TrackballControls } from 'three/examples/jsm/controls/TrackballControls';
 import { TransformControls } from 'three/examples/jsm/controls/TransformControls';
-import ThreeLoop from './threeLoop';
+import ThreeLoop from './SSThreeLoop';
 
 export default class ThreeControls {
   // 相机

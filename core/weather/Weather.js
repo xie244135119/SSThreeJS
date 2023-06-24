@@ -7,7 +7,7 @@
  */
 
 import * as THREE from 'three';
-import ThreeLoop from '../threeLoop';
+import ThreeLoop from '../SSThreeLoop';
 import Rain from './rain/Rain';
 import Snow from '../snow/Snow';
 
@@ -27,9 +27,9 @@ export default class Weather {
   #rain = null;
 
   /**
-     * 添加天气
-     * @param {string} type rain/snow/fog
-     */
+   * 添加天气
+   * @param {string} type rain/snow/fog
+   */
   addWeather = (type = '') => {
     if (!this.snow) {
       this.snow = new Snow();
@@ -64,8 +64,8 @@ export default class Weather {
   };
 
   /**
-     * 关闭天气
-     */
+   * 关闭天气
+   */
   closeWeather = () => {
     if (this.#rain) this.#rain.visible = false;
     if (this.#snow) this.#snow.visible = false;

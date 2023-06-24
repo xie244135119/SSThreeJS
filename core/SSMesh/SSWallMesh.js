@@ -1,50 +1,45 @@
-/*
- * Author  Kayson.Wan
- * Date  2022-09-21 09:33:45
- * LastEditors  xie244135119
- * LastEditTime  2022-10-19 16:07:14
- * Description
- */
-
 import * as THREE from 'three';
-// import threeLoop from '../SSThreeLoop';
-import { GUI } from 'lil-gui';
-import jianbian from './jianbian2.png';
-// import flow2 from './flow.png';
-import flow from './flow.png';
+import jianbian from '../assets/textures/jianbian2.png';
+import flow from '../assets/textures/flow.png';
 
-export default class wall {
+export default class SSWallMesh {
   /**
-   * 根据路径生成围墙
-   * @param {Array} path [] 路径点
-   * @param {*} meshName meshName
-   * @param {*} height 高度 200
-   * @returns mesh (未添加到scene)
+   *
+   * @param {Array<{x: number, y: number, z: number}>} paths 所有路径点
+   * @param {{ wallHeight: number, bgTextureUrl: string, flowTextureUrl: string, flowTextureUrl2: string, bgColor: THREE.Color  }} options 墙体高度
+   * @param {THREE.ShaderMaterialParameters} materialOptions 材质参数信息
+   * @returns
    */
-  createWallMesh = (path, meshName = '', height = 200) => {
-    const wallMat = this.#createFlowWallMat({
-      bgUrl: jianbian,
-      flowUrl: flow,
-      flowUrl2: flow,
-      color: new THREE.Color(0 / 255, 68 / 255, 176 / 255)
-    });
-    const wallMesh = this.#creatWallGeometryByPath({
-      material: wallMat,
-      path,
-      height
-    });
-    wallMesh.position.set(0, 0, 0);
-    wallMesh.name = meshName;
-    return wallMesh;
+  static fromPaths = (paths, options, materialOptions) => {
+    const newOptions = {
+      bgTextureUrl: jianbian,
+      flowTextureUrl: flow,
+      flowTextureUrl2: flow,
+      bgColor: new THREE.Color(0 / 255, 68 / 255, 176 / 255),
+      ...options
+    };
+
+    const material = SSWallMesh.getMaterial(newOptions, materialOptions);
+    const geometry = SSWallMesh.getGeomertry(paths, newOptions.wallHeight);
+    return new THREE.Mesh(geometry, material);
   };
 
   /**
    * 创建流体墙体材质
-   * option =>
-   * params bgUrl flowUrl
-   * * */
-  #createFlowWallMat = ({ bgUrl, flowUrl, flowUrl2, color }) => {
-    // 顶点着色器
+   * @param {{ bgTextureUrl: string, flowTextureUrl: string, flowTextureUrl2: string, bgColor: THREE.Color  }} param0 参数信息
+   * @param {THREE.ShaderMaterialParameters} materialOptions 材质参数信息
+   * @returns { THREE.ShaderMaterial } shadermaterial
+   */
+  static getMaterial = (
+    {
+      bgTextureUrl = jianbian,
+      flowTextureUrl = flow,
+      flowTextureUrl2 = flow,
+      bgColor = new THREE.Color(0 / 255, 68 / 255, 176 / 255)
+    },
+    materialOptions
+  ) => {
+    // 顶点
     const vertexShader = `
           varying vec2 vUv;
           varying vec3 fNormal;
@@ -56,7 +51,7 @@ export default class wall {
                   gl_Position = projectionMatrix * mvPosition;
           }
       `;
-    // 片元着色器
+    // 片元
     const fragmentShader = `
           uniform float time;
           uniform float time2;
@@ -75,24 +70,14 @@ export default class wall {
               gl_FragColor = vec4(colorBlend.rgb * bgColor.rgb, colorBlend.a) ;
           }
       `;
-    const bgTexture = new THREE.TextureLoader().load(
-      // bgUrl || './textures/mytexture/渐变蓝透.png',
-      // bgUrl || '../assets/jianbian.png'
-      bgUrl
-    );
-    const flowTexture = new THREE.TextureLoader().load(
-      flowUrl || './flow.png'
-      // 'https://model.3dmomoda.com/models/da5e99c0be934db7a42208d5d466fd33/0/gltf/F3E2E977BDB335778301D9A1FA4A4415.png',
-      // 'https://model.3dmomoda.com/models/47007127aaf1489fb54fa816a15551cd/0/gltf/116802027AC38C3EFC940622BC1632BA.jpg',
-    );
-    // 允许平铺
+    const bgTexture = new THREE.TextureLoader().load(bgTextureUrl);
+    const flowTexture = new THREE.TextureLoader().load(flowTextureUrl);
     flowTexture.wrapS = THREE.RepeatWrapping;
 
-    const flowTexture2 = new THREE.TextureLoader().load(flowUrl2 || '../assets/flow.png');
-    // 允许平铺
+    const flowTexture2 = new THREE.TextureLoader().load(flowTextureUrl2);
     flowTexture2.wrapS = THREE.RepeatWrapping;
 
-    const bgColor = color || new THREE.Color(1, 1, 1, 1);
+    const bgcolor = bgColor || new THREE.Color(1, 1, 1, 1);
     return new THREE.ShaderMaterial({
       uniforms: {
         time: {
@@ -111,7 +96,7 @@ export default class wall {
           value: bgTexture
         },
         bgColor: {
-          value: bgColor
+          value: bgcolor
         }
       },
       transparent: true,
@@ -119,41 +104,42 @@ export default class wall {
       depthTest: false,
       side: THREE.DoubleSide,
       vertexShader,
-      fragmentShader
+      fragmentShader,
+      ...materialOptions
     });
   };
 
   /**
-   * 通过path构建墙体
-   * option =>
-   * params height path material expand(是否需要扩展路径)
-   * * */
-  #creatWallGeometryByPath = ({ height = 10, path = [], material, expand = true }) => {
+   * 构建几何体数据
+   * @param {Array<{x: number, y: number, z: number}>} paths 路径数据
+   * @param {number} wallHeight 墙体高度
+   * @returns
+   */
+  static getGeomertry(paths, wallHeight = 10) {
     const pathArray = [];
-    for (let i = 0; i < path.length; i++) {
-      const data = path[i];
+    for (let i = 0; i < paths.length; i++) {
+      const data = paths[i];
       const v3 = [data.x, data.y, data.z];
       pathArray.push(v3);
     }
-
     let verticesByTwo = null;
     // 1.处理路径数据  每两个顶点为为一组
-    if (expand) {
-      // 1.1向y方向拉伸顶点
-      verticesByTwo = pathArray.reduce(
-        (arr, [x, y, z]) =>
-          arr.concat([
-            [
-              [x, y, z],
-              [x, y + height, z]
-            ]
-          ]),
-        []
-      );
-    } else {
-      // 1.2 已经处理好路径数据
-      verticesByTwo = pathArray;
-    }
+    // if (true) {
+    // 1.1向y方向拉伸顶点
+    verticesByTwo = pathArray.reduce(
+      (arr, [x, y, z]) =>
+        arr.concat([
+          [
+            [x, y, z],
+            [x, y + wallHeight, z]
+          ]
+        ]),
+      []
+    );
+    // } else {
+    //   // 1.2 已经处理好路径数据
+    //   verticesByTwo = pathArray;
+    // }
     // 2.解析需要渲染的四边形 每4个顶点为一组
     const verticesByFour = verticesByTwo.reduce((arr, item, i) => {
       if (i === verticesByTwo.length - 1) return arr;
@@ -175,7 +161,7 @@ export default class wall {
       .fill(0)
       .map((item, i) => verticesByThree.slice(i * 3 * 6, (i + 1) * 3 * 6));
     // 5.2 按uv周期分组
-    const pointsGroupBy63 = pointsGroupBy18.map((item, i) =>
+    const pointsGroupBy63 = pointsGroupBy18.map((item) =>
       new Array(item.length / 3).fill(0).map((it, i) => item.slice(i * 3, (i + 1) * 3))
     );
     // 5.3根据BoundingBox确定uv平铺范围
@@ -192,16 +178,6 @@ export default class wall {
       })
     );
     geometry.setAttribute('uv', new THREE.BufferAttribute(new Float32Array(uvs), 2));
-    const meshMat =
-      material ||
-      new THREE.MeshBasicMaterial({
-        // color: 0x00ffff,
-        color: 0x00c0ff, // 65,94,194
-        side: THREE.DoubleSide,
-        transparent: true,
-        // opacity: 0.5
-        opacity: 0.25
-      });
-    return new THREE.Mesh(geometry, meshMat);
-  };
+    return geometry;
+  }
 }

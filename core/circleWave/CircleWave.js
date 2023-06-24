@@ -7,7 +7,7 @@
  */
 
 import * as THREE from 'three';
-import ThreeLoop from '../threeLoop';
+import ThreeLoop from '../SSThreeLoop';
 import img from './扩散圆环.png';
 import ThreeJs from '..';
 

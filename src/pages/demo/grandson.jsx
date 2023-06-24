@@ -7,18 +7,19 @@
  */
 import React, { useEffect } from 'react';
 import BaseLightSetting from '../../../core/baseLightSetting/BaseLightSetting';
-import SSThreejs, { THREE } from '../../../core/index';
+// import SSThreejs, { THREE, ThreeEvent } from '../../../core/index';
 import PostProcessUtil from '../../../core/PostProcessUtil';
+import SSThreeJs, { THREE, SSThreeEvent } from '../../../core/index';
 
 export default function ParentIndex(props) {
   // eslint-disable-next-line react/prop-types
   const { children } = props;
 
   useEffect(() => {
-    const js = new SSThreejs();
+    const js = new SSThreeJs();
     js.setup('threecontainer');
     js.threeScene.background = new THREE.Color(0, 0, 0);
-    // js.addDymaicDebug();
+    js.addDymaicDebug();
 
     // 几何体
     const geomertry = new THREE.BoxGeometry(1, 1, 1);
@@ -27,6 +28,16 @@ export default function ParentIndex(props) {
     });
     const mesh = new THREE.Mesh(geomertry, material);
     js.threeScene.add(mesh);
+
+    js.threeEvent.addEventListener(SSThreeEvent.EventType.CLICK, (e) => {
+      console.log(' 点击事件 ', e);
+    });
+    js.threeEvent.addEventListener(SSThreeEvent.EventType.DBLCLICK, (e) => {
+      console.log(' 双击 ', e);
+    });
+    js.threeEvent.addEventListener(SSThreeEvent.EventType.DRAG, (e) => {
+      console.log(' 拖拽 ', e);
+    });
 
     // js.closeWebglRender();
     //

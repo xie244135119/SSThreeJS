@@ -9,8 +9,8 @@
 import * as THREE from 'three';
 import GUI from 'lil-gui';
 import { TransformControls } from 'three/examples/jsm/controls/TransformControls';
-import ThreeTool from '../tool';
-import ThreeEvent from '../Event';
+import ThreeTool from '../SSTool';
+import ThreeEvent from '../SSEvent';
 
 class GuiIndex {
   /**
@@ -294,9 +294,9 @@ class GuiIndex {
     switch (key) {
       case 'ambient_color':
         this.#threeJs.threeAmbientLight.color = new THREE.Color(
-          value.r / 255,
-          value.g / 255,
-          value.b / 255
+          value.r / 1,
+          value.g / 1,
+          value.b / 1
         );
         break;
       case 'ambient_visible':
@@ -307,9 +307,9 @@ class GuiIndex {
         break;
       case 'directional_color':
         this.#threeJs.threeDirectionLight.color = new THREE.Color(
-          value.r / 255,
-          value.g / 255,
-          value.b / 255
+          value.r / 1,
+          value.g / 1,
+          value.b / 1
         );
         break;
       case 'directional_visible':
@@ -331,7 +331,7 @@ class GuiIndex {
       ambient_color: new THREE.Color(0.8, 0.9, 1),
       ambient_inensity: 1.5,
       ambient_visible: true,
-      directional_color: new THREE.Color(255 / 255, 240 / 255, 217 / 255),
+      directional_color: new THREE.Color(1 / 1, 240 / 1, 217 / 1),
       directional_intensity: 1.5,
       directional_visible: true
     };
@@ -374,7 +374,7 @@ class GuiIndex {
       ambient_color: new THREE.Color(0.8, 0.9, 1),
       ambient_inensity: 1.5,
       ambient_visible: true,
-      directional_color: new THREE.Color(255 / 255, 240 / 255, 217 / 255),
+      directional_color: new THREE.Color(1 / 1, 240 / 1, 217 / 1),
       directional_intensity: 1.5,
       directional_visible: true
     };

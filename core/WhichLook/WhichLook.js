@@ -12,7 +12,7 @@ import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader';
 import { THREE } from '../index';
 
 import cameraViewImg from './tietu.png';
-import ThreeLoop from '../threeLoop';
+import ThreeLoop from '../SSThreeLoop';
 // import threeCameraModelConfig from '@/static/threeCameraModelConfig';
 // let cameraModelPath = './cameraModel/sxt01.FBX';
 const cameraModelPath = '/public/models/gltf/yuntai/sxt01.FBX';

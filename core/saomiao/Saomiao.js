@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import ThreeLoop from '../threeLoop';
+import ThreeLoop from '../SSThreeLoop';
 
 export default class Saomiao {
   scene = null;
