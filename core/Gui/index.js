@@ -57,12 +57,14 @@ class GuiIndex {
    * setup
    */
   setup() {
-    this.guiInstance = new GUI();
+    this.guiInstance = new GUI({
+      closeFolders: true,
+      title: 'SSThreeJs Controls'
+    });
     // this.guiInstance.
     this.guiInstance.domElement.style.position = 'absolute';
     this.guiInstance.name = 'debug';
-    this.guiInstance.width = 300;
-    this.guiInstance.closed = false;
+    this.guiInstance.close();
     // add scene
     this.addLightControlView();
     // add model camera

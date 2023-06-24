@@ -47,9 +47,9 @@ export default function ParentIndex(props) {
       render: js.threeRenderer,
       container: js.threeContainer
     });
-    // uti.initPostProcess(true);
+    // uti.initPostProcess(false);
 
-    const baseSetting = new BaseLightSetting(js);
+    // const baseSetting = new BaseLightSetting(js, null, false);
     return () => {
       js.destroy();
     };

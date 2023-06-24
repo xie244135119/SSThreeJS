@@ -878,7 +878,6 @@ export default class PostProcessUtil {
       if (openGui) {
         gui.show();
       } else {
-        // gui & gui.hide();
         gui.destroy();
       }
     }

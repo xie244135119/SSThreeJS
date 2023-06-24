@@ -71,16 +71,14 @@ export default class BaseLightSetting {
     this.threeJs = threeJs;
     this.guiSetting = defaultSetting || this.defaultSetting;
     // this.addCubeMap();
-    if (gui) {
-      this.startShadowTest();
-    }
+    this.startShadowTest(gui);
   }
 
   /**
-   * 阴影测试
+   * 阴影测试 gui
    * @param {*} directionalLight
    */
-  startShadowTest = () => {
+  startShadowTest = (openGui) => {
     const ambientLight = this.threeJs.threeAmbientLight;
     const directionalLight = this.threeJs.threeDirectionLight;
     directionalLight.castShadow = true;
@@ -101,11 +99,11 @@ export default class BaseLightSetting {
     // this.lightTarget.position.set(-455, 0, -54);
     this.lightTarget.position.set(0, 0, 0);
 
-    this.initGui(ambientLight, directionalLight);
+    this.initGui(ambientLight, directionalLight, openGui);
   };
 
   // 光照gui
-  initGui = (ambientLight, directionalLight) => {
+  initGui = (ambientLight, directionalLight, openGui) => {
     // const params = {
     //   savePreset() {
     //     // save current values to an object
@@ -421,6 +419,10 @@ export default class BaseLightSetting {
         this.threeJs.threeScene.environment = null;
       }
     });
+
+    if (!openGui) {
+      gui.destroy();
+    }
   };
 
   destory = () => {
