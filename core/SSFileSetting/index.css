@@ -1,12 +1,14 @@
 
 .menuicon{ 
-  position: fixed; 
+  position: absolute;
+  right: 15px;
+  bottom: 15px;
   border: 1px solid; 
   border-radius: 50%; 
   width: 50px; 
   height: 50px; 
   font-size: 25px;
-  text-align: center; 
+  text-align: center;
   color: white; 
   background-color: rgb(98 185 89); 
   box-shadow: white 0 0 10px; 
@@ -21,23 +23,24 @@
 
 
 .drawer{ 
-  position: fixed; 
+  position: absolute; 
   top: 0;
-  right: 0;
+  right: -300px;
   display: flex;
   overflow-y: auto;
   width: 300px;
+  height: 100%;
   background-color: white; 
 
   /* opacity: 0; */
   box-shadow: black 0 0 5px;
-  transition: left 0.25s ease-out 0s, opacity 0.25s ease-out 0s; 
+  transition: right 0.25s ease-out 0s, opacity 0.25s ease-out 0s; 
   flex-direction: column;
   box-sizing: border-box;
 }
 
 .drawershow{
-  /* right: 0; */
+  right: 0;
 }
 
 

@@ -241,24 +241,16 @@ export default class SSFileSetting {
     menudiv.innerText = '调';
     menudiv.className = styles.menuicon;
     this._ssthreeObject.threeContainer.parentElement.append(menudiv);
-    menudiv.style.top = `${
-      this._ssthreeObject.threeContainer.offsetTop +
-      this._ssthreeObject.threeContainer.offsetHeight -
-      menudiv.offsetHeight -
-      15
-    }px`;
-    menudiv.style.left = `${
-      this._ssthreeObject.threeContainer.offsetLeft +
-      this._ssthreeObject.threeContainer.offsetWidth -
-      menudiv.offsetWidth -
-      15
-    }px`;
+    // adjust style
+    if (
+      ['relative', 'absolute'].indexOf(
+        this._ssthreeObject.threeContainer.parentElement.style.position
+      ) === -1
+    ) {
+      this._ssthreeObject.threeContainer.parentElement.style.position = 'relative';
+    }
     menudiv.onclick = () => {
-      this._menuContainer.parentElement.style.left = `${
-        this._ssthreeObject.threeContainer.offsetLeft +
-        this._ssthreeObject.threeContainer.offsetWidth -
-        this._menuContainer.parentElement.offsetWidth
-      }px`;
+      this._menuContainer.parentElement.style.right = '0px';
       this._menuContainer.parentElement.style.opacity = 1;
     };
   };
@@ -270,9 +262,6 @@ export default class SSFileSetting {
     const drawer = document.createElement('div');
     drawer.className = styles.drawer;
     this._ssthreeObject.threeContainer.parentElement.append(drawer);
-    drawer.style.top = `${this._ssthreeObject.threeContainer.offsetTop}px`;
-    drawer.style.height = `${this._ssthreeObject.threeContainer.offsetHeight}px`;
-    // drawer.style.left = `${this._ssthreeObject.threeContainer.offsetLeft + this._ssthreeObject.threeContainer.offsetWidth}px`;
 
     const header = document.createElement('div');
     header.className = styles.drawerheader;
@@ -286,11 +275,8 @@ export default class SSFileSetting {
     closetext.className = styles.drawerheaderclose;
     header.append(closetext);
     closetext.onpointerdown = () => {
-      drawer.style.opacity = 0;
-      drawer.style.left = `${
-        this._ssthreeObject.threeContainer.offsetLeft +
-        this._ssthreeObject.threeContainer.offsetWidth
-      }px`;
+      // drawer.style.opacity = 0;
+      drawer.style.right = `-${drawer.offsetWidth}px`;
     };
 
     const content = document.createElement('div');
