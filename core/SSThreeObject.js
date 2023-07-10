@@ -1,3 +1,5 @@
+import * as THREE from 'three';
+
 export default class SSThreeObject {
   /**
    * @type HTMLElement three dom
@@ -25,13 +27,26 @@ export default class SSThreeObject {
   threeOrbitControl = null;
 
   /**
-   * @param {{ container: HTMLElement, threeScene: THREE.Scene, threeOrbitControl: OrbitControls, threeCamera: THREE.Camera, threeRender: THREE.WebGLRenderer }} param0 构造参数
+   * @type EffectComposer
    */
-  constructor({ container, threeScene, threeOrbitControl, threeCamera, threeRenderer } = {}) {
+  threeEffectComposer = null;
+
+  /**
+   * @param {{ container: HTMLElement, threeScene: THREE.Scene, threeOrbitControl: OrbitControls, threeCamera: THREE.Camera, threeRender: THREE.WebGLRenderer ,EffectComposer}} param0 构造参数
+   */
+  constructor({
+    container,
+    threeScene,
+    threeOrbitControl,
+    threeCamera,
+    threeRenderer,
+    threeEffectComposer
+  } = {}) {
     this.threeContainer = container;
     this.threeScene = threeScene;
     this.threeOrbitControl = threeOrbitControl;
     this.threeCamera = threeCamera;
     this.threeRenderer = threeRenderer;
+    this.threeEffectComposer = threeEffectComposer;
   }
 }

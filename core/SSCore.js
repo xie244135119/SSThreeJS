@@ -15,6 +15,7 @@ import SSThreeTool from './SSTool';
 import LoadingManager from './plugin/loadingmanager';
 import SSThreeObject from './SSThreeObject';
 import SSLoader from './SSLoader';
+import PostProcessManager from './PostProcessManager';
 
 export default class SSThreeJs {
   /**
@@ -40,6 +41,9 @@ export default class SSThreeJs {
 
   // gui
   threeGUI = new ThreeGUI();
+
+  // postProcessing
+  postProcessManager = null;
 
   /**
    * @type SSEvent
@@ -161,6 +165,8 @@ export default class SSThreeJs {
 
     // add webgl render
     this.startWebglRender();
+
+    this.postProcessManager = new PostProcessManager(this.ssthreeObject, false);
 
     ThreeLoop.add(() => {
       if (this.ssthreeObject.threeOrbitControl.autoRotate) {

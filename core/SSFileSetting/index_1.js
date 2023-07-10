@@ -79,7 +79,6 @@ export default class SSFileSetting {
    */
   export() {
     const resault = {};
-    console.log(' 导出类名 ', this._modules);
     this._modules.forEach((e) => {
       const text = e.export();
       if (text) {
@@ -98,7 +97,6 @@ export default class SSFileSetting {
     modules.forEach((E) => {
       const e = new E();
       e.name = E.name;
-      console.log(' module e ', e, E);
       e.mount(this._ssthreeObject);
       this._modules.push(e);
     });
@@ -156,6 +154,13 @@ export default class SSFileSetting {
         this.addDebugForObject(obj, gui, e.onDebugChange);
       }
     });
+  }
+
+  /**
+   * 移除调试
+   */
+  removeDebugModel() {
+    this._menuContainer.parentElement.remove();
   }
 
   /**

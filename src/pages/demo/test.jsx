@@ -63,6 +63,8 @@ export default function ParentIndex(props) {
 
     // const baseSetting = new BaseLightSetting(js, null, false);
     return () => {
+      console.log(' xxxx remove');
+      fileSetting.removeDebugModel();
       jsRef.current.destroy();
     };
   }, []);
