@@ -60,7 +60,7 @@ void main() {
   /**
    * model linear-gradient 渐变
    * @param {{ uMin: THREE.Vector3, uMax: THREE.Vector3, uFromColor: THREE.Color, uToColor: THREE.Color, uOffsetY: number }} param0
-   * @returns
+   * @returns {THREE.ShaderMaterial}
    */
   static defaultMaterial = ({ uMin, uMax, uFromColor, uToColor, uOffsetY }) => {
     const material = new THREE.ShaderMaterial({

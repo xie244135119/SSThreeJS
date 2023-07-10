@@ -20,6 +20,11 @@ export default class SSThreeObject {
   threeRenderer = null;
 
   /**
+   * @type OrbitControls
+   */
+  threeOrbitControl = null;
+
+  /**
    * @param {{ container: HTMLElement, threeScene: THREE.Scene, threeOrbitControl: OrbitControls, threeCamera: THREE.Camera, threeRender: THREE.WebGLRenderer }} param0 构造参数
    */
   constructor({ container, threeScene, threeOrbitControl, threeCamera, threeRenderer } = {}) {

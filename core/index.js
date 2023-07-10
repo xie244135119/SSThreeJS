@@ -14,11 +14,17 @@ import SSDispose from './SSDispose';
 export default SSThreeJs;
 export {
   THREE,
+  // ssthree 事件
   SSEvent,
+  // css2d, css3d 面板渲染
   SSCssRenderer,
+  // base tool
   SSThreeTool,
+  // three loop
   SSThreeLoop,
+  // three object
   SSThreeObject,
+  //
   SSMaterial,
   SSMesh,
   SSPostProcess,

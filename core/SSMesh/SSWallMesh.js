@@ -4,7 +4,7 @@ import flow from '../assets/textures/flow.png';
 
 export default class SSWallMesh {
   /**
-   *
+   * 创建墙体材质
    * @param {Array<{x: number, y: number, z: number}>} paths 所有路径点
    * @param {{ wallHeight: number, bgTextureUrl: string, flowTextureUrl: string, flowTextureUrl2: string, bgColor: THREE.Color  }} options 墙体高度
    * @param {THREE.ShaderMaterialParameters} materialOptions 材质参数信息
@@ -19,8 +19,8 @@ export default class SSWallMesh {
       ...options
     };
 
-    const material = SSWallMesh.getMaterial(newOptions, materialOptions);
-    const geometry = SSWallMesh.getGeomertry(paths, newOptions.wallHeight);
+    const material = SSWallMesh._getMaterial(newOptions, materialOptions);
+    const geometry = SSWallMesh._getGeomertry(paths, newOptions.wallHeight);
     return new THREE.Mesh(geometry, material);
   };
 
@@ -30,7 +30,7 @@ export default class SSWallMesh {
    * @param {THREE.ShaderMaterialParameters} materialOptions 材质参数信息
    * @returns { THREE.ShaderMaterial } shadermaterial
    */
-  static getMaterial = (
+  static _getMaterial = (
     {
       bgTextureUrl = jianbian,
       flowTextureUrl = flow,
@@ -115,7 +115,7 @@ export default class SSWallMesh {
    * @param {number} wallHeight 墙体高度
    * @returns
    */
-  static getGeomertry(paths, wallHeight = 10) {
+  static _getGeomertry(paths, wallHeight = 10) {
     const pathArray = [];
     for (let i = 0; i < paths.length; i++) {
       const data = paths[i];
