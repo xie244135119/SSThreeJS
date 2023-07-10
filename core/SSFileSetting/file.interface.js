@@ -43,6 +43,15 @@ export default class SSFileInterface {
   }
 
   /**
+   * @returns {Object} 调试工具类型
+   */
+  getDebugSelectTypes() {
+    return {
+      slide: [1, 2, 3, 4]
+    };
+  }
+
+  /**
    * 调试工具变化
    * @param {{ key: string, value: any, data: any  }} params
    */
