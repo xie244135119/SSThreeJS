@@ -6,7 +6,7 @@ let isLoopDestory = false;
 // render handle
 let animateRenderRef = null;
 
-export default class ThreeLoop {
+export default class SSThreeLoop {
   /**
    * setup
    */

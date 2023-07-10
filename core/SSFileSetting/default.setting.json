@@ -1,0 +1,47 @@
+{
+  "light": [
+    {
+      "type": "SpotLight",
+      "props": [
+        "color",
+        "intensity",
+        ""
+      ]
+    },
+    {
+      "type": "PointLight",
+      "props": [
+        "",
+        ""
+      ]
+    },
+    {
+      "type": "DirectionalLight",
+      "props": [
+        "",
+        ""
+      ]
+    },
+    {
+      "type": "AmbientLight",
+      "props": [
+        "",
+        ""
+      ]
+    },
+    {
+      "type": "HemisphereLight",
+      "props": [
+        "",
+        ""
+      ]
+    },
+    {
+      "type": "RectAreaLight",
+      "props": [
+        "",
+        ""
+      ]
+    }
+  ]
+}

@@ -12,21 +12,10 @@ export default [
     path: '/parent',
     component: './pages/demo/parent',
     children: [
-      // {
-      //   path: '/',
-      //   redirect: '/child2'
-      // },
       {
-        name: '二级主页',
-        path: '/child2',
-        component: './pages/demo/child',
-        children: [
-          {
-            name: '三级主页',
-            path: './child3',
-            component: './pages/demo/grandson'
-          }
-        ]
+        name: '三级主页',
+        path: './test',
+        component: './pages/demo/test'
       }
     ]
   },

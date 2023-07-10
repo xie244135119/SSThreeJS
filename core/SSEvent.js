@@ -6,7 +6,7 @@
  * Description three.js event
  */
 
-import ThreeTool from './SSTool';
+import SSThreeTool from './SSTool';
 
 const EventType = {
   // 单击事件
@@ -27,7 +27,7 @@ const EventType = {
   MOUSECANCEL: 'mousecancel'
 };
 // export { EventType };
-export default class ThreeEvent {
+export default class SSEvent {
   // parent element
   _targetElement = document.body;
 
@@ -49,7 +49,7 @@ export default class ThreeEvent {
   constructor(aContainer = this._targetElement) {
     if (aContainer) {
       this._targetElement = aContainer;
-      this.#addListeners();
+      this._addListeners();
     }
   }
 
@@ -96,7 +96,7 @@ export default class ThreeEvent {
   /**
    * 内部增加全系列注册事件
    */
-  #addListeners = () => {
+  _addListeners = () => {
     this._targetElement.addEventListener('pointerdown', this.#onElementPointDown);
     this._targetElement.addEventListener('pointerup', this.#onElementPointUp);
     this._targetElement.addEventListener('click', this.#onElementClick);
@@ -172,7 +172,7 @@ export default class ThreeEvent {
    * 注册鼠标移动事件
    * @param {*} aCamera
    */
-  #onElementMouseMove = ThreeTool.debounce((e = new Event()) => {
+  #onElementMouseMove = SSThreeTool.debounce((e = new Event()) => {
     this._modelEventFunc?.[EventType.MOUSEMOVE]?.forEach((element) => {
       element.fn?.(e);
     });
@@ -254,4 +254,4 @@ export default class ThreeEvent {
   };
 }
 
-ThreeEvent.EventType = EventType;
+SSEvent.EventType = EventType;

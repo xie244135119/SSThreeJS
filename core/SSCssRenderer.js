@@ -1,43 +1,51 @@
 import * as THREE from 'three';
 import { CSS2DRenderer, CSS2DObject } from 'three/examples/jsm/renderers/CSS2DRenderer';
-import { CSS3DRenderer } from 'three/examples/jsm/renderers/CSS3DRenderer';
+import { CSS3DRenderer, CSS3DObject } from 'three/examples/jsm/renderers/CSS3DRenderer';
 import { SVGRenderer } from 'three/examples/jsm/renderers/SVGRenderer';
-
 import { Line2 } from 'three/examples/jsm/lines/Line2';
 import { LineGeometry } from 'three/examples/jsm/lines/LineGeometry';
-import { LineMaterial } from 'three/examples/jsm/lines/LineMaterial';
-import ThreeTool from './SSTool';
-import ThreeLoop from './SSThreeLoop';
+import { LineMaterial, LineMaterialParameters } from 'three/examples/jsm/lines/LineMaterial';
+import SSThreeTool from './SSTool/index';
+import SSThreeLoop from './SSThreeLoop';
+import SSThreeObject from './SSThreeObject';
+import SSLoader from './SSLoader';
 
 /**
- * css2d 渲染器
+ * @description css2d 渲染器
+ * @type CSS2DRenderer
  */
 let _css2dRender = null;
 /**
- * css 3d渲染器
+ * @description css 3d渲染器
+ * @type CSS3DRenderer
  */
 let _css3dRender = null;
 /**
- * svg渲染器
+ * @description svg渲染器
+ * @type SVGRenderer
  */
 const _svgRender = null;
 
-export default class Three2D3DRenderer {
+export default class SSCssRenderer {
   #resizeObserver = null;
 
-  //
-  threeJs = null;
+  /**
+   * @description three object<scene，camera>
+   * @type SSThreeObject
+   */
+  _ssthreeObject = null;
 
-  constructor(aThreeJs) {
-    this.threeJs = aThreeJs;
+  constructor(ssthreeObject) {
+    this._ssthreeObject = ssthreeObject;
   }
 
   /**
    * 文件损毁
    */
   destory = () => {
-    this.removeResizeOBserver();
-    ThreeLoop.removeIds(['svgFrameHandle', 'css2dFrameHandle', 'css3dFrameHandle']);
+    this._ssthreeObject = null;
+    this._removeResizeOBserver();
+    SSThreeLoop.removeIds(['svgFrameHandle', 'css2dFrameHandle', 'css3dFrameHandle']);
   };
 
   /**
@@ -47,8 +55,8 @@ export default class Three2D3DRenderer {
    * @param {*} aDomElement 标签元素
    */
   setup2D = () => {
-    const { threeScene, threeCamera, threeContainer } = this.threeJs;
-    this.addResizeOBserver(threeContainer);
+    const { threeScene, threeCamera, threeContainer } = this._ssthreeObject;
+    this._addResizeObserver(threeContainer);
     //
     let labelrender = _css2dRender;
     if (labelrender === null) {
@@ -57,14 +65,13 @@ export default class Three2D3DRenderer {
       labelrender = render;
       render.domElement.style.position = 'absolute';
       render.domElement.style.top = 0;
-      // render.domElement.style.pointerEvents = 'none';//点击事件穿透
     }
     if (labelrender instanceof CSS2DRenderer) {
       labelrender.setSize(threeContainer.offsetWidth, threeContainer.offsetHeight, true);
       threeContainer.appendChild(labelrender.domElement);
     }
 
-    ThreeLoop.add(() => {
+    SSThreeLoop.add(() => {
       labelrender.render(threeScene, threeCamera);
     }, 'css2dFrameHandle');
   };
@@ -76,8 +83,8 @@ export default class Three2D3DRenderer {
    * @param {*} aDomElement 标签元素
    */
   setup3D = () => {
-    const { threeScene, threeCamera, threeContainer } = this.threeJs;
-    this.addResizeOBserver(threeContainer);
+    const { threeScene, threeCamera, threeContainer } = this._ssthreeObject;
+    this._addResizeObserver(threeContainer);
     //
     let labelrender = _css3dRender;
     if (labelrender === null) {
@@ -92,7 +99,7 @@ export default class Three2D3DRenderer {
       labelrender.setSize(threeContainer.offsetWidth, threeContainer.offsetHeight, true);
       threeContainer.appendChild(labelrender.domElement);
     }
-    ThreeLoop.add(() => {
+    SSThreeLoop.add(() => {
       labelrender.render(threeScene, threeCamera);
     }, 'css3dFrameHandle');
   };
@@ -104,8 +111,8 @@ export default class Three2D3DRenderer {
    * @param {*} aDomElement 标签元素
    */
   setupSVG = () => {
-    const { threeScene, threeCamera, threeContainer } = this.threeJs;
-    this.addResizeOBserver(threeContainer);
+    const { threeScene, threeCamera, threeContainer } = this._ssthreeObject;
+    this._addResizeObserver(threeContainer);
     //
     let labelrender = _svgRender;
     if (labelrender === null) {
@@ -120,7 +127,7 @@ export default class Three2D3DRenderer {
       labelrender.setSize(threeContainer.offsetWidth, threeContainer.offsetHeight, true);
       threeContainer.appendChild(labelrender.domElement);
     }
-    ThreeLoop.add(() => {
+    SSThreeLoop.add(() => {
       labelrender.render(threeScene, threeCamera);
     }, 'svgFrameHandle');
   };
@@ -226,25 +233,28 @@ export default class Three2D3DRenderer {
   };
 
   // 求两点的中点
-  _getVCenter(v1, v2) {
+  _getVCenter = (v1, v2) => {
     const v = v1.add(v2);
     return v.divideScalar(2);
-  }
+  };
 
   // 获取两点间指定比例位置坐标
-  _getLenVcetor(v1, v2, len) {
+  _getLenVcetor = (v1, v2, len) => {
     const v1v2Len = v1.distanceTo(v2);
     return v1.lerp(v2, len / v1v2Len);
-  }
+  };
 
   /**
    * 添加动态监听
    */
-  addResizeOBserver = (aContainer = document.body) => {
+  _addResizeObserver = (aContainer = document.body) => {
     const observer = new window.ResizeObserver(() => {
       // 调整labelRender 文字
       if (_css2dRender != null) {
         _css2dRender.setSize(aContainer.offsetWidth, aContainer.offsetHeight);
+      }
+      if (_css3dRender != null) {
+        _css3dRender.setSize(aContainer.offsetWidth, aContainer.offsetHeight);
       }
     });
     observer.observe(aContainer);
@@ -256,7 +266,7 @@ export default class Three2D3DRenderer {
    * @param {*} aContainer
    * @returns
    */
-  removeResizeOBserver = () => {
+  _removeResizeOBserver = () => {
     if (this.#resizeObserver !== null) {
       this.#resizeObserver.disconnect();
       this.#resizeObserver = null;
@@ -264,17 +274,18 @@ export default class Three2D3DRenderer {
   };
 
   /**
-   * add line
+   * 增加描线
+   * @param {THREE.Vector3} startPoint 起点
+   * @param {THREE.Vector3} endPoint 终点
+   * @param {LineMaterialParameters} lineOptions
+   * @returns {{ line: Line2, group: THREE.Group }}
    */
-  addLine = (
-    startPoint = new THREE.Vector3(),
-    endPoint = new THREE.Vector3(),
-    depthTest = true
-  ) => {
+  addLine = (startPoint, endPoint, lineOptions) => {
     const material = new LineMaterial({
       color: new THREE.Color(111 / 255, 175 / 255, 173 / 255),
       linewidth: 0.001,
-      depthTest
+      depthTest: false,
+      ...lineOptions
     });
     const geo = new LineGeometry();
     geo.setPositions([
@@ -286,10 +297,10 @@ export default class Three2D3DRenderer {
       endPoint.z
     ]);
     const group = new THREE.Group();
-    this.threeJs.threeScene.add(group);
+    this._ssthreeObject.threeScene.add(group);
     const line = new Line2(geo, material);
     group.add(line);
-    this.threeJs.loadSprite(require('./assets/line_start.png').default).then((obj) => {
+    SSLoader.loadSprite(require('./assets/line_start.png')).then((obj) => {
       obj.position.copy(startPoint);
       obj.scale.set(0.2, 0.2, 0.2);
       group.attach(obj);
@@ -302,8 +313,8 @@ export default class Three2D3DRenderer {
 
   /**
    * auto compute position and create line
-   * @param {*} aObj obj model
-   * @param {*} meshTowards direction
+   * @param {THREE.Object3D} aObj obj model
+   * @param {string} meshTowards direction
    * @returns
    */
   addLineAuto = (aObj, meshTowards = 'z') => {
@@ -311,9 +322,9 @@ export default class Three2D3DRenderer {
       return {};
     }
 
-    const startVector = ThreeTool.getObjectCenter(aObj);
+    const startVector = SSThreeTool.getObjectCenter(aObj);
     const endVector = startVector.clone();
-    const { max, min } = ThreeTool.setBoundingBox(aObj);
+    const { max, min } = SSThreeTool.setBoundingBox(aObj);
     const xWidth = max.x - min.x;
     const zWidth = max.z - min.z;
     const yHeight = max.y - min.y;
@@ -344,3 +355,5 @@ export default class Three2D3DRenderer {
     };
   };
 }
+
+export { CSS2DObject, CSS3DObject };

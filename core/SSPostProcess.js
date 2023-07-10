@@ -7,7 +7,6 @@
  */
 import * as THREE from 'three';
 // 后处理
-import { CSS2DRenderer } from 'three/examples/jsm/renderers/CSS2DRenderer';
 import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer';
 import { FullScreenQuad, Pass } from 'three/examples/jsm/postprocessing/Pass';
 import { ShaderPass } from 'three/examples/jsm/postprocessing/ShaderPass';

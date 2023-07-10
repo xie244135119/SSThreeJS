@@ -18,7 +18,7 @@ class GuiIndex {
    */
   guiInstance = null;
 
-  // threejs
+  //
   #threeJs = null;
 
   // mesh modal controller
@@ -66,7 +66,7 @@ class GuiIndex {
     this.guiInstance.name = 'debug';
     this.guiInstance.close();
     // add scene
-    this.addLightControlView();
+    // this.addLightControlView();
     // add model camera
     this.addCameraControlView();
     this.addCameraPositionAction();
@@ -157,7 +157,7 @@ class GuiIndex {
    * @param {*} obj3d
    */
   addCameraPositionAction = () => {
-    this.#threeJs.threeOrbitControl.addEventListener(
+    this.#threeJs.ssthreeObject.threeOrbitControl.addEventListener(
       'change',
       ThreeTool.debounce(() => {
         if (!this.#selectObject) {
@@ -325,48 +325,48 @@ class GuiIndex {
     }
   };
 
-  /**
-   * scene config
-   */
-  addLightControlView = () => {
-    const object = {
-      ambient_color: new THREE.Color(0.8, 0.9, 1),
-      ambient_inensity: 1.5,
-      ambient_visible: true,
-      directional_color: new THREE.Color(1 / 1, 240 / 1, 217 / 1),
-      directional_intensity: 1.5,
-      directional_visible: true
-    };
-    const parammap = {
-      ambient_inensity: {
-        min: 0,
-        max: 10,
-        step: 0.1
-      },
-      directional_intensity: {
-        min: 0,
-        max: 10,
-        step: 0.1
-      }
-    };
+  // /**
+  //  * scene config
+  //  */
+  // addLightControlView = () => {
+  //   const object = {
+  //     ambient_color: new THREE.Color(0.8, 0.9, 1),
+  //     ambient_inensity: 1.5,
+  //     ambient_visible: true,
+  //     directional_color: new THREE.Color(1 / 1, 240 / 1, 217 / 1),
+  //     directional_intensity: 1.5,
+  //     directional_visible: true
+  //   };
+  //   const parammap = {
+  //     ambient_inensity: {
+  //       min: 0,
+  //       max: 10,
+  //       step: 0.1
+  //     },
+  //     directional_intensity: {
+  //       min: 0,
+  //       max: 10,
+  //       step: 0.1
+  //     }
+  //   };
 
-    const datGui = this.guiInstance;
-    const folder = datGui.addFolder('display');
-    const propertyNames = Object.getOwnPropertyNames(object);
-    propertyNames.forEach((key) => {
-      const value = object[key];
-      if (value instanceof THREE.Color) {
-        folder.addColor(object, key).onChange((e) => {
-          this.onSceneGuiChange(key, e);
-        });
-      } else {
-        const map = parammap[key] || {};
-        folder.add(object, key, map.min, map.max, map.step).onChange((e) => {
-          this.onSceneGuiChange(key, e);
-        });
-      }
-    });
-  };
+  //   const datGui = this.guiInstance;
+  //   const folder = datGui.addFolder('display');
+  //   const propertyNames = Object.getOwnPropertyNames(object);
+  //   propertyNames.forEach((key) => {
+  //     const value = object[key];
+  //     if (value instanceof THREE.Color) {
+  //       folder.addColor(object, key).onChange((e) => {
+  //         this.onSceneGuiChange(key, e);
+  //       });
+  //     } else {
+  //       const map = parammap[key] || {};
+  //       folder.add(object, key, map.min, map.max, map.step).onChange((e) => {
+  //         this.onSceneGuiChange(key, e);
+  //       });
+  //     }
+  //   });
+  // };
 
   /**
    * postcess config
@@ -419,7 +419,7 @@ class GuiIndex {
     // 默认的group
     const debugBoxGroup = new THREE.Group();
     debugBoxGroup.name = 'debug_box_position_group';
-    this.#threeJs.threeScene.add(debugBoxGroup);
+    this.#threeJs.ssthreeObject.threeScene.add(debugBoxGroup);
 
     const object = {
       add_mesh: false,
@@ -477,7 +477,11 @@ class GuiIndex {
    * @param {*} value
    */
   addNewMeshListener = () => {
-    const { threeEvent, threeScene, threeContainer, threeCamera, getModelsByPoint } = this.#threeJs;
+    const {
+      ssthreeObject: { threeScene, threeContainer, threeCamera },
+      threeEvent,
+      getModelsByPoint
+    } = this.#threeJs;
     if (!(threeEvent instanceof ThreeEvent)) return;
     if (!(threeScene instanceof THREE.Scene)) return;
 
@@ -625,7 +629,7 @@ class GuiIndex {
    * add watch look
    */
   addWatchLookControllerView = () => {
-    const { threeScene } = this.#threeJs;
+    const { threeScene } = this.#threeJs.ssthreeObject;
     if (!(threeScene instanceof THREE.Scene)) return;
     const groups = [];
     threeScene.children.forEach((e) => {

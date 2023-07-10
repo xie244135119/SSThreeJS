@@ -4,7 +4,31 @@ import { Line2 } from 'three/examples/jsm/lines/Line2';
 import { LineGeometry } from 'three/examples/jsm/lines/LineGeometry';
 import { LineMaterial } from 'three/examples/jsm/lines/LineMaterial';
 
-export default class ThreeTool {
+export default class SSThreeTool {
+  /**
+   * 经过拆分后的模型数据，根据子物体获取拆分前 原始物体名称
+   * @param {THREE.Object3D} obj3d object
+   * @returns
+   */
+  static getOriginMesh = (obj3d) => {
+    if (!(obj3d instanceof THREE.Object3D)) {
+      return null;
+    }
+    if (obj3d.name.indexOf('_') === -1) {
+      return obj3d;
+    }
+    const nameArry = obj3d.name.split('_') || [];
+    const lastText = nameArry[nameArry.length - 1];
+    if (!lastText) {
+      return obj3d;
+    }
+    if (Number.isNaN(lastText)) {
+      return obj3d;
+    }
+    nameArry.pop();
+    return obj3d.parent;
+  };
+
   /**
    * set model center
    * @param {*} obj object3D

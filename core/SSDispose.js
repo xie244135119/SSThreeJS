@@ -7,14 +7,14 @@
  */
 import * as THREE from 'three';
 
-export default class ThreeDisposeQueue {
+export default class SSDispose {
   constructor() {
     this.operationQueue = new Set();
   }
 
   destory() {
     this.operationQueue.forEach((e) => {
-      this.dispose(e);
+      SSDispose.dispose(e);
     });
     THREE.Cache.clear();
   }
@@ -30,7 +30,7 @@ export default class ThreeDisposeQueue {
   /**
    * 具体元素 uniforms
    */
-  disposeUniforms = (uniforms = {}) => {
+  static disposeUniforms = (uniforms = {}) => {
     const uniformKeys = Object.getOwnPropertyNames(uniforms);
     uniformKeys.forEach((e) => {
       const { value } = uniforms[e];
@@ -44,7 +44,7 @@ export default class ThreeDisposeQueue {
    * 2.0 dispose 元素
    * @param {THREE.Object3D} aObj
    */
-  dispose = (aObj) => {
+  static dispose = (aObj) => {
     const disposeGeometry = (geo) => {
       if (geo instanceof THREE.BufferGeometry) {
         geo.dispose();

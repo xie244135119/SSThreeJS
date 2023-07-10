@@ -1,49 +1,27 @@
 import * as THREE from 'three';
 import TWEEN from '@tweenjs/tween.js';
 import Stats from 'stats.js';
-import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader';
-import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader';
-import { MTLLoader } from 'three/examples/jsm/loaders/MTLLoader';
-import { GLTFLoader, GLTF } from 'three/examples/jsm/loaders/GLTFLoader';
-import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader';
+import WEBGL from 'three/examples/jsm/capabilities/WebGL';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 import { RGBELoader } from 'three/examples/jsm/loaders/RGBELoader';
-import { KTX2Loader } from 'three/examples/jsm/loaders/KTX2Loader';
-import { SVGLoader } from 'three/examples/jsm/loaders/SVGLoader';
 import { HDRCubeTextureLoader } from 'three/examples/jsm/loaders/HDRCubeTextureLoader';
-import { MeshoptDecoder } from 'three/examples/jsm/libs/meshopt_decoder.module';
-import { CSS2DObject } from 'three/examples/jsm/renderers/CSS2DRenderer';
-import { CSS3DObject } from 'three/examples/jsm/renderers/CSS3DRenderer';
-import WEBGL from 'three/examples/jsm/capabilities/WebGL';
 // import { DebugEnvironment } from 'three/examples/jsm/environments/DebugEnvironment';
 import ThreeLoop from './SSThreeLoop';
-import ThreeDisposeQueue from './Dispose';
-import ThreeEvent from './SSEvent';
+import SSDispose from './SSDispose';
+import SSEvent from './SSEvent';
 import ThreeControls from './Controls';
-// import PostProcess from './postProcess';
 import ThreeGUI from './Gui/index';
-import ThreeTool from './SSTool';
-import ThreeCss2D from './css2d';
+import SSThreeTool from './SSTool';
 import LoadingManager from './plugin/loadingmanager';
+import SSThreeObject from './SSThreeObject';
+import SSLoader from './SSLoader';
 
-class ThreeJs {
+export default class SSThreeJs {
   /**
-   * @type HTMLElement
+   * @description 存储类
+   * @type ssthreeObject
    */
-  threeContainer = null;
-
-  /**
-   * @type THREE.Scene
-   */
-  threeScene = null;
-
-  /**
-   * @type THREE.Camera
-   */
-  threeCamera = null;
-
-  // render
-  threeRenderer = null;
+  ssthreeObject = new SSThreeObject();
 
   /**
    * @type THREE.DirectionalLight direction light
@@ -56,26 +34,17 @@ class ThreeJs {
   threeAmbientLight = null;
 
   /**
-   * @type OrbitControls control
-   */
-  threeOrbitControl = null;
-
-  /**
    * @type ThreeControls three custom control
    */
-  threeControls = new ThreeControls();
+  threeControls = null;
 
   // gui
   threeGUI = new ThreeGUI();
 
-  // threeCss2D thress3D
-  threeCss2D = new ThreeCss2D(this);
-
-  // despose queue
-  threeDisposeQueue = new ThreeDisposeQueue();
-
-  // three event
-  threeEvent = new ThreeEvent();
+  /**
+   * @type SSEvent
+   */
+  threeEvent = null;
 
   // stats js
   #statsJs = new Stats();
@@ -111,44 +80,33 @@ class ThreeJs {
     this.threeEvent.destory();
     this.threeEvent = null;
 
-    this.threeCss2D.destory();
-    this.threeCss2D = null;
-
-    if (this.threeScene !== null) {
-      this.threeDisposeQueue.dispose(this.threeScene);
-      if (this.threeRenderer.info.programs.length !== 0) {
-        console.log('scene material has not released', this.threeRenderer.info);
-      } else if (this.threeRenderer.info.memory.geometries) {
-        console.log('scene geometries has not released', this.threeRenderer.info);
-      } else if (this.threeRenderer.info.memory.textures) {
-        console.log('scene textures has not released', this.threeRenderer.info);
+    if (this.ssthreeObject.threeScene !== null) {
+      SSDispose.dispose(this.ssthreeObject.threeScene);
+      if (this.ssthreeObject.threeRenderer.info.programs.length !== 0) {
+        console.log('scene material has not released', this.ssthreeObject.threeRenderer.info);
+      } else if (this.ssthreeObject.threeRenderer.info.memory.geometries) {
+        console.log('scene geometries has not released', this.ssthreeObject.threeRenderer.info);
+      } else if (this.ssthreeObject.threeRenderer.info.memory.textures) {
+        console.log('scene textures has not released', this.ssthreeObject.threeRenderer.info);
       }
     }
 
-    if (this.threeRenderer !== null) {
-      this.threeRenderer.dispose();
-      this.threeRenderer.forceContextLoss();
-      this.threeContainer.removeChild(this.threeRenderer.domElement);
+    if (this.ssthreeObject.threeRenderer !== null) {
+      this.ssthreeObject.threeRenderer.dispose();
+      this.ssthreeObject.threeRenderer.forceContextLoss();
+      this.ssthreeObject.threeContainer.removeChild(this.ssthreeObject.threeRenderer.domElement);
     }
   }
-
-  /**
-   * dispose obj
-   * @param {obj} obj
-   */
-  destroyObj = (obj) => {
-    this.threeDisposeQueue.dispose(obj);
-  };
 
   // Container初始化
   #getContainerDom = (aContainer) => {
     if (typeof aContainer === 'string') {
       const element = document.getElementById(aContainer);
-      this.threeContainer = element;
+      this.ssthreeObject.threeContainer = element;
       return element;
     }
     if (aContainer instanceof HTMLElement) {
-      this.threeContainer = aContainer;
+      this.ssthreeObject.threeContainer = aContainer;
       return aContainer;
     }
     return document.body;
@@ -164,11 +122,11 @@ class ThreeJs {
 
     // scene
     const scene = new THREE.Scene();
-    this.threeScene = scene;
+    this.ssthreeObject.threeScene = scene;
     const aspect = container.offsetWidth / container.offsetHeight;
     const camera = new THREE.PerspectiveCamera(45, aspect, 0.1, 20000);
     camera.position.set(10, 10, 10);
-    this.threeCamera = camera;
+    this.ssthreeObject.threeCamera = camera;
     // webgl render
     this.#addRender();
     // ambient light
@@ -182,14 +140,19 @@ class ThreeJs {
     this.threeDirectionLight = directLight;
 
     // control
+    this.threeControls = new ThreeControls();
     this.threeControls.bindThreeJs(this);
-    this.threeControls.bindCamera(this.threeCamera, this.threeRenderer, this.threeScene);
+    this.threeControls.bindCamera(
+      this.ssthreeObject.threeCamera,
+      this.ssthreeObject.threeRenderer,
+      this.ssthreeObject.threeScene
+    );
     // keyboard orbitcontrol
     this.#addOrbitControl(camera, container);
     // page resize
-    this.#addResizeOBserver(container, this.threeRenderer, camera);
+    this.#addResizeOBserver(container, this.ssthreeObject.threeRenderer, camera);
     // add event
-    this.threeEvent = new ThreeEvent(container);
+    this.threeEvent = new SSEvent(container);
     // loading manager
     LoadingManager.shareInstance.addProgressView(container);
     //
@@ -199,8 +162,8 @@ class ThreeJs {
     this.startWebglRender();
 
     ThreeLoop.add(() => {
-      if (this.threeOrbitControl.autoRotate) {
-        this.threeOrbitControl.update();
+      if (this.ssthreeObject.threeOrbitControl.autoRotate) {
+        this.ssthreeObject.threeOrbitControl.update();
       }
     }, 'control update');
 
@@ -211,8 +174,8 @@ class ThreeJs {
    * get camera eye
    */
   getEye = () => ({
-    cameraPosition: this.threeCamera.position,
-    scenePosition: this.threeOrbitControl.target
+    camera: this.ssthreeObject.threeCamera.position,
+    control: this.ssthreeObject.threeOrbitControl.target
   });
 
   /**
@@ -221,15 +184,15 @@ class ThreeJs {
    * @returns
    */
   addSky = (skys = []) => {
-    const pmremGenerator = new THREE.PMREMGenerator(this.threeRenderer);
+    const pmremGenerator = new THREE.PMREMGenerator(this.ssthreeObject.threeRenderer);
     const hdrLoader = new THREE.CubeTextureLoader(LoadingManager.shareInstance.threeLoadingManager);
     return new Promise((reslove, reject) => {
       hdrLoader.load(
         skys,
         (texture) => {
           const cubetexure = pmremGenerator.fromCubemap(texture).texture;
-          this.threeScene.environment = cubetexure;
-          this.threeScene.background = cubetexure;
+          this.ssthreeObject.threeScene.environment = cubetexure;
+          this.ssthreeObject.threeScene.background = cubetexure;
           pmremGenerator.dispose();
           reslove(texture);
         },
@@ -246,7 +209,7 @@ class ThreeJs {
    * addHdr
    */
   addHDR = (hdrs = []) => {
-    const pmremGenerator = new THREE.PMREMGenerator(this.threeRenderer);
+    const pmremGenerator = new THREE.PMREMGenerator(this.ssthreeObject.threeRenderer);
     if (hdrs.length === 1) {
       return new Promise((reslove, reject) => {
         const rgbeLoader = new RGBELoader(LoadingManager.shareInstance.threeLoadingManager);
@@ -254,8 +217,8 @@ class ThreeJs {
           hdrs,
           (texture) => {
             const cubetexure = pmremGenerator.fromCubemap(texture).texture;
-            this.threeScene.background = cubetexure;
-            this.threeScene.environment = cubetexure;
+            this.ssthreeObject.threeScene.background = cubetexure;
+            this.ssthreeObject.threeScene.environment = cubetexure;
             pmremGenerator.dispose();
             reslove(texture);
           },
@@ -274,8 +237,8 @@ class ThreeJs {
         hdrs,
         (texture) => {
           const cubetexure = pmremGenerator.fromCubemap(texture).texture;
-          this.threeScene.environment = cubetexure;
-          this.threeScene.background = cubetexure;
+          this.ssthreeObject.threeScene.environment = cubetexure;
+          this.ssthreeObject.threeScene.background = cubetexure;
           pmremGenerator.dispose();
           reslove(texture);
         },
@@ -290,22 +253,25 @@ class ThreeJs {
 
   // render
   #addRender = () => {
-    this.threeRenderer = new THREE.WebGLRenderer({
+    this.ssthreeObject.threeRenderer = new THREE.WebGLRenderer({
       antialias: true,
       alpha: true,
       logarithmicDepthBuffer: true
     });
-    this.threeRenderer.shadowMap.enabled = true;
-    this.threeRenderer.shadowMap.type = THREE.PCFSoftShadowMap;
-    this.threeRenderer.setSize(this.threeContainer.clientWidth, this.threeContainer.clientHeight);
-    this.threeRenderer.setPixelRatio(window.devicePixelRatio);
-    this.threeRenderer.setClearColor('white', 0);
-    this.threeContainer.appendChild(this.threeRenderer.domElement);
-    this.threeRenderer.autoClear = true;
-    this.threeRenderer.toneMapping = THREE.ACESFilmicToneMapping; // 模拟、逼近高动态范围（HDR）效果 LinearToneMapping 为默认值，线性色调映射。
-    this.threeRenderer.toneMappingExposure = 1;
-    // this.threeRenderer.textureEncoding = THREE.sRGBEncoding; // LinearEncoding
-    // this.threeRenderer.outputEncoding = THREE.sRGBEncoding; // sRGBEncoding
+    this.ssthreeObject.threeRenderer.shadowMap.enabled = true;
+    this.ssthreeObject.threeRenderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    this.ssthreeObject.threeRenderer.setSize(
+      this.ssthreeObject.threeContainer.clientWidth,
+      this.ssthreeObject.threeContainer.clientHeight
+    );
+    this.ssthreeObject.threeRenderer.setPixelRatio(window.devicePixelRatio);
+    this.ssthreeObject.threeRenderer.setClearColor('white', 0);
+    this.ssthreeObject.threeContainer.appendChild(this.ssthreeObject.threeRenderer.domElement);
+    this.ssthreeObject.threeRenderer.autoClear = true;
+    this.ssthreeObject.threeRenderer.toneMapping = THREE.ACESFilmicToneMapping; // 模拟、逼近高动态范围（HDR）效果 LinearToneMapping 为默认值，线性色调映射。
+    this.ssthreeObject.threeRenderer.toneMappingExposure = 1;
+    // this.ssthreeObject.threeRenderer.textureEncoding = THREE.sRGBEncoding; // LinearEncoding
+    // this.ssthreeObject.threeRenderer.outputEncoding = THREE.sRGBEncoding; // sRGBEncoding
   };
 
   /**
@@ -313,7 +279,10 @@ class ThreeJs {
    */
   startWebglRender = () => {
     ThreeLoop.add(() => {
-      this.threeRenderer.render(this.threeScene, this.threeCamera);
+      this.ssthreeObject.threeRenderer.render(
+        this.ssthreeObject.threeScene,
+        this.ssthreeObject.threeCamera
+      );
     }, 'webglrender update');
   };
 
@@ -339,27 +308,31 @@ class ThreeJs {
     speed = 0.5,
     cb = null
   ) => {
-    if (!this.threeCamera) {
+    if (!this.ssthreeObject.threeCamera) {
       return;
     }
     if (!animate) {
-      if (this.threeCamera instanceof THREE.Camera) {
-        this.threeCamera.position.set(aCameraPosition.x, aCameraPosition.y, aCameraPosition.z);
+      if (this.ssthreeObject.threeCamera instanceof THREE.Camera) {
+        this.ssthreeObject.threeCamera.position.set(
+          aCameraPosition.x,
+          aCameraPosition.y,
+          aCameraPosition.z
+        );
       }
-      if (this.threeOrbitControl instanceof OrbitControls) {
+      if (this.ssthreeObject.threeOrbitControl instanceof OrbitControls) {
         const center = new THREE.Vector3(aCenterPosition.x, aCenterPosition.y, aCenterPosition.z);
-        this.threeOrbitControl.target.set(center.x, center.y, center.z);
-        this.threeOrbitControl.update();
+        this.ssthreeObject.threeOrbitControl.target.set(center.x, center.y, center.z);
+        this.ssthreeObject.threeOrbitControl.update();
       }
     } else {
       //
       const startPoint = {
-        camera_x: this.threeCamera.position.x,
-        camera_y: this.threeCamera.position.y,
-        camera_z: this.threeCamera.position.z,
-        orbitControl_x: this.threeOrbitControl.target.x,
-        orbitControl_y: this.threeOrbitControl.target.y,
-        orbitControl_z: this.threeOrbitControl.target.z
+        camera_x: this.ssthreeObject.threeCamera.position.x,
+        camera_y: this.ssthreeObject.threeCamera.position.y,
+        camera_z: this.ssthreeObject.threeCamera.position.z,
+        orbitControl_x: this.ssthreeObject.threeOrbitControl.target.x,
+        orbitControl_y: this.ssthreeObject.threeOrbitControl.target.y,
+        orbitControl_z: this.ssthreeObject.threeOrbitControl.target.z
       };
       const endPoint = {
         camera_x: aCameraPosition.x,
@@ -373,9 +346,13 @@ class ThreeJs {
         startPoint,
         endPoint,
         (e) => {
-          this.threeCamera.position.set(e.camera_x, e.camera_y, e.camera_z);
-          this.threeOrbitControl.target.set(e.orbitControl_x, e.orbitControl_y, e.orbitControl_z);
-          this.threeOrbitControl.update();
+          this.ssthreeObject.threeCamera.position.set(e.camera_x, e.camera_y, e.camera_z);
+          this.ssthreeObject.threeOrbitControl.target.set(
+            e.orbitControl_x,
+            e.orbitControl_y,
+            e.orbitControl_z
+          );
+          this.ssthreeObject.threeOrbitControl.update();
         },
         speed,
         cb?.()
@@ -395,42 +372,21 @@ class ThreeJs {
   /**
    * dynamic debug
    */
-  addDymaicDebug = (aCamera = this.threeCamera) => {
-    this.#addAxisControl(this.threeScene, this.threeCamera);
+  addDymaicDebug = () => {
+    this.#addAxisControl(this.ssthreeObject.threeScene, this.ssthreeObject.threeCamera);
     this.#addStatAnalyse();
     this.#addGui();
-    window.threeJs = this;
-    window.threeCamera = this.threeCamera;
+    window.ssthreeJs = this;
+    window.ssthreeObject = this.ssthreeObject;
     window.THREE = THREE;
-    window.threeRenderer = this.threeRenderer;
-    window.threeAmbientLight = this.threeAmbientLight;
-    window.threeDirectLight = this.threeDirectionLight;
-    window.threeOrbitControl = this.threeOrbitControl;
-    window.threeScene = this.threeScene;
-    window.threeCamera.setPosition = (aPositionX, aPositionY, aPositionZ) => {
-      this.threeCamera.position.set(aPositionX, aPositionY, aPositionZ);
-      this.threeCamera.lookAt(new THREE.Vector3(0, 0, 0));
-    };
-    window.threeCamera.setFov = (aValue) => {
-      aCamera.fov = aValue;
-      aCamera.updateProjectionMatrix();
-    };
-    window.threeCamera.setNear = (aValue) => {
-      aCamera.near = aValue;
-      aCamera.updateProjectionMatrix();
-    };
-    window.threeCamera.setFar = (aValue) => {
-      aCamera.far = aValue;
-      aCamera.updateProjectionMatrix();
-    };
-    window.threeCamera.setZoom = (aValue) => {
-      aCamera.zoom = aValue;
-      aCamera.updateProjectionMatrix();
-    };
-    window.threeCamera.setFocus = (aValue) => {
-      aCamera.focus = aValue;
-      aCamera.updateProjectionMatrix();
-    };
+    // window.ssthreeObject.threeCamera.setFov = (aValue) => {
+    //   aCamera.fov = aValue;
+    //   aCamera.updateProjectionMatrix();
+    // };
+    // window.ssthreeObject.threeCamera.setFocus = (aValue) => {
+    //   aCamera.focus = aValue;
+    //   aCamera.updateProjectionMatrix();
+    // };
   };
 
   /**
@@ -443,14 +399,9 @@ class ThreeJs {
       this.threeGUI.destroy();
       this.threeGUI = null;
     }
-    window.threeJs = null;
+    window.ssthreeJs = null;
     window.THREE = null;
-    window.threeCamera = null;
-    window.threeRenderer = null;
-    window.threeDirectLight = null;
-    window.threeOrbitControl = null;
-    window.threeAmbientLight = null;
-    window.threeScene = null;
+    window.ssthreeObject = null;
   };
 
   /**
@@ -489,7 +440,7 @@ class ThreeJs {
   //   Promise.all(promiseall)
   //     .then((objs) => {
   //       objs.forEach((e) => {
-  //         this.threeScene.add(e);
+  //         this.ssthreeObject.threeScene.add(e);
   //       });
   //       aCallBack?.(aStep, objs);
   //       if (aStep.nextStep) {
@@ -538,19 +489,25 @@ class ThreeJs {
       let promise = Promise.resolve();
       switch (model.type) {
         case 'obj':
-          promise = this.loadObj(model.obj, model.mtl, false);
+          // promise = this.loadObj(model.obj, model.mtl, false);
+          promise = SSLoader.loadObj(
+            model.obj,
+            model.mtl,
+            null,
+            LoadingManager.shareInstance.threeLoadingManager
+          );
           break;
         case 'fbx':
-          promise = this.loadFbx(model.fbx, false);
+          promise = this.loadFbx(model.fbx);
           break;
         case 'gltf':
-          promise = this.loadGltf(model.gltf, false);
+          promise = this.loadGltf(model.gltf);
           break;
         case 'draco':
-          promise = this.loadGltfDraco(model.draco, false);
+          promise = this.loadGltfDraco(model.draco);
           break;
         case 'opt':
-          promise = this.loadGltfOptKTX(model.opt, false);
+          promise = this.loadGltfOptKTX(model.opt);
           break;
         default:
           break;
@@ -561,9 +518,9 @@ class ThreeJs {
         .then((obj) => {
           onBeforeRender?.(model, obj);
           if (obj instanceof THREE.Object3D) {
-            this.threeScene.add(obj);
+            this.ssthreeObject.threeScene.add(obj);
           } else if (obj.scene instanceof THREE.Object3D) {
-            this.threeScene.add(obj.scene);
+            this.ssthreeObject.threeScene.add(obj.scene);
           }
 
           onAfterRender?.(model, obj);
@@ -593,34 +550,44 @@ class ThreeJs {
     resuseBlock();
   };
 
+  // /**
+  //  * load obj
+  //  * @param {string} aObjPath obj path
+  //  * @param {string} aMaterialPath material path
+  //  * @param {boolean} addToScene shadow shadow
+  //  * @returns {Promise<THREE.Group>}
+  //  */
+  // loadObj = (aObjPath = '', aMaterialPath = '', addToScene = true) => {
+  //   const getDirectoryText = (aPath = '') => {
+  //     const baseDirectoryArry = aPath.split('/');
+  //     baseDirectoryArry.pop();
+  //     return `${baseDirectoryArry.join('/')}/`;
+  //   };
+  //   return LoadingManager.shareInstance.getModelDataByUrl(aMaterialPath).then((materialdata) => {
+  //     const mtlloader = new MTLLoader(LoadingManager.shareInstance.threeLoadingManager);
+  //     const mtltext = String.fromCharCode.apply(null, new Uint8Array(materialdata));
+  //     const materials = mtlloader.parse(mtltext, getDirectoryText(aMaterialPath));
+  //     return LoadingManager.shareInstance.getModelDataByUrl(aObjPath).then((objdata) => {
+  //       const objloader = new OBJLoader(LoadingManager.shareInstance.threeLoadingManager);
+  //       objloader.setMaterials(materials);
+  //       const group = objloader.parse(objdata);
+  //       if (addToScene) {
+  //         this.ssthreeObject.threeScene.add(group);
+  //       }
+  //       return group;
+  //     });
+  //   });
+  // };
+
   /**
-   * load obj
-   * @param {string} aObjPath obj path
-   * @param {string} aMaterialPath material path
-   * @param {boolean} addToScene shadow shadow
-   * @returns {Promise<THREE.Group>}
+   * 获取模型路径目录
+   * @returns
    */
-  loadObj = (aObjPath = '', aMaterialPath = '', addToScene = true) => {
-    const getDirectoryText = (aPath = '') => {
-      const baseDirectoryArry = aPath.split('/');
-      baseDirectoryArry.pop();
-      return `${baseDirectoryArry.join('/')}/`;
-    };
-    return LoadingManager.shareInstance.getModelDataByUrl(aMaterialPath).then((materialdata) => {
-      const mtlloader = new MTLLoader(LoadingManager.shareInstance.threeLoadingManager);
-      const mtltext = String.fromCharCode.apply(null, new Uint8Array(materialdata));
-      const materials = mtlloader.parse(mtltext, getDirectoryText(aMaterialPath));
-      // materials.shading = THREE.FlatShading;
-      return LoadingManager.shareInstance.getModelDataByUrl(aObjPath).then((objdata) => {
-        const objloader = new OBJLoader(LoadingManager.shareInstance.threeLoadingManager);
-        objloader.setMaterials(materials);
-        const group = objloader.parse(objdata);
-        if (addToScene) {
-          this.threeScene.add(group);
-        }
-        return group;
-      });
-    });
+  getModelDirectory = (aPath = '') => {
+    const baseDirectory = aPath.split('/');
+    baseDirectory.pop();
+    const directory = `${baseDirectory.join('/')}/`;
+    return directory;
   };
 
   /**
@@ -629,206 +596,65 @@ class ThreeJs {
    * @param {string} addToScene add to scene
    * @returns {Promise<THREE.Group>}
    */
-  loadFbx = (aFbxpath = '', addToScene = true) =>
-    LoadingManager.shareInstance.getModelDataByUrl(aFbxpath).then((data) => {
-      const fbxloader = new FBXLoader(LoadingManager.shareInstance.threeLoadingManager);
-      const baseDirectory = aFbxpath.split('/');
-      baseDirectory.pop();
-      const obj = fbxloader.parse(data, `${baseDirectory.join('/')}/`);
-      if (addToScene) {
-        this.threeScene.add(obj);
-      }
-      return obj;
-    });
-
-  /**
-   * load svg
-   * @param {string} aSVGpath svg path
-   * @returns {Promise<THREE.SVGResult>}
-   */
-  loadSVG = (aSVGpath = '') => {
-    const svgloader = new SVGLoader(LoadingManager.shareInstance.threeLoadingManager);
-    return new Promise((reslove, reject) => {
-      svgloader.load(
-        aSVGpath,
-        (obj) => {
-          this.threeScene.add(obj);
-          reslove(obj);
-        },
-        null,
-        (e) => {
-          reject(e);
-        }
+  loadFbx = (aFbxpath = '') =>
+    LoadingManager.shareInstance
+      .getModelDataByUrl(aFbxpath)
+      .then((data) =>
+        SSLoader.loadFbxBuffer(
+          data,
+          this.getModelDirectory(aFbxpath),
+          LoadingManager.shareInstance.threeLoadingManager
+        )
       );
-    });
-  };
 
   /**
    * load gltf
    * @param {string} path model path
-   * @param {boolean} addToScene 添加到场景上
+   * @param {THREE.LoadingManager} manager loading manager
    * @returns {Promise<GLTF>}
    */
-  loadGltf = (path, addToScene = true) =>
-    LoadingManager.shareInstance.getModelDataByUrl(path).then((data) => {
-      const gltfLoader = new GLTFLoader(LoadingManager.shareInstance.threeLoadingManager);
-      const baseDirectory = path.split('/');
-      baseDirectory.pop();
-      return new Promise((reslove, reject) => {
-        gltfLoader.parse(
+  loadGltf = (path) =>
+    LoadingManager.shareInstance
+      .getModelDataByUrl(path)
+      .then((data) =>
+        SSLoader.loadGltfBuffer(
           data,
-          `${baseDirectory.join('/')}/`,
-          (gltf) => {
-            const obj = gltf.scene;
-            if (addToScene) {
-              this.threeScene.add(obj);
-            }
-            reslove(gltf);
-          },
-          (e) => {
-            reject(e);
-          }
-        );
-      });
-    });
+          this.getModelDirectory(path),
+          LoadingManager.shareInstance.threeLoadingManager
+        )
+      );
 
   /**
    * load gltf
-   * @param {ArrayBuffer} aBuffer 数据
-   * @param {Boolean} addToScene 是否，默认true
-   * @returns {Promise<GLTF>}
+   * @param {*} path
+   * @returns
    */
-  loadGltfDracoBuffer = (aBuffer, addToScene = true) => {
-    const gltfLoader = new GLTFLoader(LoadingManager.shareInstance.threeLoadingManager);
-    const dracoLoader = new DRACOLoader(LoadingManager.shareInstance.threeLoadingManager);
-    dracoLoader.setDecoderPath('/static/three/draco/');
-    dracoLoader.preload();
-    gltfLoader.setDRACOLoader(dracoLoader);
-    return new Promise((reslove, reject) => {
-      gltfLoader.parse(
-        aBuffer,
-        '/',
-        (gltf) => {
-          const obj = gltf.scene;
-          if (addToScene) {
-            this.threeScene.add(obj);
-          }
-          reslove(gltf);
-        },
-        (e) => {
-          reject(e);
-        }
-      );
-    });
-  };
-
-  /**
-   * load gltf Draco
-   * @param {string} path model path
-   * @param {boolean} addToScene scene add
-   * @returns {Promise<GLTF>}
-   */
-  loadGltfDraco(path, addToScene = true) {
-    return LoadingManager.shareInstance.getModelDataByUrl(path).then((data) => {
-      const gltfLoader = new GLTFLoader(LoadingManager.shareInstance.threeLoadingManager);
-      const dracoLoader = new DRACOLoader(LoadingManager.shareInstance.threeLoadingManager);
-      dracoLoader.setDecoderPath('/static/three/draco/');
-      dracoLoader.preload();
-      gltfLoader.setDRACOLoader(this.dracoLoader);
-      const baseDirectory = path.split('/');
-      baseDirectory.pop();
-      return new Promise((reslove, reject) => {
-        gltfLoader.load(
-          path,
-          (gltf) => {
-            const obj = gltf.scene;
-            if (addToScene) {
-              this.threeScene.add(obj);
-            }
-            reslove(gltf);
-          },
-          null,
-          (e) => {
-            reject(e);
-          }
-        );
-      });
-    });
-  }
-
-  /**
-   * load gltf ktx
-   * @param {string} path model path
-   * @param {boolean} addToScene add to
-   * @returns {Promise<GLTF>}
-   */
-  loadGltfOptKTX = (path, addToScene = true) =>
-    LoadingManager.shareInstance.getModelDataByUrl(path).then((data) => {
-      const ktx2Loader = new KTX2Loader(LoadingManager.shareInstance.threeLoadingManager)
-        .setTranscoderPath('/public/static/three/basis/')
-        .detectSupport(this.threeRenderer);
-      const gltfLoader = new GLTFLoader(LoadingManager.shareInstance.threeLoadingManager);
-      gltfLoader.setKTX2Loader(ktx2Loader);
-      gltfLoader.setMeshoptDecoder(MeshoptDecoder);
-      const baseDirectory = path.split('/');
-      baseDirectory.pop();
-      return new Promise((reslove, reject) => {
-        gltfLoader.parse(
+  loadGltfDraco = (path) =>
+    LoadingManager.shareInstance
+      .getModelDataByUrl(path)
+      .then((data) =>
+        SSLoader.loadGltfDracoBuffer(
           data,
-          `${baseDirectory.join('/')}/`,
-          (gltf) => {
-            const obj = gltf.scene;
-            if (addToScene) {
-              this.threeScene.add(obj);
-            }
-            reslove(gltf);
-          },
-          (e) => {
-            reject(e);
-          }
-        );
-      });
-    });
-
-  // /**
-  //  * v1.0 加载sprit
-  //  * @param {string} img path
-  //  * @param {func} cb
-  //  */
-  // loadImg = (path, cb) => {
-  //   const spriteMap = new THREE.TextureLoader().load(path);
-  //   const spriteMaterial = new THREE.SpriteMaterial({
-  //     map: spriteMap,
-  //     // sizeAttenuation: THREE.sizeAtt,
-  //     depthWrite: false,
-  //     side: THREE.DoubleSide,
-  //     depthTest: false
-  //   });
-  //   const sprite = new THREE.Sprite(spriteMaterial);
-  //   cb(sprite);
-  // };
+          this.getModelDirectory(path),
+          LoadingManager.shareInstance.threeLoadingManager
+        )
+      );
 
   /**
-   * v2.0 create Sprite
-   * @param {string} texturePath sprite texture path
-   * @return {Promise<THREE.Sprite}
+   * load gltf
+   * @param {*} path
+   * @returns
    */
-  loadSprite = (texturePath) =>
-    new Promise((reslove, reject) => {
-      const spriteMap = new THREE.TextureLoader().load(texturePath, null, null, (e) => {
-        reject(e);
-      });
-      spriteMap.wrapS = THREE.RepeatWrapping;
-      spriteMap.wrapT = THREE.RepeatWrapping;
-      const spriteMaterial = new THREE.SpriteMaterial({
-        map: spriteMap,
-        depthWrite: false,
-        side: THREE.DoubleSide,
-        depthTest: false
-      });
-      const sprite = new THREE.Sprite(spriteMaterial);
-      reslove(sprite);
-    });
+  loadGltfOptKTX = (path) =>
+    LoadingManager.shareInstance
+      .getModelDataByUrl(path)
+      .then((data) =>
+        SSLoader.loadGltfOptKTXBuffer(
+          data,
+          this.getModelDirectory(path),
+          LoadingManager.shareInstance.threeLoadingManager
+        )
+      );
 
   /**
    * add orbitControl
@@ -837,7 +663,7 @@ class ThreeJs {
    */
   #addOrbitControl = (aCamera = new THREE.Camera(), aDomElement = document.getElementById()) => {
     const control = new OrbitControls(aCamera, aDomElement);
-    this.threeOrbitControl = control;
+    this.ssthreeObject.threeOrbitControl = control;
     control.enablePan = true;
     control.autoRotate = false;
   };
@@ -846,9 +672,9 @@ class ThreeJs {
    * remove orbitControl
    */
   #removeOrbitControl = () => {
-    if (this.threeOrbitControl !== null) {
-      this.threeOrbitControl.dispose();
-      this.threeOrbitControl = null;
+    if (this.ssthreeObject.threeOrbitControl !== null) {
+      this.ssthreeObject.threeOrbitControl.dispose();
+      this.ssthreeObject.threeOrbitControl = null;
     }
   };
 
@@ -857,7 +683,10 @@ class ThreeJs {
    * @param {*} aContainer
    * @returns
    */
-  #addAxisControl = (aScene = this.threeScene, aCamera = this.threeCamera) => {
+  #addAxisControl = (
+    aScene = this.ssthreeObject.threeScene,
+    aCamera = this.ssthreeObject.threeCamera
+  ) => {
     const axis = new THREE.AxesHelper(100);
     aScene.add(axis);
     this.#axisControlHelper = axis;
@@ -935,7 +764,7 @@ class ThreeJs {
   /**
    * add stats
    */
-  #addStatAnalyse = (aContainer = this.threeContainer) => {
+  #addStatAnalyse = (aContainer = this.ssthreeObject.threeContainer) => {
     const stats = new Stats();
     this.#statsJs = stats;
     stats.showPanel(0);
@@ -971,31 +800,31 @@ class ThreeJs {
   getModelsByPoint = (
     aPoint = { x: 0, y: 0 },
     ignoreMeshNames = [],
-    targetObject3Ds = this.threeScene.children
+    targetObject3Ds = this.ssthreeObject.threeScene.children
   ) => {
-    if (!this.threeContainer || !this.threeCamera) {
+    if (!this.ssthreeObject.threeContainer || !this.ssthreeObject.threeCamera) {
       return [];
     }
     if (!targetObject3Ds) {
       return [];
     }
     const x =
-      ((aPoint.x - this.threeContainer.getBoundingClientRect().left) /
-        this.threeContainer.offsetWidth) *
+      ((aPoint.x - this.ssthreeObject.threeContainer.getBoundingClientRect().left) /
+        this.ssthreeObject.threeContainer.offsetWidth) *
         2 -
       1; // 规范设施横坐标
     const y =
       -(
-        (aPoint.y - this.threeContainer.getBoundingClientRect().top) /
-        this.threeContainer.offsetHeight
+        (aPoint.y - this.ssthreeObject.threeContainer.getBoundingClientRect().top) /
+        this.ssthreeObject.threeContainer.offsetHeight
       ) *
         2 +
       1; // 规范设施纵坐标
     const standardVector = new THREE.Vector3(x, y, 1); // 规范设施坐标
-    const worldVector = standardVector.unproject(this.threeCamera);
-    const ray = worldVector.sub(this.threeCamera.position).normalize();
-    const raycaster = new THREE.Raycaster(this.threeCamera.position, ray);
-    raycaster.camera = this.threeCamera;
+    const worldVector = standardVector.unproject(this.ssthreeObject.threeCamera);
+    const ray = worldVector.sub(this.ssthreeObject.threeCamera.position).normalize();
+    const raycaster = new THREE.Raycaster(this.ssthreeObject.threeCamera.position, ray);
+    raycaster.camera = this.ssthreeObject.threeCamera;
     let models = raycaster.intersectObjects(targetObject3Ds, true);
     //
     const commonMeshTypes = [
@@ -1015,7 +844,7 @@ class ThreeJs {
       if (ignoreMeshNames.indexOf(aMesh.name) !== -1) {
         return false;
       }
-      if (ignoreMeshNames.indexOf(ThreeJs.getOriginMesh(aMesh)?.name) !== -1) {
+      if (ignoreMeshNames.indexOf(SSThreeTool.getOriginMesh(aMesh)?.name) !== -1) {
         return false;
       }
       return true;
@@ -1041,9 +870,9 @@ class ThreeJs {
   static getModelsByPoint = (
     aPoint = { x: 0, y: 0 },
     ignoreMeshNames = [],
-    targetObject3Ds = this.threeScene.children,
-    domElement = this.threeContainer,
-    sceneCamera = this.threeCamera
+    targetObject3Ds = this.ssthreeObject.threeScene.children,
+    domElement = this.ssthreeObject.threeContainer,
+    sceneCamera = this.ssthreeObject.threeCamera
   ) => {
     if (!domElement || !sceneCamera) {
       return [];
@@ -1079,7 +908,7 @@ class ThreeJs {
       if (ignoreMeshNames.indexOf(aMesh.name) !== -1) {
         return false;
       }
-      if (ignoreMeshNames.indexOf(ThreeJs.getOriginMesh(aMesh)?.name) !== -1) {
+      if (ignoreMeshNames.indexOf(SSThreeTool.getOriginMesh(aMesh)?.name) !== -1) {
         return false;
       }
       return true;
@@ -1094,36 +923,12 @@ class ThreeJs {
   };
 
   /**
-   * 经过拆分后的模型数据，根据子物体获取拆分前 原始物体名称
-   * @param {THREE.Object3D} obj3d object
-   * @returns
-   */
-  static getOriginMesh = (obj3d) => {
-    if (!(obj3d instanceof THREE.Object3D)) {
-      return null;
-    }
-    if (obj3d.name.indexOf('_') === -1) {
-      return obj3d;
-    }
-    const nameArry = obj3d.name.split('_') || [];
-    const lastText = nameArry[nameArry.length - 1];
-    if (!lastText) {
-      return obj3d;
-    }
-    if (Number.isNaN(lastText)) {
-      return obj3d;
-    }
-    nameArry.pop();
-    return obj3d.parent;
-  };
-
-  /**
    * set mesh opacity
    * @param {number} aOpacity opacity  range:[0,1]
    * @param {Array<string>} meshNames material names defaut all
    * @param {THREE.Object3D} targetObject3D target object
    */
-  setOpacity = (aOpacity = 0.5, meshNames = [], targetObject3D = this.threeScene) => {
+  setOpacity = (aOpacity = 0.5, meshNames = [], targetObject3D = this.ssthreeObject.threeScene) => {
     const setMeshTransparent = (aMesh) => {
       if (aMesh instanceof THREE.Mesh) {
         let materialChildren = aMesh.material;
@@ -1159,7 +964,11 @@ class ThreeJs {
    * @param {Array<string} meshNames material names defaut all
    * @param {THREE.Object3D} targetObject3D 目标object3d
    */
-  setVisible = (aVisible = true, meshNames = [], targetObject3D = this.threeScene) => {
+  setVisible = (
+    aVisible = true,
+    meshNames = [],
+    targetObject3D = this.ssthreeObject.threeScene
+  ) => {
     // set material transpant
     const setObjVisible = (aObj) => {
       if (aObj instanceof THREE.Object3D) {
@@ -1201,17 +1010,17 @@ class ThreeJs {
    * @param {number} aValue 放大缩小的倍数
    */
   zoom = (aValue = 1) => {
-    if (this.threeCamera instanceof THREE.PerspectiveCamera) {
+    if (this.ssthreeObject.threeCamera instanceof THREE.PerspectiveCamera) {
       this.useTweenAnimate(
         {
-          zoom: this.threeCamera.zoom
+          zoom: this.ssthreeObject.threeCamera.zoom
         },
         {
-          zoom: this.threeCamera.zoom * aValue
+          zoom: this.ssthreeObject.threeCamera.zoom * aValue
         },
         (e) => {
-          this.threeCamera.zoom = e.zoom;
-          this.threeCamera.updateProjectionMatrix();
+          this.ssthreeObject.threeCamera.zoom = e.zoom;
+          this.ssthreeObject.threeCamera.updateProjectionMatrix();
         },
         0.5
       );
@@ -1223,20 +1032,20 @@ class ThreeJs {
    * @returns
    */
   zoomReset = () => {
-    if (this.threeCamera instanceof THREE.PerspectiveCamera) {
-      if (this.threeCamera.zoom === 1) {
+    if (this.ssthreeObject.threeCamera instanceof THREE.PerspectiveCamera) {
+      if (this.ssthreeObject.threeCamera.zoom === 1) {
         return;
       }
       this.useTweenAnimate(
         {
-          zoom: this.threeCamera.zoom
+          zoom: this.ssthreeObject.threeCamera.zoom
         },
         {
           zoom: 1
         },
         (e) => {
-          this.threeCamera.zoom = e.zoom;
-          this.threeCamera.updateProjectionMatrix();
+          this.ssthreeObject.threeCamera.zoom = e.zoom;
+          this.ssthreeObject.threeCamera.updateProjectionMatrix();
         }
       );
     }
@@ -1248,11 +1057,11 @@ class ThreeJs {
    * @param {boolean} aReset 是否复位
    */
   splitModel = (aNumber = 0.5, aReset = false) => {
-    if (this.threeScene instanceof THREE.Scene) {
+    if (this.ssthreeObject.threeScene instanceof THREE.Scene) {
       const startPoint = {};
       const endPoint = {};
       const objs = {};
-      this.threeScene.traverse((aObj) => {
+      this.ssthreeObject.threeScene.traverse((aObj) => {
         if (aObj instanceof THREE.Mesh) {
           const postion = aObj.position.clone();
           objs[aObj.name] = aObj;
@@ -1314,11 +1123,11 @@ class ThreeJs {
    * 将屏幕坐标转化为世界坐标 <目前不是很准确>
    */
   transformPositionToVector3 = (aPoint = { x: 0, y: 0 }) => {
-    const canvas = this.threeContainer;
+    const canvas = this.ssthreeObject.threeContainer;
     const mousex = ((aPoint.x - canvas.getBoundingClientRect().left) / canvas.offsetWidth) * 2 - 1;
     const mousey = -((aPoint.y - canvas.getBoundingClientRect().top) / canvas.offsetHeight) * 2 + 1;
     const sdvector = new THREE.Vector3(mousex, mousey, 0.5);
-    const worldVector = sdvector.unproject(this.threeCamera);
+    const worldVector = sdvector.unproject(this.ssthreeObject.threeCamera);
     return worldVector;
   };
 
@@ -1332,7 +1141,7 @@ class ThreeJs {
   setMeshColorByNames = (
     meshNames = [],
     materialColor = '#DDFF00',
-    targetObject3D = this.threeScene
+    targetObject3D = this.ssthreeObject.threeScene
   ) => {
     if (meshNames.length === 0) {
       return;
@@ -1374,7 +1183,7 @@ class ThreeJs {
    * @param {THREE.Object3D} targetObject3D
    * @returns
    */
-  resetMeshNames = (meshNames = [], targetObject3D = this.threeScene) => {
+  resetMeshNames = (meshNames = [], targetObject3D = this.ssthreeObject.threeScene) => {
     if (meshNames.length === 0) {
       return;
     }
@@ -1417,7 +1226,7 @@ class ThreeJs {
       ...materialParams
     });
     const cube = new THREE.Mesh(geometry, material);
-    cube.position.copy(ThreeTool.getObjectCenter(object));
+    cube.position.copy(SSThreeTool.getObjectCenter(object));
     return cube;
   };
 
@@ -1526,11 +1335,7 @@ class ThreeJs {
     // });
     const mesh = new THREE.Mesh(geometry, material);
     // const mesh = new THREE.Mesh(geometry, material);
-    // this.threeScene.add(mesh);
+    // this.ssthreeObject.threeScene.add(mesh);
     return { mesh, curvePath };
   };
 }
-
-// ThreeJs.EventType = ThreeEvent.EventType;
-export { THREE, CSS2DObject, CSS3DObject, ThreeTool, ThreeEvent };
-export default ThreeJs;
