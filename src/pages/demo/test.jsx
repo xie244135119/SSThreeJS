@@ -8,12 +8,13 @@
 import React, { useEffect, useRef } from 'react';
 // import SSThreejs, { THREE, ThreeEvent } from '../../../core/index';
 // import PostProcessUtil from '../../../core/PostProcessUtil';
-import SSThreeJs, { THREE, SSFileSetting, SSCssRenderer } from '../../../core/index';
+import SSThreeJs, { THREE, SSCssRenderer } from '../../../core/index';
+import SSFileSetting from '../../../core/SSFileSetting/index_1';
 import SceneSetting from './ssthreejs.setting.json';
+import SSDevelopMode from '../../../core/SSFileSetting/develop';
 
 export default function ParentIndex(props) {
   // eslint-disable-next-line react/prop-types
-  const { children } = props;
   //
   const jsRef = useRef(new SSThreeJs());
 
@@ -55,6 +56,7 @@ export default function ParentIndex(props) {
 
     // 引用配置
     const fileSetting = new SSFileSetting(jsRef.current.ssthreeObject);
+    fileSetting.registerModules([SSDevelopMode]);
     fileSetting.addDebugModel();
     fileSetting.import(SceneSetting);
     // fileSetting.addDebugForObject(js.threeAmbientLight);
@@ -67,8 +69,6 @@ export default function ParentIndex(props) {
 
   return (
     <div>
-      <span>模型测试页面</span>
-      {children}
       <div id="threecontainer" style={{ height: 800 }} />
     </div>
   );

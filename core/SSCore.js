@@ -9,7 +9,7 @@ import { HDRCubeTextureLoader } from 'three/examples/jsm/loaders/HDRCubeTextureL
 import ThreeLoop from './SSThreeLoop';
 import SSDispose from './SSDispose';
 import SSEvent from './SSEvent';
-import ThreeControls from './Controls';
+// import ThreeControls from './Controls';
 import ThreeGUI from './Gui/index';
 import SSThreeTool from './SSTool';
 import LoadingManager from './plugin/loadingmanager';
@@ -19,7 +19,7 @@ import SSLoader from './SSLoader';
 export default class SSThreeJs {
   /**
    * @description 存储类
-   * @type ssthreeObject
+   * @type SSThreeObject
    */
   ssthreeObject = new SSThreeObject();
 
@@ -33,10 +33,10 @@ export default class SSThreeJs {
    */
   threeAmbientLight = null;
 
-  /**
-   * @type ThreeControls three custom control
-   */
-  threeControls = null;
+  // /**
+  //  * @type ThreeControls three custom control
+  //  */
+  // threeControls = null;
 
   // gui
   threeGUI = new ThreeGUI();
@@ -139,14 +139,15 @@ export default class SSThreeJs {
     scene.add(directLight);
     this.threeDirectionLight = directLight;
 
-    // control
-    this.threeControls = new ThreeControls();
-    this.threeControls.bindThreeJs(this);
-    this.threeControls.bindCamera(
-      this.ssthreeObject.threeCamera,
-      this.ssthreeObject.threeRenderer,
-      this.ssthreeObject.threeScene
-    );
+    // // control
+    // this.threeControls = new ThreeControls();
+    // this.threeControls.bindThreeJs(this);
+    // this.threeControls.bindCamera(
+    //   this.ssthreeObject.threeCamera,
+    //   this.ssthreeObject.threeRenderer,
+    //   this.ssthreeObject.threeScene
+    // );
+
     // keyboard orbitcontrol
     this.#addOrbitControl(camera, container);
     // page resize
@@ -381,10 +382,6 @@ export default class SSThreeJs {
     window.THREE = THREE;
     // window.ssthreeObject.threeCamera.setFov = (aValue) => {
     //   aCamera.fov = aValue;
-    //   aCamera.updateProjectionMatrix();
-    // };
-    // window.ssthreeObject.threeCamera.setFocus = (aValue) => {
-    //   aCamera.focus = aValue;
     //   aCamera.updateProjectionMatrix();
     // };
   };
@@ -724,12 +721,11 @@ export default class SSThreeJs {
 
   /**
    * add observer
+   * @param {HTMLElement} aContainer container
+   * @param {THREE.WebGLRenderer} aGlRender glrender
+   * @param {THREE.Camera} aCamera camera
    */
-  #addResizeOBserver = (
-    aContainer = document.body,
-    aGlRender = new THREE.WebGLRenderer(),
-    aCamera = new THREE.Camera()
-  ) => {
+  #addResizeOBserver = (aContainer, aGlRender, aCamera) => {
     const observer = new window.ResizeObserver(() => {
       const ascale = aContainer.offsetWidth / aContainer.offsetHeight;
       if (aCamera.isPerspectiveCamera) {
@@ -1284,58 +1280,58 @@ export default class SSThreeJs {
   //   return shapes;
   // };
 
-  // 创建管道
-  createOptionss = (points, material) => {
-    let curvePath = null;
-    let options = null;
-    const pro = this.createOptions(points);
-    curvePath = pro.curvePath;
-    options = pro.options;
-    const geometry1 = new THREE.ExtrudeBufferGeometry(this.createShapes(), options);
+  // // 创建管道
+  // createOptionss = (points, material) => {
+  //   let curvePath = null;
+  //   let options = null;
+  //   const pro = this.createOptions(points);
+  //   curvePath = pro.curvePath;
+  //   options = pro.options;
+  //   const geometry1 = new THREE.ExtrudeBufferGeometry(this.createShapes(), options);
 
-    // // ExtrudeBufferGeometry转换BufferGeometry
-    const geometry = new THREE.BufferGeometry();
-    const verticesByThree = geometry1.attributes.position.array;
-    // 4. 设置position
-    geometry.setAttribute('position', new THREE.BufferAttribute(verticesByThree, 3));
-    // 5. 设置uv 6个点为一个周期 [0, 1, 0, 0, 1, 1, 0, 0, 1, 0, 1, 1]
-    // 5.1 以18个顶点为单位分组
-    const pointsGroupBy18 = new Array(verticesByThree.length / 3 / 6)
-      .fill(0)
-      .map((_, i) => verticesByThree.slice(i * 3 * 6, (i + 1) * 3 * 6));
-    // 5.2 按uv周期分组
-    const pointsGroupBy63 = pointsGroupBy18.map((item) =>
-      new Array(item.length / 3).fill(0).map((_, i) => item.slice(i * 3, (i + 1) * 3))
-    );
-    // 5.3根据BoundingBox确定uv平铺范围
-    geometry.computeBoundingBox();
-    const { min, max } = geometry.boundingBox;
-    const rangeX = max.x - min.x;
-    const uvs = [].concat(
-      ...pointsGroupBy63.map((item) => {
-        const point0 = item[0];
-        const point5 = item[5];
-        const distance =
-          new THREE.Vector3(...point0).distanceTo(new THREE.Vector3(...point5)) / (rangeX / 10);
-        return [0, 1, 0, 0, distance, 1, 0, 0, distance, 0, distance, 1];
-      })
-    );
-    geometry.setAttribute('uv', new THREE.BufferAttribute(new Float32Array(uvs), 2));
-    // const meshMat =
-    //   material ||
-    //   new THREE.MeshBasicMaterial({
-    //     color: 0x00ffff,
-    //     side: THREE.DoubleSide
-    //   });
+  //   // // ExtrudeBufferGeometry转换BufferGeometry
+  //   const geometry = new THREE.BufferGeometry();
+  //   const verticesByThree = geometry1.attributes.position.array;
+  //   // 4. 设置position
+  //   geometry.setAttribute('position', new THREE.BufferAttribute(verticesByThree, 3));
+  //   // 5. 设置uv 6个点为一个周期 [0, 1, 0, 0, 1, 1, 0, 0, 1, 0, 1, 1]
+  //   // 5.1 以18个顶点为单位分组
+  //   const pointsGroupBy18 = new Array(verticesByThree.length / 3 / 6)
+  //     .fill(0)
+  //     .map((_, i) => verticesByThree.slice(i * 3 * 6, (i + 1) * 3 * 6));
+  //   // 5.2 按uv周期分组
+  //   const pointsGroupBy63 = pointsGroupBy18.map((item) =>
+  //     new Array(item.length / 3).fill(0).map((_, i) => item.slice(i * 3, (i + 1) * 3))
+  //   );
+  //   // 5.3根据BoundingBox确定uv平铺范围
+  //   geometry.computeBoundingBox();
+  //   const { min, max } = geometry.boundingBox;
+  //   const rangeX = max.x - min.x;
+  //   const uvs = [].concat(
+  //     ...pointsGroupBy63.map((item) => {
+  //       const point0 = item[0];
+  //       const point5 = item[5];
+  //       const distance =
+  //         new THREE.Vector3(...point0).distanceTo(new THREE.Vector3(...point5)) / (rangeX / 10);
+  //       return [0, 1, 0, 0, distance, 1, 0, 0, distance, 0, distance, 1];
+  //     })
+  //   );
+  //   geometry.setAttribute('uv', new THREE.BufferAttribute(new Float32Array(uvs), 2));
+  //   // const meshMat =
+  //   //   material ||
+  //   //   new THREE.MeshBasicMaterial({
+  //   //     color: 0x00ffff,
+  //   //     side: THREE.DoubleSide
+  //   //   });
 
-    // this.assignUVs(geometry);
-    // const material = new THREE.MeshBasicMaterial({
-    //   color: 0x00ff00,
-    //   wireframe: false
-    // });
-    const mesh = new THREE.Mesh(geometry, material);
-    // const mesh = new THREE.Mesh(geometry, material);
-    // this.ssthreeObject.threeScene.add(mesh);
-    return { mesh, curvePath };
-  };
+  //   // this.assignUVs(geometry);
+  //   // const material = new THREE.MeshBasicMaterial({
+  //   //   color: 0x00ff00,
+  //   //   wireframe: false
+  //   // });
+  //   const mesh = new THREE.Mesh(geometry, material);
+  //   // const mesh = new THREE.Mesh(geometry, material);
+  //   // this.ssthreeObject.threeScene.add(mesh);
+  //   return { mesh, curvePath };
+  // };
 }
