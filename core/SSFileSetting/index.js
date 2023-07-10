@@ -201,6 +201,17 @@ export default class SSFileSetting {
     this.addDebugForObject(this._ssthreeObject.threeRenderer, this._debugGui);
     this.cameraGui = this._addCameraSetting();
     this.postProcessGui = this._addPostProcessSetting();
+    // this.addDebugForObject(this._ssthreeObject.threeEffectComposer, this.postProcessGui);
+    // postProcess test
+    this.addDebugForObject(
+      this._ssthreeObject.threeEffectComposer.passes[1].effects[0].luminanceMaterial,
+      this.postProcessGui
+    );
+    this.addDebugForObject(
+      this._ssthreeObject.threeEffectComposer.passes[1].effects[1],
+      this.postProcessGui
+    );
+
     this.developGui = this._addDevelopSetting();
     this.otherGui = this._addOtherSetting();
     this.addDebugForObject(this._ssthreeObject.threeOrbitControl, this.cameraGui);
@@ -216,6 +227,13 @@ export default class SSFileSetting {
         this.addDebugForObject(e, this.lightGui);
       }
     });
+  }
+
+  /**
+   * 移除调试
+   */
+  removeDebugModel() {
+    this._menuContainer.parentElement.remove();
   }
 
   /**
@@ -236,7 +254,6 @@ export default class SSFileSetting {
    * add menu icon
    */
   _addMenuIcon = () => {
-    this._ssthreeObject.threeContainer.style.position = 'relative';
     const menudiv = document.createElement('div');
     menudiv.innerText = '调';
     menudiv.className = styles.menuicon;
@@ -303,6 +320,18 @@ export default class SSFileSetting {
    * @param {GUI} floder gui
    */
   _addGuiForConfig(options = {}, keys = [], floder = this._debugGui) {
+    const addGuiByObject = (object, aFolderKey = '') => {
+      if (object instanceof Object) {
+        const valueKeys = Object.keys(object);
+        const valueFolder = floder.addFolder(aFolderKey);
+        valueKeys.forEach((valueKey) => {
+          valueFolder.add(object, valueKey)?.onChange((v) => {
+            object[valueKey] = v;
+          });
+        });
+      }
+    };
+
     for (let index = 0; index < keys.length; index++) {
       const key = keys[index];
       const value = options[key];
@@ -319,15 +348,18 @@ export default class SSFileSetting {
           });
         continue;
       }
+      // Array<Ob(ject>
+      if (value instanceof Array) {
+        value.forEach((e) => {
+          if (e instanceof Object) {
+            addGuiByObject(e, `${key}_${e.name || e.type}`);
+          }
+        });
+        continue;
+      }
       // object
       if (value instanceof Object) {
-        const valueKeys = Object.keys(value);
-        const valueFolder = floder.addFolder(key);
-        valueKeys.forEach((valueKey) => {
-          valueFolder.add(value, valueKey)?.onChange((v) => {
-            value[valueKey] = v;
-          });
-        });
+        addGuiByObject(value, key);
         continue;
       }
       // select type
