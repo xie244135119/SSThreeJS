@@ -16,7 +16,7 @@ const {
   // eslint-disable-next-line no-undef
 } = THREE;
 
-class MeshReflectorMaterial extends MeshStandardMaterial {
+export default class MeshReflectorMaterial extends MeshStandardMaterial {
   constructor(
     renderer,
     camera,

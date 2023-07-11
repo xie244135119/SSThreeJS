@@ -113,7 +113,7 @@ export default class SSFileSetting {
       const selectData = e.getDebugSelectTypes?.();
       if (obj) {
         const gui = this._debugGui.addFolder(e.name);
-        this._addDebugForObject(obj, gui, e.onDebugChange, selectData);
+        this._addDebugForObject(obj, gui, e.onDebugChange?.bind(e), selectData);
       }
     });
   }

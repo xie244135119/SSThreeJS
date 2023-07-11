@@ -13,6 +13,7 @@ import SSFileSetting from '../../../core/SSFileSetting/index_1';
 import SceneSetting from './ssthreejs.setting.json';
 import SSDevelopMode from '../../../core/SSFileSetting/develop.module';
 import SSLightModule from '../../../core/SSFileSetting/light.module';
+import PostProcessManager from '../../../core/PostProcessManager';
 
 export default function ParentIndex(props) {
   // eslint-disable-next-line react/prop-types
@@ -57,14 +58,10 @@ export default function ParentIndex(props) {
 
     // 引用配置
     const fileSetting = new SSFileSetting(jsRef.current.ssthreeObject);
-    fileSetting.registerModules([SSDevelopMode, SSLightModule]);
+    fileSetting.registerModules([SSDevelopMode, SSLightModule, PostProcessManager]);
     fileSetting.addDebugModel();
     fileSetting.import(SceneSetting);
-    // fileSetting.addDebugForObject(js.threeAmbientLight);
-
-    // const baseSetting = new BaseLightSetting(js, null, false);
     return () => {
-      console.log(' xxxx remove');
       fileSetting.removeDebugModel();
       jsRef.current.destroy();
     };

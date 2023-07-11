@@ -26,8 +26,9 @@ import {
 } from 'postprocessing';
 import SSThreeObject from './SSThreeObject';
 import ThreeLoop from './SSThreeLoop';
+import SSFileInterface from './SSFileSetting/file.interface';
 
-export default class PostProcessManager {
+export default class PostProcessManager extends SSFileInterface {
   /**
    * @type SSThreeObject
    */
@@ -42,10 +43,10 @@ export default class PostProcessManager {
 
   bloomEffect = null;
 
-  constructor(ssthreeObject, openDebug = false) {
-    this.ssthreeObject = ssthreeObject;
-    this.createComposer(openDebug);
-  }
+  // constructor(ssthreeObject, openDebug = false) {
+  //   super();
+  //   this.ssthreeObject = ssthreeObject;
+  // }
 
   createComposer = (openDebug) => {
     const scene = this.ssthreeObject.threeScene;
@@ -55,13 +56,6 @@ export default class PostProcessManager {
     composer.addPass(new RenderPass(scene, camera));
     // composer.addPass(new EffectPass(camera, new BloomEffect()));
     // bloom
-    //
-    // const bloomEffect = new BloomEffect({
-    //   blendFunction: BlendFunction.ADD,
-    //   mipmapBlur: true,
-    //   luminanceThreshold: 1,
-    //   intensity: 0,
-    // });
     const bloomEffect = new SelectiveBloomEffect(scene, camera, {
       luminanceThreshold: 0.61,
       luminanceSmoothing: 0.5,
@@ -99,7 +93,7 @@ export default class PostProcessManager {
     edgeDetectionMaterial.predicationThreshold = 0.002;
     edgeDetectionMaterial.predicationScale = 1;
     composer.multisampling = 3; // 抗锯齿强度
-    this.addSMAAGUI(composer, smaaEffect, edgeDetectionMaterial);
+    // this.addSMAAGUI(composer, smaaEffect, edgeDetectionMaterial);
 
     // 合并所有的后处理效果 Merge all effects into one pass.
     const effects = [outlineEffect, bloomEffect, smaaEffect];
@@ -151,10 +145,6 @@ export default class PostProcessManager {
     }
 
     return composer;
-    // requestAnimationFrame(function render() {
-    //   requestAnimationFrame(render);
-    //   composer.render();
-    // });
   };
 
   /**
@@ -310,4 +300,68 @@ export default class PostProcessManager {
 
     folder.open();
   };
+
+  // 默认配置
+  defaultConfig = {
+    bloom: {
+      smoothing: 1,
+      inverted: true,
+      ignoreBackground: false,
+      opacity: 1,
+      luminanceThreshold: 0.61,
+      luminanceSmoothing: 0.5,
+      mipmapBlur: true,
+      intensity: 10.0
+    }
+  };
+
+  _setConfigValue() {
+    this.bloomEffect.luminanceMaterial.setThreshold(this.defaultConfig.bloom.luminanceThreshold);
+    this.bloomEffect.intensity = this.defaultConfig.bloom.intensity;
+    this.bloomEffect.luminanceMaterial.setSmoothingFactor(
+      this.defaultConfig.bloom.luminanceSmoothing
+    );
+    this.bloomEffect.inverted = this.defaultConfig.bloom.inverted;
+    this.bloomEffect.ignoreBackground = this.defaultConfig.bloom.ignoreBackground;
+    this.bloomEffect.opacity = this.defaultConfig.bloom.opacity;
+  }
+
+  mount(threeobject) {
+    console.log(' 开发模块注册 ', threeobject);
+    this.ssthreeObject = threeobject;
+    this.createComposer(false);
+    // 初始化赋值
+    this._setConfigValue();
+  }
+
+  unmount() {
+    console.log(' 开发模块解除注册 ');
+  }
+
+  import(e = {}) {
+    console.log(' 导入的文件配置 import ', e);
+    this.defaultConfig = e;
+    this._setConfigValue();
+  }
+
+  export() {
+    return this.defaultConfig;
+  }
+
+  getDebugConfig() {
+    return this.defaultConfig;
+  }
+
+  onDebugChange(e) {
+    // console.log(' develop change ', e);
+    if (!this.bloomEffect) return;
+
+    this.defaultConfig.bloom.luminanceThreshold = e.data.bloom.luminanceThreshold;
+    this.defaultConfig.bloom.intensity = e.data.bloom.intensity;
+    this.defaultConfig.bloom.luminanceSmoothing = e.data.bloom.luminanceSmoothing;
+    this.defaultConfig.bloom.inverted = e.data.bloom.inverted;
+    this.defaultConfig.bloom.ignoreBackground = e.data.bloom.ignoreBackground;
+    this.defaultConfig.bloom.opacity = e.data.bloom.opacity;
+    this._setConfigValue();
+  }
 }
