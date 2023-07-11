@@ -1,1 +1,14 @@
-{"SSDevelopMode":{"interinty":10}}
+{
+  "SSDevelopMode": { "interinty": 10 },
+  "PostProcessManager": {
+    "bloom": {
+      "luminanceThreshold": 0.61,
+      "luminanceSmoothing": 0.5,
+      "mipmapBlur": true,
+      "intensity": 5,
+      "inverted": true,
+      "ignoreBackground": false,
+      "opacity": 1
+    }
+  }
+}
