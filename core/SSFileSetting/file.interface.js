@@ -1,4 +1,8 @@
 import SSThreeObject from '../SSThreeObject';
+import SSPubSubcribeInstance from '../SSTool/pubsubscribe';
+
+// 订阅更新
+export const SSFileInterfaceUpdateScribe = 'SSFileInterfaceUpdateScribe';
 
 export default class SSFileInterface {
   /**
@@ -6,7 +10,7 @@ export default class SSFileInterface {
    * @param {SSThreeObject} obj
    */
   mount(obj) {
-    //
+    console.log(' 配置three object配置 ', obj);
   }
 
   /**
@@ -15,10 +19,6 @@ export default class SSFileInterface {
   unmount() {
     //
   }
-
-  /**
-   * 增加调试工具
-   */
 
   /**
    * 导出配置
@@ -33,6 +33,13 @@ export default class SSFileInterface {
    */
   import(obj) {
     console.log(' 导入配置 ', obj);
+  }
+
+  /**
+   * 更新调试
+   */
+  updateDebug() {
+    SSPubSubcribeInstance.publish(SSFileInterface, this);
   }
 
   /**

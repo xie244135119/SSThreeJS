@@ -34,6 +34,7 @@ export default class SSFileSetting {
   }
 
   destory() {
+    this.unregisterModules();
     this._debugGui.destroy();
   }
 
@@ -200,6 +201,18 @@ export default class SSFileSetting {
     onDebugChange = null,
     selectSource = {}
   ) {
+    // const addGuiByObject = (object, aFolderKey = '') => {
+    //   if (object instanceof Object) {
+    //     const valueKeys = Object.keys(object);
+    //     const valueFolder = floder.addFolder(aFolderKey);
+    //     valueKeys.forEach((valueKey) => {
+    //       valueFolder.add(object, valueKey)?.onChange((v) => {
+    //         object[valueKey] = v;
+    //       });
+    //     });
+    //   }
+    // };
+
     const keys = Object.keys(options);
     for (let index = 0; index < keys.length; index++) {
       const key = keys[index];
@@ -222,21 +235,24 @@ export default class SSFileSetting {
           });
         continue;
       }
-      // object
-      if (value instanceof Object) {
-        const valueKeys = Object.keys(value);
-        const valueFolder = floder.addFolder(key);
-        valueKeys.forEach((valueKey) => {
-          valueFolder.add(value, valueKey)?.onChange((v) => {
-            onDebugChange?.({
-              key,
-              value: v,
-              data: options
-            });
-          });
+      // Array<Ob(ject>
+      if (value instanceof Array) {
+        const arrayfolder = floder.addFolder(key);
+        value.forEach((e, index) => {
+          if (e instanceof Object) {
+            this._addDebugForObject(e, arrayfolder, onDebugChange, selectSource);
+          }
         });
         continue;
       }
+      // object
+      if (value instanceof Object && !(value instanceof Function)) {
+        // addGuiByObject(value, key);
+        const objfolder = floder.addFolder(key);
+        this._addDebugForObject(value, objfolder, onDebugChange, selectSource);
+        continue;
+      }
+
       // select type
       const types = selectSource[key];
       if (types) {
@@ -247,9 +263,6 @@ export default class SSFileSetting {
             data: options
           });
         });
-        continue;
-      }
-      if (options[key] === null) {
         continue;
       }
       floder.add(options, key)?.onChange((v) => {
