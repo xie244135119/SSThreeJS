@@ -1,14 +1,10 @@
 import GUI from 'lil-gui';
 import * as THREE from 'three';
-import { Pass } from 'three/examples/jsm/postprocessing/Pass';
-import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
-import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass';
-import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass';
 import SSFile from '../SSTool/file';
 import styles from './index.css';
-import SSConfig from '../SSConfig/index';
 import SSThreeObject from '../SSThreeObject';
-import SSFileInterface from './file.interface';
+import SSFileInterface, { SSUpdateScribe } from './file.interface';
+import SSPubSubcribeInstance from '../SSTool/pubsubscribe';
 
 export default class SSFileSetting {
   /**
@@ -27,21 +23,6 @@ export default class SSFileSetting {
   _menuContainer = null;
 
   /**
-   * @type GUI 灯光gui
-   */
-  lightGui = null;
-
-  /**
-   * @type GUI 后处理gui
-   */
-  postProcessGui = null;
-
-  /**
-   * @type GUI 摄像头gui
-   */
-  cameraGui = null;
-
-  /**
    * @type Array<SSFileInterface>
    */
   _modules = null;
@@ -54,83 +35,8 @@ export default class SSFileSetting {
   }
 
   destory() {
+    this.unregisterModules();
     this._debugGui.destroy();
-  }
-
-  /**
-   * 导入设置
-   * @param {{ lights: Array<{}>, camera:{}, orbitControls:{} }} fileSetting 加载的配置
-   */
-  import(fileSetting = {}) {
-    const updateDataToObj = (dataObj = {}, source = {}) => {
-      Object.keys(dataObj).forEach((key) => {
-        if (source[key] instanceof THREE.Color) {
-          source[key].set(dataObj[key]);
-        } else if (source[key] instanceof THREE.Vector3) {
-          source[key].copy(dataObj[key]);
-        } else {
-          source[key] = dataObj[key];
-        }
-      });
-    };
-    let existlights = this._ssthreeObject.threeScene.children.filter(
-      (item) => item instanceof THREE.Light
-    );
-    existlights.forEach((e) => {
-      e.removeFromParent();
-    });
-    existlights = null;
-    //
-    const { lights = [], camera = {}, orbitControls = {} } = fileSetting;
-    lights.forEach((e) => {
-      const light = new THREE[e.type]();
-      this._ssthreeObject.threeScene.add(light);
-      updateDataToObj(e, light);
-    });
-    updateDataToObj(camera, this._ssthreeObject.threeCamera);
-    updateDataToObj(orbitControls, this._ssthreeObject.threeOrbitControl);
-    this._ssthreeObject.threeOrbitControl.update();
-  }
-
-  /**
-   * export setting to json
-   */
-  export() {
-    const getDataFromObj = (obj) => {
-      const resault = {
-        type: obj.type
-      };
-      const props = this.getObjectDebugProps(obj);
-      props.forEach((e) => {
-        if (obj[e] === Infinity || obj[e] === -Infinity) {
-          //
-        } else {
-          resault[e] = obj[e];
-        }
-      });
-      return resault;
-    };
-
-    // light
-    const lights = [];
-    this._ssthreeObject.threeScene.children.forEach((child) => {
-      if (child instanceof THREE.Light) {
-        const data = getDataFromObj(child);
-        lights.push(data);
-      }
-    });
-    // Camera
-    const camera = getDataFromObj(this._ssthreeObject.threeCamera);
-    // OrbitControls
-    const orbitControls = getDataFromObj(this._ssthreeObject.threeOrbitControl);
-    orbitControls.target = this._ssthreeObject.threeOrbitControl.target;
-    // PostProcess
-    const resault = {
-      lights,
-      camera,
-      orbitControls
-    };
-    SSFile.exportJson(resault, 'ssthreejs.setting.json');
   }
 
   /**
@@ -138,11 +44,20 @@ export default class SSFileSetting {
    * @param {Array<SSFileInterface>} modules
    */
   registerModules(modules = []) {
-    console.log(' modules ', modules);
+    this._modules = [];
     modules.forEach((E) => {
-      const module = new E();
-      module.mount(this._ssthreeObject);
-      this._modules.push(module);
+      const e = new E();
+      e.__name = E.name;
+      e.mount?.(this._ssthreeObject);
+      this._modules.push(e);
+    });
+    SSPubSubcribeInstance.subscribe(SSUpdateScribe, (aModule) => {
+      if (this._debugGui) {
+        const origingui = this._debugGui?.children?.find((item) => item._title === aModule.__name);
+        origingui.destroy();
+        const gui = this._addModuleGui(aModule);
+        gui.open();
+      }
     });
   }
 
@@ -151,30 +66,44 @@ export default class SSFileSetting {
    */
   unregisterModules() {
     this._modules.forEach((e) => {
-      e.unmount();
+      e.unmount?.();
     });
+    this._modules = null;
   }
 
   /**
-   * 获取设置调试的物体
-   * @param {THREE.Object3D} object 材质物体
+   * export setting to json
    */
-  getObjectDebugProps = (object) => {
-    const allProps = Object.keys(object);
-    const validProps = allProps.filter(
-      (prop) =>
-        SSConfig.TYPEKEYS.IgnoreKeys.indexOf(prop) === -1 && typeof object[prop] !== 'function'
-    );
-    console.log(' object 支持调试的key值 ', object, validProps);
-    return validProps;
-  };
+  export() {
+    const resault = {};
+    this._modules.forEach((e) => {
+      const text = e.export?.();
+      if (text) {
+        resault[e.__name] = text;
+      }
+    });
+    SSFile.exportJson(resault, 'ssthreejs.setting.json');
+  }
+
+  /**
+   * 导入设置
+   * @param {{}} fileSetting 加载的配置
+   */
+  import(fileSetting = {}) {
+    this._modules.forEach((e) => {
+      if (fileSetting[e.__name]) {
+        e.import(fileSetting[e.__name]);
+        SSPubSubcribeInstance.publish(SSUpdateScribe, e);
+      }
+    });
+  }
 
   /**
    * 增加调试
    */
   addDebugModel() {
     // 右下角调试按钮
-    this._addMenuIcon();
+    this._addDrawIcon();
     // 右侧的抽屉
     this._addDrawerView();
     //
@@ -182,44 +111,14 @@ export default class SSFileSetting {
       this._debugGui = new GUI({
         autoPlace: true,
         injectStyles: true,
-        title: '场景配置',
+        title: '场景调试',
         closeFolders: true,
         container: this._menuContainer,
-        width: 300
+        width: '100%'
       });
     }
-    window.fileSetting = this;
-    //
-    this.lightGui = this._addLightsSetting();
-    this.addDebugForObject(this._ssthreeObject.threeRenderer, this._debugGui);
-    this.cameraGui = this._addCameraSetting();
-    this.postProcessGui = this._addPostProcessSetting();
-    // this.addDebugForObject(this._ssthreeObject.threeEffectComposer, this.postProcessGui);
-    // postProcess test
-    this.addDebugForObject(
-      this._ssthreeObject.threeEffectComposer.passes[1].effects[0].luminanceMaterial,
-      this.postProcessGui
-    );
-    this.addDebugForObject(
-      this._ssthreeObject.threeEffectComposer.passes[1].effects[1],
-      this.postProcessGui
-    );
 
-    this.developGui = this._addDevelopSetting();
-    this.otherGui = this._addOtherSetting();
-    this.addDebugForObject(this._ssthreeObject.threeOrbitControl, this.cameraGui);
-    this.addDebugForObject(this._ssthreeObject.threeCamera, this.cameraGui);
-    //
-    this.cameraGui.onOpenClose((e) => {
-      console.log(' gui onOpenClose 变化 ', e);
-    });
-
-    //
-    this._ssthreeObject.threeScene.children.forEach((e) => {
-      if (e instanceof THREE.Light) {
-        this.addDebugForObject(e, this.lightGui);
-      }
-    });
+    this._modules.forEach(this._addModuleGui);
   }
 
   /**
@@ -230,23 +129,25 @@ export default class SSFileSetting {
   }
 
   /**
-   * add dynamic debug，适用于新增单场景调试
-   * @param {THREE.Object3D | Pass} object
-   * @param {GUI} gui
+   * 增加 模块调试工具
+   * @param {SSFileInterface} aModule 模块
+   * @returns {GUI}
    */
-  addDebugForObject(object, gui = this.otherGui) {
-    if (!object) {
-      return;
+  _addModuleGui = (aModule) => {
+    const obj = aModule.getDebugConfig?.();
+    if (obj) {
+      const gui = this._debugGui.addFolder(aModule.__name);
+      const selectData = aModule.getDebugSelectTypes?.();
+      this._addDebugForObject(obj, gui, aModule.onDebugChange?.bind(aModule), selectData);
+      return gui;
     }
-    const validProps = this.getObjectDebugProps(object);
-    const folder = gui.addFolder(object.type || object.constructor?.name || object.prototype?.name);
-    this._addGuiForConfig(object, validProps, folder);
-  }
+    return null;
+  };
 
   /**
    * add menu icon
    */
-  _addMenuIcon = () => {
+  _addDrawIcon = () => {
     const menudiv = document.createElement('div');
     menudiv.innerText = '调';
     menudiv.className = styles.menuicon;
@@ -308,26 +209,22 @@ export default class SSFileSetting {
 
   /**
    * 新增 gui 事件
-   * @param {THREE.Object3D | Pass} options 配置对象
-   * @param {Array<string>} keys 属性值
+   * @param {object} options 配置对象
    * @param {GUI} floder gui
+   * @param {Function} onDebugChange 调试改变的时候
+   * @param {object} selectSource select组件数据源
    */
-  _addGuiForConfig(options = {}, keys = [], floder = this._debugGui) {
-    const addGuiByObject = (object, aFolderKey = '') => {
-      if (object instanceof Object) {
-        const valueKeys = Object.keys(object);
-        const valueFolder = floder.addFolder(aFolderKey);
-        valueKeys.forEach((valueKey) => {
-          valueFolder.add(object, valueKey)?.onChange((v) => {
-            object[valueKey] = v;
-          });
-        });
-      }
-    };
-
+  _addDebugForObject(
+    options = {},
+    floder = this._debugGui,
+    onDebugChange = null,
+    selectSource = {}
+  ) {
+    const keys = Object.keys(options);
     for (let index = 0; index < keys.length; index++) {
       const key = keys[index];
       const value = options[key];
+
       if (value instanceof THREE.Color) {
         floder
           .addColor(
@@ -337,121 +234,52 @@ export default class SSFileSetting {
             key
           )
           .onChange((e) => {
-            value.setRGB(e.r, e.g, e.b);
+            onDebugChange?.({
+              key,
+              value: e,
+              data: options
+            });
           });
         continue;
       }
       // Array<Ob(ject>
       if (value instanceof Array) {
-        value.forEach((e) => {
+        const arrayfolder = floder.addFolder(key);
+        value.forEach((e, index) => {
           if (e instanceof Object) {
-            addGuiByObject(e, `${key}_${e.name || e.type}`);
+            const objfolder = arrayfolder.addFolder(index + 1);
+            this._addDebugForObject(e, objfolder, onDebugChange, selectSource);
           }
         });
         continue;
       }
       // object
-      if (value instanceof Object) {
-        addGuiByObject(value, key);
+      if (value instanceof Object && !(value instanceof Function)) {
+        // addGuiByObject(value, key);
+        const objfolder = floder.addFolder(key);
+        this._addDebugForObject(value, objfolder, onDebugChange, selectSource);
         continue;
       }
+
       // select type
-      const types = SSConfig.STATUSVARS[key];
+      const types = selectSource[key];
       if (types) {
         floder.add(options, key, types)?.onChange((v) => {
-          options[key] = v;
+          onDebugChange?.({
+            key,
+            value: v,
+            data: options
+          });
         });
         continue;
       }
-      if (options[key] === null) {
-        continue;
-      }
       floder.add(options, key)?.onChange((v) => {
-        options[key] = v;
+        onDebugChange?.({
+          key,
+          value: v,
+          data: options
+        });
       });
     }
-
-    if (options instanceof THREE.Object3D) {
-      const props = {
-        removeOne: () => {
-          this._ssthreeObject.threeScene.remove(options);
-          floder.destroy();
-        }
-      };
-      floder.add(props, 'removeOne');
-    }
   }
-
-  /**
-   * 增加灯光 相关配置
-   */
-  _addLightsSetting = () => {
-    const lightfolder = this._debugGui.addFolder('Light Helper');
-
-    // 新增额外的灯光
-    const options = {
-      LIGHT_TYPE: SSConfig.STATUSVARS.LIGHT_TYPE[0],
-      addOne: () => {
-        const lightTypeController = lightfolder.controllers.find(
-          (e) => e.property === 'LIGHT_TYPE'
-        );
-        console.log(' lightType ', lightTypeController);
-        const lightType = lightTypeController.getValue();
-
-        const light = new THREE[lightType]();
-        this._ssthreeObject.threeScene.add(light);
-        this.addDebugForObject(light, lightfolder);
-      }
-    };
-    Object.keys(options).forEach((key) => {
-      const types = SSConfig.STATUSVARS[key];
-      lightfolder.add(options, key, types);
-    });
-    return lightfolder;
-  };
-
-  /**
-   * 增加后处理相关
-   */
-  _addPostProcessSetting = () => {
-    const postProcessFolder = this._debugGui.addFolder('PostProcess Helper');
-    return postProcessFolder;
-  };
-
-  /**
-   * 业务功能
-   */
-  _addDevelopSetting = () => {
-    const developFolder = this._debugGui.addFolder('Develop Helper');
-    return developFolder;
-  };
-
-  /**
-   * 摄像头相关
-   */
-  _addCameraSetting = () => {
-    const otherFolder = this._debugGui.addFolder('Camera Helper');
-    return otherFolder;
-  };
-
-  /**
-   * webglRender
-   * @returns
-   */
-  _addRenderSetting = () => {
-    const otherFolder = this._debugGui.addFolder('WebglRender Helper');
-    return otherFolder;
-  };
-
-  /**
-   * 其他相关
-   */
-  _addOtherSetting = () => {
-    const otherFolder = this._debugGui.addFolder('Other Helper');
-    return otherFolder;
-  };
-
-  /**
-   *
-   */
 }

@@ -55,10 +55,22 @@
     },
     "camera": {
       "position": {
-        "x": 2.186568432629345,
-        "y": 1.4687777408039908,
-        "z": 0.7279386123185945
+        "x": 2.3325369746365165,
+        "y": 3.2689004483370496,
+        "z": -2.6376227372065615
       }
+    }
+  },
+  "PostProcessManager": {
+    "bloom": {
+      "smoothing": 1,
+      "inverted": true,
+      "ignoreBackground": false,
+      "opacity": 1,
+      "luminanceThreshold": 0.61,
+      "luminanceSmoothing": 0.5,
+      "mipmapBlur": true,
+      "intensity": 10
     }
   }
 }

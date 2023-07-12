@@ -9,7 +9,7 @@ import React, { useEffect, useRef } from 'react';
 // import SSThreejs, { THREE, ThreeEvent } from '../../../core/index';
 // import PostProcessUtil from '../../../core/PostProcessUtil';
 import SSThreeJs, { THREE, SSCssRenderer } from '../../../core/index';
-import SSFileSetting from '../../../core/SSFileSetting/index_1';
+import SSFileSetting from '../../../core/SSFileSetting/index';
 import SceneSetting from './ssthreejs.setting.json';
 import SSDevelopMode from '../../../core/SSFileSetting/develop.module';
 import SSLightModule from '../../../core/SSFileSetting/light.module';
@@ -58,7 +58,7 @@ export default function ParentIndex(props) {
 
     // 引用配置
     const fileSetting = new SSFileSetting(jsRef.current.ssthreeObject);
-    fileSetting.registerModules([SSDevelopMode, SSLightModule]);
+    fileSetting.registerModules([SSDevelopMode, SSLightModule, PostProcessManager]);
     fileSetting.addDebugModel();
     fileSetting.import(SceneSetting);
 
