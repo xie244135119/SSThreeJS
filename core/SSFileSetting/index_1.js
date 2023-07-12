@@ -3,7 +3,8 @@ import * as THREE from 'three';
 import SSFile from '../SSTool/file';
 import styles from './index.css';
 import SSThreeObject from '../SSThreeObject';
-import SSFileInterface from './file.interface';
+import SSFileInterface, { SSUpdateScribe } from './file.interface';
+import SSPubSubcribeInstance from '../SSTool/pubsubscribe';
 
 export default class SSFileSetting {
   /**
@@ -46,10 +47,20 @@ export default class SSFileSetting {
     this._modules = [];
     modules.forEach((E) => {
       const e = new E();
-      e.name = E.name;
+      e.__name = E.name;
       e.mount?.(this._ssthreeObject);
       this._modules.push(e);
     });
+    const trigger = (aModule) => {
+      console.log(' gui 更新数据 ', aModule, this._debugGui);
+      if (this._debugGui) {
+        const origingui = this._debugGui?.children?.find((item) => item._title === aModule.__name);
+        origingui.destroy();
+        const gui = this._addModuleGui(aModule);
+        gui.open();
+      }
+    };
+    SSPubSubcribeInstance.subscribe(SSUpdateScribe, trigger);
   }
 
   /**
@@ -70,7 +81,7 @@ export default class SSFileSetting {
     this._modules.forEach((e) => {
       const text = e.export?.();
       if (text) {
-        resault[e.name] = text;
+        resault[e.__name] = text;
       }
     });
     SSFile.exportJson(resault, 'ssthreejs.setting.json');
@@ -82,8 +93,9 @@ export default class SSFileSetting {
    */
   import(fileSetting = {}) {
     this._modules.forEach((e) => {
-      if (fileSetting[e.name]) {
-        e.import(fileSetting[e.name]);
+      if (fileSetting[e.__name]) {
+        e.import(fileSetting[e.__name]);
+        SSPubSubcribeInstance.publish(SSUpdateScribe, e);
       }
     });
   }
@@ -108,14 +120,7 @@ export default class SSFileSetting {
       });
     }
 
-    this._modules.forEach((e) => {
-      const obj = e.getDebugConfig?.();
-      const selectData = e.getDebugSelectTypes?.();
-      if (obj) {
-        const gui = this._debugGui.addFolder(e.name);
-        this._addDebugForObject(obj, gui, e.onDebugChange?.bind(e), selectData);
-      }
-    });
+    this._modules.forEach(this._addModuleGui);
   }
 
   /**
@@ -124,6 +129,22 @@ export default class SSFileSetting {
   removeDebugModel() {
     this._menuContainer.parentElement.remove();
   }
+
+  /**
+   * 增加 模块调试工具
+   * @param {SSFileInterface} aModule 模块
+   * @returns {GUI}
+   */
+  _addModuleGui = (aModule) => {
+    const obj = aModule.getDebugConfig?.();
+    if (obj) {
+      const gui = this._debugGui.addFolder(aModule.__name);
+      const selectData = aModule.getDebugSelectTypes?.();
+      this._addDebugForObject(obj, gui, aModule.onDebugChange?.bind(aModule), selectData);
+      return gui;
+    }
+    return null;
+  };
 
   /**
    * add menu icon
@@ -201,18 +222,6 @@ export default class SSFileSetting {
     onDebugChange = null,
     selectSource = {}
   ) {
-    // const addGuiByObject = (object, aFolderKey = '') => {
-    //   if (object instanceof Object) {
-    //     const valueKeys = Object.keys(object);
-    //     const valueFolder = floder.addFolder(aFolderKey);
-    //     valueKeys.forEach((valueKey) => {
-    //       valueFolder.add(object, valueKey)?.onChange((v) => {
-    //         object[valueKey] = v;
-    //       });
-    //     });
-    //   }
-    // };
-
     const keys = Object.keys(options);
     for (let index = 0; index < keys.length; index++) {
       const key = keys[index];
@@ -240,7 +249,8 @@ export default class SSFileSetting {
         const arrayfolder = floder.addFolder(key);
         value.forEach((e, index) => {
           if (e instanceof Object) {
-            this._addDebugForObject(e, arrayfolder, onDebugChange, selectSource);
+            const objfolder = arrayfolder.addFolder(index + 1);
+            this._addDebugForObject(e, objfolder, onDebugChange, selectSource);
           }
         });
         continue;

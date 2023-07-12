@@ -8,41 +8,41 @@
 
 class SSPubSubcribe {
   // 观察者
-  subscribeObjs = {};
+  _subscribeObjs = {};
 
   /**
    * 订阅消息
-   * @param {消息名称}} name
-   * @param {触发的函数} fn
+   * @param {string} name 消息名称
+   * @param {Function} fn
    */
   subscribe = (name, fn) => {
-    const arry = this.subscribeObjs[name] || [];
+    const arry = this._subscribeObjs[name] || [];
     const idenifer = Symbol('subcribe');
     arry.push({
       type: idenifer,
       fn
     });
-    this.subscribeObjs[name] = arry;
+    this._subscribeObjs[name] = arry;
     return idenifer;
   };
 
   /**
    * 移除订阅
-   * @param {消息名称} name
+   * @param {string} name 消息名称
    */
   remove = (name, idenifer) => {
-    const arry = this.subscribeObjs[name] || [];
+    const arry = this._subscribeObjs[name] || [];
     const findIndex = arry.findIndex((item) => item.type === idenifer);
     arry.splice(findIndex, 1);
   };
 
   /**
    * 发布消息
-   * @param {消息名称} name
-   * @param {消息传值对象} data
+   * @param {string} name 消息名称
+   * @param {object} data 消息传值对象
    */
   publish = (name = '', data = {} || []) => {
-    const array = this.subscribeObjs[name] || [];
+    const array = this._subscribeObjs[name] || [];
     for (let index = 0; index < array.length; index += 1) {
       const { fn } = array[index];
       fn?.(data);

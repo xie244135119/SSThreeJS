@@ -135,7 +135,7 @@ export default class SSDevelopMode extends SSFileInterface {
   }
 
   mount() {
-    console.log(' 开发模块注册 ');
+    //
   }
 
   unmount() {

@@ -1,8 +1,11 @@
 import SSThreeObject from '../SSThreeObject';
 import SSPubSubcribeInstance from '../SSTool/pubsubscribe';
 
-// 订阅更新
-export const SSFileInterfaceUpdateScribe = 'SSFileInterfaceUpdateScribe';
+/**
+ * @type string 更新通知
+ * @param {{ target: SSFileInterface, type: string, value: Object }}  type可选类型: add or change
+ */
+export const SSUpdateScribe = 'SSUpdateScribe';
 
 export default class SSFileInterface {
   /**
@@ -38,8 +41,8 @@ export default class SSFileInterface {
   /**
    * 更新调试
    */
-  updateDebug() {
-    SSPubSubcribeInstance.publish(SSFileInterface, this);
+  forceUpdateDebug() {
+    SSPubSubcribeInstance.publish(SSUpdateScribe, this);
   }
 
   /**

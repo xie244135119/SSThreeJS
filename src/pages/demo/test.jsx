@@ -58,9 +58,10 @@ export default function ParentIndex(props) {
 
     // 引用配置
     const fileSetting = new SSFileSetting(jsRef.current.ssthreeObject);
-    fileSetting.registerModules([SSDevelopMode, SSLightModule, PostProcessManager]);
+    fileSetting.registerModules([SSDevelopMode, SSLightModule]);
     fileSetting.addDebugModel();
     fileSetting.import(SceneSetting);
+
     return () => {
       fileSetting.removeDebugModel();
       jsRef.current.destroy();

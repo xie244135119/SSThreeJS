@@ -1,7 +1,20 @@
 import * as THREE from 'three';
+import SSDispose from '../SSDispose';
 import SSFileInterface from './file.interface';
 import SSThreeObject from '../SSThreeObject';
-import SSConfig from '../SSConfig';
+// import SSConfig from '../SSConfig';
+
+// 轨道控制
+const defaultControlKeys = [
+  'minPolarAngle',
+  'maxPolarAngle',
+  'enableDamping',
+  'dampingFactor',
+  'enableZoom',
+  'zoomSpeed',
+  'autoRotate',
+  'autoRotateSpeed'
+];
 
 export default class SSLightModule extends SSFileInterface {
   /**
@@ -72,29 +85,53 @@ export default class SSLightModule extends SSFileInterface {
   }
 
   import(obj) {
-    console.log(' import light ', obj);
-    const { type, ...rest } = obj;
-    const light = new THREE[type]();
-    Object.keys(rest).forEach((key) => {
-      if (key === 'position') {
-        light[key].set(rest[key].x, rest[key].y, rest[key].z);
-      } else if (key === 'color') {
-        light[key].set(rest[key]);
-      } else {
-        light[key] = rest[key];
-      }
+    // 移除默认灯光
+    const originLights = this._ssthreeObject.threeScene.children.filter(
+      (item) => item instanceof THREE.Light
+    );
+    originLights.forEach((e) => {
+      SSDispose.dispose(e);
+      e.removeFromParent();
     });
-    this._ssthreeObject.threeScene.add(light);
+
+    const { lights = [], camera = {}, orbitControl = {} } = obj;
+    lights.forEach((rest) => {
+      const light = new THREE[rest.type]();
+      Object.keys(rest).forEach((key) => {
+        if (key === 'position') {
+          light[key].set(rest[key].x, rest[key].y, rest[key].z);
+        } else if (key === 'color') {
+          light[key].set(rest[key]);
+        } else {
+          light[key] = rest[key];
+        }
+      });
+      this._ssthreeObject.threeScene.add(light);
+    });
+    // 轨道控制
+    const defaultControlVect3Keys = ['target'];
+    defaultControlKeys.forEach((key) => {
+      this._ssthreeObject.threeOrbitControl[key] = orbitControl[key];
+    });
+    defaultControlVect3Keys.forEach((key) => {
+      this._ssthreeObject.threeOrbitControl[key].copy(orbitControl[key]);
+    });
+    // camera
+    const defaultCameraVect3Keys = ['position'];
+    defaultCameraVect3Keys.forEach((key) => {
+      this._ssthreeObject.threeCamera[key].copy(camera[key]);
+    });
   }
 
   export() {
+    // 灯光
     const lights = [];
     this._ssthreeObject.threeScene.children.forEach((e) => {
       if (e instanceof THREE.Light) {
         if (e.visible) {
           const obj = {};
           obj.type = e.constructor.name;
-          Object.keys(this._lightProps[e.constructor.name]).forEach((key) => {
+          Object.keys(this._lightProps[obj.type]).forEach((key) => {
             if (key === 'position') {
               obj[key] = {
                 x: e[key].x,
@@ -103,7 +140,7 @@ export default class SSLightModule extends SSFileInterface {
               };
             } else if (key === 'color') {
               obj[key] = e[key].getHex();
-            } else {
+            } else if (key.indexOf('_') === -1) {
               obj[key] = e[key];
             }
           });
@@ -111,28 +148,64 @@ export default class SSLightModule extends SSFileInterface {
         }
       }
     });
-    console.log(' export light ', lights);
-    return lights;
+    // 轨道控制
+    const {
+      target,
+      minPolarAngle,
+      maxPolarAngle,
+      enableDamping,
+      dampingFactor,
+      enableZoom,
+      zoomSpeed,
+      autoRotate,
+      autoRotateSpeed
+    } = this._ssthreeObject.threeOrbitControl;
+    const orbitControl = {
+      target,
+      minPolarAngle,
+      maxPolarAngle,
+      enableDamping,
+      dampingFactor,
+      enableZoom,
+      zoomSpeed,
+      autoRotate,
+      autoRotateSpeed
+    };
+    // camera
+    const { position } = this._ssthreeObject.threeCamera;
+    const camera = {
+      position
+    };
+    const obj = {
+      lights,
+      orbitControl,
+      camera
+    };
+
+    console.log(' export light ', obj);
+    return obj;
   }
 
   getDebugConfig() {
     const options = {
-      lightType: this.getDebugSelectTypes().lightType[0],
+      lightType: this.getDebugSelectTypes().lightType[2],
       addOne: () => {
-        const { lightType = this.getDebugSelectTypes().lightType[0] } = this._dynamicConfig;
+        const { lightType = this.getDebugSelectTypes().lightType[2] } = this._dynamicConfig;
         console.log(' add one light ', lightType);
         const light = new THREE[lightType]();
         this._ssthreeObject.threeScene.add(light);
         // 更新 调试
-        this.updateDebug();
+        this.forceUpdateDebug();
       }
     };
-    //
+    // lights
     this._ssthreeObject.threeScene.children.forEach((e) => {
       if (e instanceof THREE.Light) {
         const list = options[e.type] || [];
         // 从 _lightProps 读取赋值
-        const obj = {};
+        const obj = {
+          __id: e.id
+        };
         Object.keys(this._lightProps[e.type]).forEach((key) => {
           obj[key] = e[key];
         });
@@ -140,7 +213,14 @@ export default class SSLightModule extends SSFileInterface {
         options[e.type] = list;
       }
     });
-    console.log(' 获取的调试选项 ', options);
+    // orcontrol
+    const orbitControl = {
+      objType: 'threeOrbitControl'
+    };
+    defaultControlKeys.forEach((key) => {
+      orbitControl[key] = this._ssthreeObject.threeOrbitControl[key];
+    });
+    options.orbitControl = orbitControl;
     return options;
   }
 
@@ -153,5 +233,27 @@ export default class SSLightModule extends SSFileInterface {
   onDebugChange(params) {
     console.log(' gui 灯光改变 ', params);
     this._dynamicConfig[params.key] = params.value;
+    // 复用的对象结构 直接使用已有的结构
+    // 非复用结构 需要赋值 <获取scene上的场景元素>
+    if (params.data.__id) {
+      const obj3d = this._ssthreeObject.threeScene.getObjectById(params.data.__id);
+      if (obj3d) {
+        if (params.key === 'color') {
+          obj3d[params.key].setRGB(params.value.r, params.value.g, params.value.b);
+        } else {
+          obj3d[params.key] = params.value;
+        }
+      }
+    }
+
+    //
+    switch (params.data.objType) {
+      case 'threeOrbitControl':
+        this._ssthreeObject.threeOrbitControl[params.key] = params.value;
+        break;
+
+      default:
+        break;
+    }
   }
 }

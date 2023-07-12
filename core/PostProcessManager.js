@@ -327,7 +327,7 @@ export default class PostProcessManager extends SSFileInterface {
   }
 
   mount(threeobject) {
-    console.log(' 开发模块注册 ', threeobject);
+    // console.log(' 开发模块注册 ', threeobject);
     this.ssthreeObject = threeobject;
     this.createComposer(false);
     // 初始化赋值
