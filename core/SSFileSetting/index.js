@@ -47,6 +47,7 @@ export default class SSFileSetting {
     this._modules = [];
     modules.forEach((E) => {
       const e = new E();
+      e.ssthreeObject = this._ssthreeObject;
       e.__name = E.name;
       e.mount?.(this._ssthreeObject);
       this._modules.push(e);
@@ -66,6 +67,7 @@ export default class SSFileSetting {
    */
   unregisterModules() {
     this._modules.forEach((e) => {
+      e.ssthreeObject = null;
       e.unmount?.();
     });
     this._modules = null;
@@ -138,7 +140,17 @@ export default class SSFileSetting {
     if (obj) {
       const gui = this._debugGui.addFolder(aModule.__name);
       const selectData = aModule.getDebugSelectTypes?.();
-      this._addDebugForObject(obj, gui, aModule.onDebugChange?.bind(aModule), selectData);
+      this._addDebugForObject(
+        obj,
+        gui,
+        (params) => {
+          aModule.onDebugChange?.({
+            ...params,
+            target: obj
+          });
+        },
+        selectData
+      );
       return gui;
     }
     return null;

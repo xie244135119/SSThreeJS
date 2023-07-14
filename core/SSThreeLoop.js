@@ -62,7 +62,7 @@ export default class SSThreeLoop {
 
   /**
    * delete event
-   * @param {*} identifier string 标识符
+   * @param {string | Symbol} identifier 标识符
    */
   static removeId = (identifier) => {
     this.removeIds([identifier]);
@@ -70,7 +70,7 @@ export default class SSThreeLoop {
 
   /**
    * delete identifer
-   * @param {*} identifier string 标识符
+   * @param {Array<string | Symbol>} identifier string 标识符
    */
   static removeIds = (identifiers = []) => {
     identifiers.forEach((e) => {

@@ -297,6 +297,7 @@ export default class SSCssRenderer {
       endPoint.z
     ]);
     const group = new THREE.Group();
+    group.name = 'LineGroup';
     this._ssthreeObject.threeScene.add(group);
     const line = new Line2(geo, material);
     group.add(line);
@@ -317,7 +318,7 @@ export default class SSCssRenderer {
    * @param {string} meshTowards direction
    * @returns
    */
-  addLineAuto = (aObj, meshTowards = 'z') => {
+  addLineFromObject = (aObj, meshTowards = 'z') => {
     if (!(aObj instanceof THREE.Object3D)) {
       return {};
     }

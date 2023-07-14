@@ -23,7 +23,7 @@ export default function ParentIndex(props) {
   // 测试 SS
   const testcssrender = () => {
     const cssrender = new SSCssRenderer(jsRef.current.ssthreeObject);
-    cssrender.setup2D();
+    // cssrender.setup2D();
     cssrender.addLine(
       {
         x: 0,
@@ -47,8 +47,10 @@ export default function ParentIndex(props) {
     const geomertry = new THREE.BoxGeometry(1, 1, 1);
     const material = new THREE.MeshStandardMaterial({
       color: new THREE.Color(1, 1, 1)
+      // side: THREE.DoubleSide
     });
     const mesh = new THREE.Mesh(geomertry, material);
+    mesh.name = 'TestBox';
     jsRef.current.ssthreeObject.threeScene.add(mesh);
 
     //

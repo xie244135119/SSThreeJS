@@ -50,7 +50,7 @@
       "dampingFactor": 0.1,
       "enableZoom": true,
       "zoomSpeed": 1,
-      "autoRotate": true,
+      "autoRotate": false,
       "autoRotateSpeed": 2
     },
     "camera": {

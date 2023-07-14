@@ -356,12 +356,12 @@ export default class PostProcessManager extends SSFileInterface {
     // console.log(' develop change ', e);
     if (!this.bloomEffect) return;
 
-    this.defaultConfig.bloom.luminanceThreshold = e.data.bloom.luminanceThreshold;
-    this.defaultConfig.bloom.intensity = e.data.bloom.intensity;
-    this.defaultConfig.bloom.luminanceSmoothing = e.data.bloom.luminanceSmoothing;
-    this.defaultConfig.bloom.inverted = e.data.bloom.inverted;
-    this.defaultConfig.bloom.ignoreBackground = e.data.bloom.ignoreBackground;
-    this.defaultConfig.bloom.opacity = e.data.bloom.opacity;
+    this.defaultConfig.bloom.luminanceThreshold = e.target.bloom.luminanceThreshold;
+    this.defaultConfig.bloom.intensity = e.target.bloom.intensity;
+    this.defaultConfig.bloom.luminanceSmoothing = e.target.bloom.luminanceSmoothing;
+    this.defaultConfig.bloom.inverted = e.target.bloom.inverted;
+    this.defaultConfig.bloom.ignoreBackground = e.target.bloom.ignoreBackground;
+    this.defaultConfig.bloom.opacity = e.target.bloom.opacity;
     this._setConfigValue();
   }
 }

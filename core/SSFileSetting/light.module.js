@@ -121,6 +121,7 @@ export default class SSLightModule extends SSFileInterface {
     defaultCameraVect3Keys.forEach((key) => {
       this._ssthreeObject.threeCamera[key].copy(camera[key]);
     });
+    this._ssthreeObject.threeOrbitControl.update();
   }
 
   export() {
@@ -149,28 +150,35 @@ export default class SSLightModule extends SSFileInterface {
       }
     });
     // 轨道控制
-    const {
-      target,
-      minPolarAngle,
-      maxPolarAngle,
-      enableDamping,
-      dampingFactor,
-      enableZoom,
-      zoomSpeed,
-      autoRotate,
-      autoRotateSpeed
-    } = this._ssthreeObject.threeOrbitControl;
-    const orbitControl = {
-      target,
-      minPolarAngle,
-      maxPolarAngle,
-      enableDamping,
-      dampingFactor,
-      enableZoom,
-      zoomSpeed,
-      autoRotate,
-      autoRotateSpeed
-    };
+    // const {
+    //   target,
+    //   minPolarAngle,
+    //   maxPolarAngle,
+    //   enableDamping,
+    //   dampingFactor,
+    //   enableZoom,
+    //   zoomSpeed,
+    //   autoRotate,
+    //   autoRotateSpeed
+    // } = this._ssthreeObject.threeOrbitControl;
+    // const orbitControl = {
+    //   target,
+    //   minPolarAngle,
+    //   maxPolarAngle,
+    //   enableDamping,
+    //   dampingFactor,
+    //   enableZoom,
+    //   zoomSpeed,
+    //   autoRotate,
+    //   autoRotateSpeed
+    // };
+    const orbitControl = {};
+    // 轨道控制
+    const defaultControlVect3Keys = ['target'];
+    [...defaultControlKeys, ...defaultControlVect3Keys].forEach((key) => {
+      orbitControl[key] = this._ssthreeObject.threeOrbitControl[key];
+    });
+
     // camera
     const { position } = this._ssthreeObject.threeCamera;
     const camera = {
@@ -181,8 +189,6 @@ export default class SSLightModule extends SSFileInterface {
       orbitControl,
       camera
     };
-
-    console.log(' export light ', obj);
     return obj;
   }
 

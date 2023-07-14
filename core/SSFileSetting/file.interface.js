@@ -9,18 +9,23 @@ export const SSUpdateScribe = 'SSUpdateScribe';
 
 export default class SSFileInterface {
   /**
+   * @type SSThreeObject 绑定的目标元素
+   */
+  ssthreeObject = null;
+
+  /**
    * 挂载
    * @param {SSThreeObject} obj
    */
   mount(obj) {
-    console.log(' 配置three object配置 ', obj);
+    //
   }
 
   /**
    * 卸载
    */
   unmount() {
-    //
+    this.ssthreeObject = null;
   }
 
   /**
