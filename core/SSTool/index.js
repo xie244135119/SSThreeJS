@@ -93,10 +93,10 @@ export default class SSThreeTool {
   };
 
   /**
-   * debonuce
-   * @param {*} fn 虚函数
-   * @param {*} time 防抖时间
-   * @param {*} immediate
+   * 防抖
+   * @param {function} fn 虚函数
+   * @param {number} [wait=200] 防抖时间
+   * @param {boolean} [immediate=false] 立刻执行
    * @returns
    */
   static debounce = (fn, wait = 200, immediate = false) => {
@@ -110,6 +110,26 @@ export default class SSThreeTool {
       timer = setTimeout(() => {
         // eslint-disable-next-line prefer-rest-params
         fn.apply(this, arguments);
+      }, wait);
+    };
+  };
+
+  /**
+   * 节流
+   * @param {function} fn 虚函数
+   * @param {number} [wait=200] 等待时间
+   * @returns
+   */
+  static throttle = (fn, wait = 200) => {
+    let timer = null;
+    return function block() {
+      const context = this;
+      // eslint-disable-next-line prefer-rest-params
+      const args = [...arguments];
+      if (timer) return;
+      timer = setTimeout(() => {
+        fn.apply(context, args);
+        timer = null;
       }, wait);
     };
   };

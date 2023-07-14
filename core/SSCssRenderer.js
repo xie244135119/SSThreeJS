@@ -277,10 +277,11 @@ export default class SSCssRenderer {
    * 增加描线
    * @param {THREE.Vector3} startPoint 起点
    * @param {THREE.Vector3} endPoint 终点
-   * @param {LineMaterialParameters} lineOptions
+   * @param {LineMaterialParameters} [lineOptions] 线框效果
+   * @param {boolean} [centerIcon=false] 中心icon
    * @returns {{ line: Line2, group: THREE.Group }}
    */
-  addLine = (startPoint, endPoint, lineOptions) => {
+  static addLine = (startPoint, endPoint, lineOptions = {}, centerIcon = false) => {
     const material = new LineMaterial({
       color: new THREE.Color(111 / 255, 175 / 255, 173 / 255),
       linewidth: 0.001,
@@ -298,14 +299,15 @@ export default class SSCssRenderer {
     ]);
     const group = new THREE.Group();
     group.name = 'LineGroup';
-    this._ssthreeObject.threeScene.add(group);
     const line = new Line2(geo, material);
     group.add(line);
-    SSLoader.loadSprite(require('./assets/line_start.png')).then((obj) => {
-      obj.position.copy(startPoint);
-      obj.scale.set(0.2, 0.2, 0.2);
-      group.attach(obj);
-    });
+    if (centerIcon) {
+      SSLoader.loadSprite(require('./assets/line_start.png')).then((obj) => {
+        obj.position.copy(startPoint);
+        obj.scale.set(0.2, 0.2, 0.2);
+        group.attach(obj);
+      });
+    }
     return {
       line,
       group
@@ -315,10 +317,11 @@ export default class SSCssRenderer {
   /**
    * auto compute position and create line
    * @param {THREE.Object3D} aObj obj model
-   * @param {string} meshTowards direction
+   * @param {string} [meshTowards='z'] direction
+   * @param {LineMaterialParameters} [lineOptions] 线条效案
    * @returns
    */
-  addLineFromObject = (aObj, meshTowards = 'z') => {
+  static addLineFromObject = (aObj, meshTowards = 'z', lineOptions = {}) => {
     if (!(aObj instanceof THREE.Object3D)) {
       return {};
     }
@@ -347,7 +350,7 @@ export default class SSCssRenderer {
     }
     endVector.y += (yHeight * 0.5 * 4) / 5;
     //
-    const { group, line } = this.addLine(startVector, endVector, false);
+    const { group, line } = this.addLine(startVector, endVector, lineOptions, true);
     return {
       group,
       line,

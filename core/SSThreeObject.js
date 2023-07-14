@@ -74,27 +74,37 @@ export default class SSThreeObject {
    * @param {THREE.Vector2} aPoint 点位信息
    * @param {Array<THREE.Object3D>} targetObject3Ds 目标模型
    * @param {Array<string>} [ignoreMeshNames] 忽略的材质名称
+   * @param {boolean} [needOffset=false] 是否需要偏移
    * @returns
    */
-  getModelsByPoint = (aPoint, targetObject3Ds = this.threeScene.children, ignoreMeshNames = []) => {
-    const x =
-      ((aPoint.x - this.threeContainer.getBoundingClientRect().left) /
-        this.threeContainer.offsetWidth) *
-        2 -
-      1; // 规范设施横坐标
-    const y =
-      -(
-        (aPoint.y - this.threeContainer.getBoundingClientRect().top) /
-        this.threeContainer.offsetHeight
-      ) *
-        2 +
-      1;
-    // 规范设施纵坐标
-    const standardVector = new THREE.Vector3(x, y, 1); // 规范设施坐标
-    const worldVector = standardVector.unproject(this.threeCamera);
-    const ray = worldVector.sub(this.threeCamera.position).normalize();
-    const raycaster = new THREE.Raycaster(this.threeCamera.position, ray);
-    raycaster.camera = this.threeCamera;
+  getModelsByPoint = (
+    aPoint,
+    targetObject3Ds = this.threeScene.children,
+    ignoreMeshNames = [],
+    needOffset = false
+  ) => {
+    const point = new THREE.Vector2();
+    if (needOffset) {
+      point.x =
+        ((aPoint.x - this.threeContainer.getBoundingClientRect().left) /
+          this.threeContainer.offsetWidth) *
+          2 -
+        1; // 规范设施横坐标
+      point.y =
+        -(
+          (aPoint.y - this.threeContainer.getBoundingClientRect().top) /
+          this.threeContainer.offsetHeight
+        ) *
+          2 +
+        1;
+    } else {
+      point.x = (aPoint.x / this.threeContainer.offsetWidth) * 2 - 1; // 规范设施横坐标
+      point.y = -(aPoint.y / this.threeContainer.offsetHeight) * 2 + 1;
+    }
+
+    const raycaster = new THREE.Raycaster();
+    raycaster.setFromCamera(point, this.threeCamera);
+
     let models = raycaster.intersectObjects(targetObject3Ds, true);
     //
     const commonMeshTypes = [

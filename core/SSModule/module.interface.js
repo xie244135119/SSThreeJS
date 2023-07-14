@@ -3,11 +3,11 @@ import SSPubSubcribeInstance from '../SSTool/pubsubscribe';
 
 /**
  * @type string 更新通知
- * @param {{ target: SSFileInterface, type: string, value: Object }}  type可选类型: add or change
+ * @param {{ target: SSModuleInterface, type: string, value: Object }}  type可选类型: add or change
  */
-export const SSUpdateScribe = 'SSUpdateScribe';
+export const SSModuleUpdateScribe = 'SSModuleUpdateScribe';
 
-export default class SSFileInterface {
+export default class SSModuleInterface {
   /**
    * @type SSThreeObject 绑定的目标元素
    */
@@ -17,14 +17,14 @@ export default class SSFileInterface {
    * 挂载
    * @param {SSThreeObject} obj
    */
-  mount(obj) {
+  moduleMount(obj) {
     //
   }
 
   /**
    * 卸载
    */
-  unmount() {
+  moduleUnmount() {
     this.ssthreeObject = null;
   }
 
@@ -32,35 +32,36 @@ export default class SSFileInterface {
    * 导出配置
    * @returns {Object} 导出的配置项
    */
-  export() {
+  moduleExport() {
     return {};
   }
 
   /**
    * 导入配置
    */
-  import(obj) {
+  moduleImport(obj) {
     console.log(' 导入配置 ', obj);
   }
 
   /**
-   * 更新调试
+   * 更新ui调试
    */
-  forceUpdateDebug() {
-    SSPubSubcribeInstance.publish(SSUpdateScribe, this);
+  moduleUpdateGui() {
+    SSPubSubcribeInstance.publish(SSModuleUpdateScribe, this);
   }
 
   /**
+   * 获取模块调试配置
    * @returns {Object} 调试工具配置
    */
-  getDebugConfig() {
+  getModuleConfig() {
     return {};
   }
 
   /**
    * @returns {Object} 调试工具类型
    */
-  getDebugSelectTypes() {
+  getModuleSelectTypes() {
     return {
       slide: [1, 2, 3, 4]
     };
@@ -70,7 +71,7 @@ export default class SSFileInterface {
    * 调试工具变化
    * @param {{ key: string, value: any, data: any  }} params
    */
-  onDebugChange(params = {}) {
+  moduleGuiChange(params = {}) {
     //
   }
 }

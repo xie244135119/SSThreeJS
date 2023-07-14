@@ -7,7 +7,7 @@ import SSCssRenderer, { CSS2DObject, CSS3DObject } from './SSCssRenderer';
 import * as SSMaterial from './SSMaterial/index';
 import * as SSMesh from './SSMesh/index';
 import SSPostProcess from './SSPostProcess';
-import SSFileSetting from './SSFileSetting';
+import SSFileSetting from './SSModule';
 import SSThreeObject from './SSThreeObject';
 import SSDispose from './SSDispose';
 

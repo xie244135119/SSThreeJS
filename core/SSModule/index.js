@@ -3,10 +3,10 @@ import * as THREE from 'three';
 import SSFile from '../SSTool/file';
 import styles from './index.css';
 import SSThreeObject from '../SSThreeObject';
-import SSFileInterface, { SSUpdateScribe } from './file.interface';
+import SSModuleInterface, { SSModuleUpdateScribe } from './module.interface';
 import SSPubSubcribeInstance from '../SSTool/pubsubscribe';
 
-export default class SSFileSetting {
+export default class SSModuleCenter {
   /**
    * @type GUI
    */
@@ -23,7 +23,7 @@ export default class SSFileSetting {
   _menuContainer = null;
 
   /**
-   * @type Array<SSFileInterface>
+   * @type Array<SSModuleInterface>
    */
   _modules = null;
 
@@ -41,7 +41,7 @@ export default class SSFileSetting {
 
   /**
    * 模块注册
-   * @param {Array<SSFileInterface>} modules
+   * @param {Array<SSModuleInterface>} modules
    */
   registerModules(modules = []) {
     this._modules = [];
@@ -49,13 +49,13 @@ export default class SSFileSetting {
       const e = new E();
       e.ssthreeObject = this._ssthreeObject;
       e.__name = E.name;
-      e.mount?.(this._ssthreeObject);
+      e.moduleMount?.(this._ssthreeObject);
       this._modules.push(e);
     });
-    SSPubSubcribeInstance.subscribe(SSUpdateScribe, (aModule) => {
+    SSPubSubcribeInstance.subscribe(SSModuleUpdateScribe, (aModule) => {
       if (this._debugGui) {
         const origingui = this._debugGui?.children?.find((item) => item._title === aModule.__name);
-        origingui.destroy();
+        origingui?.destroy();
         const gui = this._addModuleGui(aModule);
         gui.open();
       }
@@ -68,7 +68,7 @@ export default class SSFileSetting {
   unregisterModules() {
     this._modules.forEach((e) => {
       e.ssthreeObject = null;
-      e.unmount?.();
+      e.moduleUnmount?.();
     });
     this._modules = null;
   }
@@ -79,7 +79,7 @@ export default class SSFileSetting {
   export() {
     const resault = {};
     this._modules.forEach((e) => {
-      const text = e.export?.();
+      const text = e.moduleExport?.();
       if (text) {
         resault[e.__name] = text;
       }
@@ -94,8 +94,8 @@ export default class SSFileSetting {
   import(fileSetting = {}) {
     this._modules.forEach((e) => {
       if (fileSetting[e.__name]) {
-        e.import(fileSetting[e.__name]);
-        SSPubSubcribeInstance.publish(SSUpdateScribe, e);
+        e.moduleImport(fileSetting[e.__name]);
+        SSPubSubcribeInstance.publish(SSModuleUpdateScribe, e);
       }
     });
   }
@@ -132,19 +132,19 @@ export default class SSFileSetting {
 
   /**
    * 增加 模块调试工具
-   * @param {SSFileInterface} aModule 模块
+   * @param {SSModuleInterface} aModule 模块
    * @returns {GUI}
    */
   _addModuleGui = (aModule) => {
-    const obj = aModule.getDebugConfig?.();
+    const obj = aModule.getModuleConfig?.();
     if (obj) {
       const gui = this._debugGui.addFolder(aModule.__name);
-      const selectData = aModule.getDebugSelectTypes?.();
+      const selectData = aModule.getModuleSelectTypes?.();
       this._addDebugForObject(
         obj,
         gui,
         (params) => {
-          aModule.onDebugChange?.({
+          aModule.moduleGuiChange?.({
             ...params,
             target: obj
           });

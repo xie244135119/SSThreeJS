@@ -9,10 +9,10 @@ import React, { useEffect, useRef } from 'react';
 // import SSThreejs, { THREE, ThreeEvent } from '../../../core/index';
 // import PostProcessUtil from '../../../core/PostProcessUtil';
 import SSThreeJs, { THREE, SSCssRenderer } from '../../../core/index';
-import SSFileSetting from '../../../core/SSFileSetting/index';
+import SSModuleCenter from '../../../core/SSModule/index';
 import SceneSetting from './ssthreejs.setting.json';
-import SSDevelopMode from '../../../core/SSFileSetting/develop.module';
-import SSLightModule from '../../../core/SSFileSetting/light.module';
+import SSDevelopMode from '../../../core/SSModule/develop.module';
+import SSLightModule from '../../../core/SSModule/light.module';
 import PostProcessManager from '../../../core/PostProcessManager';
 
 export default function ParentIndex(props) {
@@ -22,9 +22,9 @@ export default function ParentIndex(props) {
 
   // 测试 SS
   const testcssrender = () => {
-    const cssrender = new SSCssRenderer(jsRef.current.ssthreeObject);
+    // const cssrender = new SSCssRenderer(jsRef.current.ssthreeObject);
     // cssrender.setup2D();
-    cssrender.addLine(
+    SSCssRenderer.addLine(
       {
         x: 0,
         y: 0,
@@ -59,13 +59,14 @@ export default function ParentIndex(props) {
     // js.closeWebglRender();
 
     // 引用配置
-    const fileSetting = new SSFileSetting(jsRef.current.ssthreeObject);
-    fileSetting.registerModules([SSDevelopMode, SSLightModule, PostProcessManager]);
-    fileSetting.addDebugModel();
-    fileSetting.import(SceneSetting);
+    const moduleCenter = new SSModuleCenter(jsRef.current.ssthreeObject);
+    moduleCenter.registerModules([SSDevelopMode, SSLightModule]);
+    moduleCenter.addDebugModel();
+    moduleCenter.import(SceneSetting);
 
     return () => {
-      fileSetting.removeDebugModel();
+      moduleCenter.destory();
+      moduleCenter.removeDebugModel();
       jsRef.current.destroy();
     };
   }, []);

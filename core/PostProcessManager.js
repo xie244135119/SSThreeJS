@@ -26,14 +26,9 @@ import {
 } from 'postprocessing';
 import SSThreeObject from './SSThreeObject';
 import ThreeLoop from './SSThreeLoop';
-import SSFileInterface from './SSFileSetting/file.interface';
+import SSModuleInterface from './SSModule/module.interface';
 
-export default class PostProcessManager extends SSFileInterface {
-  /**
-   * @type SSThreeObject
-   */
-  ssthreeObject = null;
-
+export default class SSPostProcessManagerModule extends SSModuleInterface {
   composer = null;
 
   /**
@@ -326,33 +321,32 @@ export default class PostProcessManager extends SSFileInterface {
     this.bloomEffect.opacity = this.defaultConfig.bloom.opacity;
   }
 
-  mount(threeobject) {
+  moduleMount(threeobject) {
     // console.log(' 开发模块注册 ', threeobject);
-    this.ssthreeObject = threeobject;
     this.createComposer(false);
     // 初始化赋值
     this._setConfigValue();
   }
 
-  unmount() {
+  moduleUnmount() {
     console.log(' 开发模块解除注册 ');
   }
 
-  import(e = {}) {
+  moduleImport(e = {}) {
     console.log(' 导入的文件配置 import ', e);
     this.defaultConfig = e;
     this._setConfigValue();
   }
 
-  export() {
+  moduleExport() {
     return this.defaultConfig;
   }
 
-  getDebugConfig() {
+  getModuleConfig() {
     return this.defaultConfig;
   }
 
-  onDebugChange(e) {
+  moduleGuiChange(e) {
     // console.log(' develop change ', e);
     if (!this.bloomEffect) return;
 
