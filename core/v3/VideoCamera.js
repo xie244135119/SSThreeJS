@@ -35,7 +35,7 @@ class VideoCamera extends EventDispatcher {
      * @type {Texture | VideoTexture | CanvasText}
      */
     this.texture = new Texture();
-    this.texture = new TextureLoader().load(require('./icon2.png').default);
+    // this.texture = new TextureLoader().load(require('./icon2.png').default);
 
     /**
      * @type {HTMLVideoElement}
