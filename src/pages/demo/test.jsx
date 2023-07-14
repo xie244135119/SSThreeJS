@@ -14,6 +14,8 @@ import SceneSetting from './ssthreejs.setting.json';
 import SSDevelopMode from '../../../core/SSModule/develop.module';
 import SSLightModule from '../../../core/SSModule/light.module';
 import PostProcessManager from '../../../core/PostProcessManager';
+import VideoSceneViewerManager from '../../../core/VideoSceneViewer/VideoSceneViewerManager';
+import videoBlendImg from '../../../core/assets/default_ground1.png';
 
 export default function ParentIndex(props) {
   // eslint-disable-next-line react/prop-types
@@ -43,6 +45,11 @@ export default function ParentIndex(props) {
     jsRef.current.ssthreeObject.threeScene.background = new THREE.Color(0, 0, 0);
     jsRef.current.addDymaicDebug();
 
+    const plane = new THREE.PlaneGeometry(5, 5);
+    const planeMaterial = new THREE.MeshBasicMaterial({});
+    const planeMesh = new THREE.Mesh(plane, planeMaterial);
+    planeMesh.rotation.set(-Math.PI / 2, 0, 0);
+    jsRef.current.ssthreeObject.threeScene.add(planeMesh);
     // 几何体
     const geomertry = new THREE.BoxGeometry(1, 1, 1);
     const material = new THREE.MeshStandardMaterial({
@@ -50,6 +57,7 @@ export default function ParentIndex(props) {
       // side: THREE.DoubleSide
     });
     const mesh = new THREE.Mesh(geomertry, material);
+    mesh.position.set(0, 0.5, 0);
     mesh.name = 'TestBox';
     jsRef.current.ssthreeObject.threeScene.add(mesh);
 
@@ -57,6 +65,31 @@ export default function ParentIndex(props) {
     testcssrender();
 
     // js.closeWebglRender();
+
+    // 视频融合Data
+    const videoFusionData = [
+      {
+        camera: {
+          name: '视频融合_test',
+          fov: 27,
+          aspect: 1,
+          near: 0.1,
+          far: 164,
+          position: { x: 0.7180480205018174, y: 1.2705360638579253, z: 2.052677400678885 },
+          rotation: { x: -0.6313513526773442, y: 0.20934010887576412, z: 0.1507975959985109 },
+          target: { x: 0, y: 0, z: 0 }
+        },
+        video: { poster: videoBlendImg, stream: '' },
+        // video: { poster: '', stream: './public/threeTextures/videoBlendVideoTest3.mp4' },
+        eye: {
+          position: { x: -22.26714020755176, y: 96.87804310841558, z: -144.87257420359424 },
+          target: { x: -21.692831852230174, y: 96.54080558055747, z: -93.53923082919695 }
+        }
+      }
+    ];
+    // // 视频融合
+    // const videoBlend = new VideoSceneViewerManager(jsRef.current, videoFusionData, false);
+    // videoBlend.openVideoFusion(videoFusionData);
 
     // 引用配置
     const moduleCenter = new SSModuleCenter(jsRef.current.ssthreeObject);
