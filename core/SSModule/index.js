@@ -27,6 +27,11 @@ export default class SSModuleCenter {
    */
   _modules = null;
 
+  // /**
+  //  * @type {{string: GUI}}
+  //  */
+  // _moduleGuis = null;
+
   /**
    * @param {SSThreeObject} ssthreeObject 构造参数
    */
@@ -34,7 +39,7 @@ export default class SSModuleCenter {
     this._ssthreeObject = ssthreeObject;
   }
 
-  destory() {
+  destroy() {
     this.unregisterModules();
     this._debugGui.destroy();
   }
@@ -45,6 +50,7 @@ export default class SSModuleCenter {
    */
   registerModules(modules = []) {
     this._modules = [];
+    // this._moduleGuis = {};
     modules.forEach((E) => {
       const e = new E();
       e.ssthreeObject = this._ssthreeObject;
@@ -53,12 +59,12 @@ export default class SSModuleCenter {
       this._modules.push(e);
     });
     SSPubSubcribeInstance.subscribe(SSModuleUpdateScribe, (aModule) => {
-      if (this._debugGui) {
-        const origingui = this._debugGui?.children?.find((item) => item._title === aModule.__name);
-        origingui?.destroy();
-        const gui = this._addModuleGui(aModule);
-        gui.open();
-      }
+      const lastgui = aModule.__gui;
+      console.log(' lastgui ', lastgui);
+      lastgui?.destroy();
+      // this._moduleGuis[aModule.__name] = null;
+      const gui = this._addModuleGui(aModule);
+      gui.open();
     });
   }
 
@@ -119,7 +125,6 @@ export default class SSModuleCenter {
         width: '100%'
       });
     }
-
     this._modules.forEach(this._addModuleGui);
   }
 
@@ -138,7 +143,9 @@ export default class SSModuleCenter {
   _addModuleGui = (aModule) => {
     const obj = aModule.getModuleConfig?.();
     if (obj) {
-      const gui = this._debugGui.addFolder(aModule.__name);
+      const gui = this._debugGui.addFolder(aModule.title || aModule.__name);
+      // this._moduleGuis[aModule.__name] = gui;
+      aModule.__gui = gui;
       const selectData = aModule.getModuleSelectTypes?.();
       this._addDebugForObject(
         obj,
@@ -246,6 +253,7 @@ export default class SSModuleCenter {
             key
           )
           .onChange((e) => {
+            options[key] = e;
             onDebugChange?.({
               key,
               value: e,
@@ -277,6 +285,7 @@ export default class SSModuleCenter {
       const types = selectSource[key];
       if (types) {
         floder.add(options, key, types)?.onChange((v) => {
+          options[key] = v;
           onDebugChange?.({
             key,
             value: v,
@@ -286,6 +295,7 @@ export default class SSModuleCenter {
         continue;
       }
       floder.add(options, key)?.onChange((v) => {
+        options[key] = v;
         onDebugChange?.({
           key,
           value: v,

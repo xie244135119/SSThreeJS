@@ -98,7 +98,7 @@ export default function ParentIndex(props) {
     moduleCenter.import(SceneSetting);
 
     return () => {
-      moduleCenter.destory();
+      moduleCenter.destroy();
       moduleCenter.removeDebugModel();
       jsRef.current.destroy();
     };

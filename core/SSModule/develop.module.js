@@ -7,6 +7,11 @@ import SSEvent from '../SSEvent';
 
 export default class SSDevelopMode extends SSModuleInterface {
   /**
+   * 类标题
+   */
+  title = '路径取点工具';
+
+  /**
    * @type THREE.Group
    */
   _pathGroup = null;
@@ -185,16 +190,16 @@ export default class SSDevelopMode extends SSModuleInterface {
           this._pathGroup.getObjectByName('debug_line_moveline')?.removeFromParent();
           this._pathGroup.children.pop();
           this._pointGroup.children.pop();
-          // 新建一条 从最近的目标点 到滑动点位的线条
           break;
         case 'Enter':
           if (this._lineVectors.length === 0) {
             return;
           }
+          this.closeChoosePathMode();
           this._dynamicConfig.enable = false;
           this._dynamicConfig.points = JSON.stringify(this._lineVectors);
-          this.closeChoosePathMode();
-          this.moduleUpdateGui();
+          this.moduleUpdateGuiValue('points', JSON.stringify(this._lineVectors));
+          this.moduleUpdateGuiValue('enable', false);
           break;
         default:
           break;
@@ -242,21 +247,31 @@ export default class SSDevelopMode extends SSModuleInterface {
   moduleGuiChange(params) {
     const { key, value, target } = params;
     this._dynamicConfig = target;
+    this._dynamicConfig.color = new THREE.Color(
+      this._dynamicConfig.color.r,
+      this._dynamicConfig.color.g,
+      this._dynamicConfig.color.b
+    );
     if (key === 'enable') {
       if (value) {
         this.openChoosePathMode();
       } else {
         this.closeChoosePathMode();
       }
-    } else if (key === 'color') {
+    }
+
+    if (!this._dynamicConfig.enable) {
+      return;
+    }
+    if (key === 'color') {
       this._pathGroup.traverse((e) => {
         if (e instanceof THREE.Mesh) {
-          e.material?.color?.setRGB(value.r, value.g, value.b);
+          e.material?.color?.set(this._dynamicConfig.color);
         }
       });
       this._pointGroup.traverse((e) => {
         if (e instanceof THREE.Mesh) {
-          e.material?.color?.setRGB(value.r, value.g, value.b);
+          e.material?.color?.set(this._dynamicConfig.color);
         }
       });
     }
