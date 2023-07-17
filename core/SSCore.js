@@ -16,14 +16,20 @@ import SSThreeTool from './SSTool';
 import LoadingManager from './plugin/loadingmanager';
 import SSThreeObject from './SSThreeObject';
 import SSLoader from './SSLoader';
+import SSModuleCenter from './SSModule';
 // import PostProcessManager from './PostProcessManager';
 
 export default class SSThreeJs {
   /**
-   * @description 存储类
+   * @description 场景存储类
    * @type SSThreeObject
    */
   ssthreeObject = null;
+
+  /**
+   * @type SSModuleCenter
+   */
+  ssmoduleCenter = null;
 
   /**
    * @type THREE.DirectionalLight direction light
@@ -63,6 +69,9 @@ export default class SSThreeJs {
     if (loop) {
       ThreeLoop.destory();
     }
+
+    this.ssmoduleCenter?.destroy();
+    this.ssmoduleCenter = null;
 
     this._removeOrbitControl();
 
@@ -133,7 +142,7 @@ export default class SSThreeJs {
     LoadingManager.shareInstance.addProgressView(container);
     //
     ThreeLoop.setup();
-
+    //
     this.ssthreeObject = new SSThreeObject({
       container,
       scene,
@@ -145,8 +154,8 @@ export default class SSThreeJs {
     this.ssthreeObject.autoWindowResize();
     // add webgl render
     this.ssthreeObject.render();
-    //
-    // this.postProcessManager = new PostProcessManager(this.ssthreeObject, false);
+    // module center
+    this.ssmoduleCenter = new SSModuleCenter(this.ssthreeObject);
     //
     ThreeLoop.add(() => {
       if (this.ssthreeObject.threeOrbitControl?.autoRotate) {

@@ -3,7 +3,6 @@
   position: absolute;
   right: 15px;
   bottom: 15px;
-  border: 1px solid; 
   border-radius: 50%; 
   width: 50px; 
   height: 50px; 
@@ -26,7 +25,6 @@
   position: absolute; 
   top: 0;
   right: -300px;
-  right: 0;
   display: flex;
   overflow-y: auto;
   width: 300px;
@@ -34,7 +32,7 @@
   background-color: white; 
 
   /* opacity: 0; */
-  box-shadow: black 0 0 5px;
+  box-shadow: #eee 0 0 5px;
   transition: right 0.25s ease-out 0s, opacity 0.25s ease-out 0s; 
   flex-direction: column;
   box-sizing: border-box;
@@ -48,7 +46,7 @@
 .drawerheader{ 
   display: flex; 
   align-items: center;
-  border-bottom: 1px solid; 
+  border-bottom: 1px solid #eee; 
   padding: 0 15px; 
   height: 50px;
   background-color: white; 
@@ -71,7 +69,7 @@
 .drawerfooter{ 
   display: flex;
   align-items: center; 
-  border-top: 1px solid; 
+  border-top: 1px solid #eee; 
   padding: 0 15px; 
   height: 50px;
   background-color: white; 
@@ -79,7 +77,16 @@
 }
 
 .drawerfooterbtn{
-  width: 100px;
+  border-radius: 6px;
+  padding: 5px 15px;
+  font-size: 14px;
+  color: white;
+  background-color: rgb(45 150 250/ 100%);
+  cursor: pointer;
+}
+
+.drawerfooterbtn:hover{
+  background-color:  rgb(45 150 250/ 70%);
 }
 
 .contentview{
@@ -87,6 +94,5 @@
   flex-direction: column;
   flex: 1;
   overflow-y: auto;
-  border: 1px solid red;
 }
 

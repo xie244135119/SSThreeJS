@@ -27,11 +27,6 @@ export default class SSModuleCenter {
    */
   _modules = null;
 
-  // /**
-  //  * @type {{string: GUI}}
-  //  */
-  // _moduleGuis = null;
-
   /**
    * @param {SSThreeObject} ssthreeObject 构造参数
    */
@@ -41,6 +36,7 @@ export default class SSModuleCenter {
 
   destroy() {
     this.unregisterModules();
+    this.closeDebugModel();
     this._debugGui.destroy();
   }
 
@@ -50,7 +46,6 @@ export default class SSModuleCenter {
    */
   registerModules(modules = []) {
     this._modules = [];
-    // this._moduleGuis = {};
     modules.forEach((E) => {
       const e = new E();
       e.ssthreeObject = this._ssthreeObject;
@@ -60,11 +55,11 @@ export default class SSModuleCenter {
     });
     SSPubSubcribeInstance.subscribe(SSModuleUpdateScribe, (aModule) => {
       const lastgui = aModule.__gui;
-      console.log(' lastgui ', lastgui);
       lastgui?.destroy();
-      // this._moduleGuis[aModule.__name] = null;
-      const gui = this._addModuleGui(aModule);
-      gui.open();
+      if (this._debugGui) {
+        const gui = this._addModuleGui(aModule);
+        gui.open();
+      }
     });
   }
 
@@ -78,6 +73,13 @@ export default class SSModuleCenter {
     });
     this._modules = null;
   }
+
+  /**
+   * 根据类名查询模块实例
+   * @param {string} moduleName
+   * @returns {SSModuleInterface}
+   */
+  getModuleByClassName = (moduleName) => this._modules.find((e) => e.__name === moduleName);
 
   /**
    * export setting to json
@@ -109,7 +111,7 @@ export default class SSModuleCenter {
   /**
    * 增加调试
    */
-  addDebugModel() {
+  openDebugModel() {
     // 右下角调试按钮
     this._addDrawIcon();
     // 右侧的抽屉
@@ -131,7 +133,7 @@ export default class SSModuleCenter {
   /**
    * 移除调试
    */
-  removeDebugModel() {
+  closeDebugModel() {
     this._menuContainer.parentElement.remove();
   }
 
@@ -144,7 +146,6 @@ export default class SSModuleCenter {
     const obj = aModule.getModuleConfig?.();
     if (obj) {
       const gui = this._debugGui.addFolder(aModule.title || aModule.__name);
-      // this._moduleGuis[aModule.__name] = gui;
       aModule.__gui = gui;
       const selectData = aModule.getModuleSelectTypes?.();
       this._addDebugForObject(
@@ -217,7 +218,7 @@ export default class SSModuleCenter {
     const footer = document.createElement('div');
     footer.className = styles.drawerfooter;
     drawer.append(footer);
-    const exportbt = document.createElement('button');
+    const exportbt = document.createElement('div');
     exportbt.className = styles.drawerfooterbtn;
     exportbt.innerText = '导出配置';
     footer.append(exportbt);

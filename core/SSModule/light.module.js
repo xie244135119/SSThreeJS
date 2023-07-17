@@ -209,7 +209,7 @@ export default class SSLightModule extends SSModuleInterface {
   }
 
   moduleGuiChange(params) {
-    console.log(' gui 灯光改变 ', params);
+    // console.log(' gui 灯光改变 ', params);
     this._dynamicConfig[params.key] = params.value;
     // 复用的对象结构 直接使用已有的结构
     // 非复用结构 需要赋值 <获取scene上的场景元素>

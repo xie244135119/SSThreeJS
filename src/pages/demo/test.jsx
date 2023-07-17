@@ -92,14 +92,18 @@ export default function ParentIndex(props) {
     // videoBlend.openVideoFusion(videoFusionData);
 
     // 引用配置
-    const moduleCenter = new SSModuleCenter(jsRef.current.ssthreeObject);
-    moduleCenter.registerModules([SSDevelopMode, SSLightModule]);
-    moduleCenter.addDebugModel();
-    moduleCenter.import(SceneSetting);
+    jsRef.current.ssmoduleCenter.registerModules([SSDevelopMode, SSLightModule]);
+    jsRef.current.ssmoduleCenter.import(SceneSetting);
+    // 开启调试
+    jsRef.current.ssmoduleCenter.openDebugModel();
+
+    /**
+     * @type {SSDevelopMode}
+     */
+    const developModule = jsRef.current.ssmoduleCenter.getModuleByClassName('SSDevelopMode');
+    console.log(' developModule ', developModule);
 
     return () => {
-      moduleCenter.destroy();
-      moduleCenter.removeDebugModel();
       jsRef.current.destroy();
     };
   }, []);

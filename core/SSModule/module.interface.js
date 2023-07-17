@@ -52,7 +52,7 @@ export default class SSModuleInterface {
    * 导入配置
    */
   moduleImport(obj) {
-    console.log(' 导入配置 ', obj);
+    //
   }
 
   /**
