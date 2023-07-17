@@ -13,9 +13,10 @@ import SSModuleCenter from '../../../core/SSModule/index';
 import SceneSetting from './ssthreejs.setting.json';
 import SSDevelopMode from '../../../core/SSModule/develop.module';
 import SSLightModule from '../../../core/SSModule/light.module';
-import PostProcessManager from '../../../core/PostProcessManager';
 import VideoSceneViewerManager from '../../../core/VideoSceneViewer/VideoSceneViewerManager';
 import videoBlendImg from '../../../core/assets/default_ground1.png';
+import SSEvent from '../../../core/SSEvent';
+import SSPostProcessManagerModule from '../../../core/PostProcessManager';
 
 export default function ParentIndex(props) {
   // eslint-disable-next-line react/prop-types
@@ -92,7 +93,11 @@ export default function ParentIndex(props) {
     // videoBlend.openVideoFusion(videoFusionData);
 
     // 引用配置
-    jsRef.current.ssmoduleCenter.registerModules([SSDevelopMode, SSLightModule]);
+    jsRef.current.ssmoduleCenter.registerModules([
+      SSDevelopMode,
+      SSLightModule,
+      SSPostProcessManagerModule
+    ]);
     jsRef.current.ssmoduleCenter.import(SceneSetting);
     // 开启调试
     jsRef.current.ssmoduleCenter.openDebugModel();
@@ -102,6 +107,26 @@ export default function ParentIndex(props) {
      */
     const developModule = jsRef.current.ssmoduleCenter.getModuleByClassName('SSDevelopMode');
     console.log(' developModule ', developModule);
+
+    /**
+     * @type {SSPostProcessManagerModule}
+     */
+    const ssPostProcessManagerModule = jsRef.current.ssmoduleCenter.getModuleByClassName(
+      'SSPostProcessManagerModule'
+    );
+    console.log(' ssPostProcessManagerModule ', ssPostProcessManagerModule);
+
+    jsRef.current.threeEvent.addEventListener(SSEvent.SSEventType.CLICK, (event) => {
+      const models = jsRef.current.ssthreeObject.getModelsByPoint({ x: event.x, y: event.y });
+      if (models.length > 0) {
+        const castObj = models[0].object;
+        console.log('models[0].object ', models[0].object);
+        // postProcessManager.outlineObjects([castObj]);
+        // ssPostProcessManagerModule.outlineObjects([castObj]);
+        ssPostProcessManagerModule.outlineObjects([castObj]);
+      }
+    });
+    // ssPostProcessManagerModule.outlineObjects([mesh]);
 
     return () => {
       jsRef.current.destroy();

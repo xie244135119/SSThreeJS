@@ -22,7 +22,8 @@ import {
   SMAAEffect,
   SMAAPreset,
   EdgeDetectionMode,
-  PredicationMode
+  PredicationMode,
+  BrightnessContrastEffect
 } from 'postprocessing';
 import SSThreeObject from './SSThreeObject';
 import ThreeLoop from './SSThreeLoop';
@@ -69,7 +70,9 @@ export default class SSPostProcessManagerModule extends SSModuleInterface {
       hiddenEdgeColor: '#00FFFF', // 遮挡面颜色
       height: 480,
       blur: false,
-      xRay: true
+      xRay: true,
+      outlineWidth: 2, // int : 0-5 轮廓框的定位
+      outlineColor: '#00FFFF' // 描述框的颜�
     });
     outlineEffect.blurPass.blurMaterial.kernelSize = 2; // int : 0-5 边缘模糊宽度
     this.outlineEffect = outlineEffect;
@@ -88,17 +91,14 @@ export default class SSPostProcessManagerModule extends SSModuleInterface {
     edgeDetectionMaterial.predicationThreshold = 0.002;
     edgeDetectionMaterial.predicationScale = 1;
     composer.multisampling = 3; // 抗锯齿强度
-    // this.addSMAAGUI(composer, smaaEffect, edgeDetectionMaterial);
+    // this.addSMAAGUI(composer, outlineEffect, smaaEffect, edgeDetectionMaterial);
 
     // 合并所有的后处理效果 Merge all effects into one pass.
-    const effects = [outlineEffect, bloomEffect, smaaEffect];
-    // const effects = [outlineEffect, bloomEffect];
+    const effects = [bloomEffect, outlineEffect, smaaEffect];
     const effectPass = new EffectPass(camera, ...effects);
     effectPass.renderToScreen = true;
     composer.addPass(effectPass);
 
-    this.ssthreeObject.threeRenderer.autoClear = true; //----
-    //
     this.composer = composer;
     this.ssthreeObject.threeEffectComposer = composer;
     console.log('composer', composer);
@@ -106,38 +106,6 @@ export default class SSPostProcessManagerModule extends SSModuleInterface {
     ThreeLoop.add(() => {
       composer.render();
     }, 'PostProcessManager Render');
-
-    if (openDebug) {
-      // //gui 修改围墙颜色
-      const gui = new GUI();
-      const params = {
-        luminanceThreshold: 1,
-        intensity: 1,
-        smoothing: 1,
-        inverted: true,
-        ignoreBackground: false,
-        opacity: 1
-      };
-      const folder = gui.addFolder('bloom配置');
-      folder.add(params, 'luminanceThreshold', 0, 1, 0.01).onChange((e) => {
-        bloomEffect.luminanceMaterial.setThreshold(e);
-      });
-      folder.add(params, 'intensity', 0, 10, 0.01).onChange((e) => {
-        bloomEffect.intensity = e;
-      });
-      folder.add(params, 'smoothing', 0, 1, 0.01).onChange((e) => {
-        bloomEffect.luminanceMaterial.setSmoothingFactor(e);
-      });
-      folder.add(params, 'inverted').onChange((e) => {
-        bloomEffect.inverted = e;
-      });
-      folder.add(params, 'ignoreBackground').onChange((e) => {
-        bloomEffect.ignoreBackground = e;
-      });
-      folder.add(params, 'opacity', 0, 1, 0.01).onChange((e) => {
-        bloomEffect.opacity = e;
-      });
-    }
 
     return composer;
   };
@@ -169,7 +137,7 @@ export default class SSPostProcessManagerModule extends SSModuleInterface {
         });
       }
     });
-
+    console.log('meshList', meshList);
     this.outlineEffect.visibleEdgeColor.set(visibleEdgeColor);
     this.outlineEffect.hiddenEdgeColor.set(visibleEdgeColor);
     this.outlineEffect.pulseSpeed = pulseSpeed;
@@ -192,7 +160,7 @@ export default class SSPostProcessManagerModule extends SSModuleInterface {
     this.bloomEffect.opacity = param.opacity;
   };
 
-  addSMAAGUI = (composer, smaaEffect, edgeDetectionMaterial) => {
+  addSMAAGUI = (composer, outlineEffect, smaaEffect, edgeDetectionMaterial) => {
     const renderer = composer.getRenderer();
     const context = renderer.getContext();
 
@@ -230,6 +198,18 @@ export default class SSPostProcessManagerModule extends SSModuleInterface {
         threshold: Number(edgeDetectionMaterial.defines.PREDICATION_THRESHOLD),
         strength: Number(edgeDetectionMaterial.defines.PREDICATION_STRENGTH),
         scale: Number(edgeDetectionMaterial.defines.PREDICATION_SCALE)
+      },
+      outline: {
+        edgeStrength: 4.42, // 亮度，强度
+        pulseSpeed: 0.7, // 闪烁呼吸频率
+        visibleEdgeColor: '#00FFFF', // 描边颜色
+        hiddenEdgeColor: '#00FFFF', // 遮挡面颜色
+        height: 480,
+        blur: false,
+        xRay: true,
+        outlineWidth: 2, // int : 0-5 轮廓框的定位
+        outlineColor: '#00FFFF', // 描述框的颜�
+        outlineAlpha: 0.5 // 描述框的透明层�
       }
     };
 
@@ -293,6 +273,27 @@ export default class SSPostProcessManagerModule extends SSModuleInterface {
       smaaEffect.blendMode.setBlendFunction(Number(value));
     });
 
+    folder.add(params.outline, 'edgeStrength', 0.0, 10.0, 0.01).onChange((value) => {
+      this.outlineEffect.edgeStrength = value;
+    });
+    folder.add(params.outline, 'pulseSpeed', 0.0, 10.0, 0.01).onChange((value) => {
+      this.outlineEffect.pulseSpeed = value;
+    });
+    folder.addColor(params.outline, 'visibleEdgeColor', '#000000').onChange((value) => {
+      this.outlineEffect.visibleEdgeColor.set(value);
+      console.log('value', value);
+    });
+    folder.addColor(params.outline, 'hiddenEdgeColor', '#000000').onChange((value) => {
+      this.outlineEffect.hiddenEdgeColor.set(value);
+    });
+    folder.add(params.outline, 'height', 0.0, 1000.0, 0.01).onChange((value) => {
+      this.outlineEffect.height = value;
+    });
+    folder.add(params.outline, 'blur').onChange((value) => {});
+    folder.add(params.outline, 'outlineWidth', 0.0, 5.0, 0.01).onChange((value) => {});
+    folder.addColor(params.outline, 'outlineColor', '#000000').onChange((value) => {});
+    folder.add(params.outline, 'outlineAlpha', 0.0, 1.0, 0.01).onChange((value) => {});
+
     folder.open();
   };
 
@@ -307,10 +308,21 @@ export default class SSPostProcessManagerModule extends SSModuleInterface {
       luminanceSmoothing: 0.5,
       mipmapBlur: true,
       intensity: 10.0
+    },
+    outline: {
+      visibleEdgeColor: new THREE.Color('#00FFFF'),
+      hiddenEdgeColor: new THREE.Color('#00FFFF'),
+      pulseSpeed: 0.7,
+      edgeStrength: 4.42,
+      kernelSize: 2,
+      blur: false,
+      xRay: true,
+      outlineWidth: 2
     }
   };
 
   _setConfigValue() {
+    this.bloomEffect.smoothing = this.defaultConfig.bloom.smoothing;
     this.bloomEffect.luminanceMaterial.setThreshold(this.defaultConfig.bloom.luminanceThreshold);
     this.bloomEffect.intensity = this.defaultConfig.bloom.intensity;
     this.bloomEffect.luminanceMaterial.setSmoothingFactor(
@@ -319,6 +331,31 @@ export default class SSPostProcessManagerModule extends SSModuleInterface {
     this.bloomEffect.inverted = this.defaultConfig.bloom.inverted;
     this.bloomEffect.ignoreBackground = this.defaultConfig.bloom.ignoreBackground;
     this.bloomEffect.opacity = this.defaultConfig.bloom.opacity;
+
+    if (this.outlineEffect) {
+      console.log(
+        'this.defaultConfig.outline.visibleEdgeColor',
+        this.defaultConfig.outline.visibleEdgeColor
+      );
+      this.outlineEffect.visibleEdgeColor.set(
+        this.defaultConfig.outline.visibleEdgeColor.r,
+        this.defaultConfig.outline.visibleEdgeColor.g,
+        this.defaultConfig.outline.visibleEdgeColor.b
+      );
+      this.outlineEffect.hiddenEdgeColor.set(
+        this.defaultConfig.outline.hiddenEdgeColor.r,
+        this.defaultConfig.outline.hiddenEdgeColor.r,
+        this.defaultConfig.outline.hiddenEdgeColor.g,
+        this.defaultConfig.outline.hiddenEdgeColor.b
+      );
+      this.outlineEffect.pulseSpeed = this.defaultConfig.outline.pulseSpeed;
+      this.outlineEffect.edgeStrength = this.defaultConfig.outline.edgeStrength;
+      this.outlineEffect.kernelSize = this.defaultConfig.outline.kernelSize;
+      this.outlineEffect.blur = this.defaultConfig.outline.blur;
+      this.outlineEffect.xRay = this.defaultConfig.outline.xRay;
+      this.outlineEffect.outlineWidth = this.defaultConfig.outline.outlineWidth;
+      // this.outlineEffect.outlineColor.set(this.defaultConfig.outline.outlineColor);
+    }
   }
 
   moduleMount(threeobject) {
@@ -347,15 +384,18 @@ export default class SSPostProcessManagerModule extends SSModuleInterface {
   }
 
   moduleGuiChange(e) {
-    // console.log(' develop change ', e);
+    console.log(' develop change ', e);
     if (!this.bloomEffect) return;
+    this.defaultConfig = e.target;
 
-    this.defaultConfig.bloom.luminanceThreshold = e.target.bloom.luminanceThreshold;
-    this.defaultConfig.bloom.intensity = e.target.bloom.intensity;
-    this.defaultConfig.bloom.luminanceSmoothing = e.target.bloom.luminanceSmoothing;
-    this.defaultConfig.bloom.inverted = e.target.bloom.inverted;
-    this.defaultConfig.bloom.ignoreBackground = e.target.bloom.ignoreBackground;
-    this.defaultConfig.bloom.opacity = e.target.bloom.opacity;
+    // this.defaultConfig.bloom.luminanceThreshold = e.target.bloom.luminanceThreshold;
+    // this.defaultConfig.bloom.intensity = e.target.bloom.intensity;
+    // this.defaultConfig.bloom.luminanceSmoothing = e.target.bloom.luminanceSmoothing;
+    // this.defaultConfig.bloom.inverted = e.target.bloom.inverted;
+    // this.defaultConfig.bloom.ignoreBackground = e.target.bloom.ignoreBackground;
+    // this.defaultConfig.bloom.opacity = e.target.bloom.opacity;
+
+    //
     this._setConfigValue();
   }
 }
