@@ -23,7 +23,8 @@ import {
   SMAAPreset,
   EdgeDetectionMode,
   PredicationMode,
-  BrightnessContrastEffect
+  BrightnessContrastEffect,
+  KernelSize
 } from 'postprocessing';
 import SSThreeObject from './SSThreeObject';
 import ThreeLoop from './SSThreeLoop';
@@ -70,8 +71,6 @@ export default class SSPostProcessManagerModule extends SSModuleInterface {
       hiddenEdgeColor: '#00FFFF', // 遮挡面颜色
       height: 480,
       blur: false,
-      xRay: true,
-      outlineWidth: 2, // int : 0-5 轮廓框的定位
       outlineColor: '#00FFFF' // 描述框的颜�
     });
     outlineEffect.blurPass.blurMaterial.kernelSize = 2; // int : 0-5 边缘模糊宽度
@@ -112,6 +111,32 @@ export default class SSPostProcessManagerModule extends SSModuleInterface {
   };
 
   /**
+   * 默认配置
+   */
+  defaultConfig = {
+    bloom: {
+      blendFunction: BlendFunction.SCREEN,
+      smoothing: 1,
+      inverted: true,
+      ignoreBackground: false,
+      opacity: 1,
+      luminanceThreshold: 0.61,
+      luminanceSmoothing: 0.5,
+      mipmapBlur: true,
+      intensity: 10.0
+    },
+    outline: {
+      blendFunction: BlendFunction.SCREEN,
+      visibleEdgeColor: new THREE.Color('#00FFFF'),
+      // hiddenEdgeColor: new THREE.Color('#00FFFF'),
+      pulseSpeed: 0.7,
+      edgeStrength: 4.42,
+      kernelSize: KernelSize.MEDIUM, // enum 0-5
+      blur: false
+    }
+  };
+
+  /**
    *
    * @param {*} objects [] mesh数组
    * @param {*} visibleEdgeColor 描边颜色
@@ -120,10 +145,14 @@ export default class SSPostProcessManagerModule extends SSModuleInterface {
    */
   outlineObjects = (
     objects = [],
-    visibleEdgeColor = '#00FFFF',
-    pulseSpeed = 0.7,
-    edgeStrength = 4.42,
-    kernelSize = 2
+    // visibleEdgeColor = '#00FFFF',
+    // pulseSpeed = 0.7,
+    // edgeStrength = 4.42,
+    // kernelSize = 2
+    visibleEdgeColor = this.defaultConfig.outline.visibleEdgeColor,
+    pulseSpeed = this.defaultConfig.outline.pulseSpeed,
+    edgeStrength = this.defaultConfig.outline.edgeStrength,
+    kernelSize = this.defaultConfig.outline.kernelSize
   ) => {
     const meshList = [];
     objects.forEach((element) => {
@@ -207,8 +236,6 @@ export default class SSPostProcessManagerModule extends SSModuleInterface {
         hiddenEdgeColor: '#00FFFF', // 遮挡面颜色
         height: 480,
         blur: false,
-        xRay: true,
-        outlineWidth: 2, // int : 0-5 轮廓框的定位
         outlineColor: '#00FFFF', // 描述框的颜�
         outlineAlpha: 0.5 // 描述框的透明层�
       }
@@ -297,35 +324,10 @@ export default class SSPostProcessManagerModule extends SSModuleInterface {
   getModuleConfigSource() {
     return {
       // lightType: ['AmbientLight', 'DirectionalLight', 'SpotLight', 'PointLight', 'RectAreaLight']
-      blendFunction: Object.keys(BlendFunction).map((item) => BlendFunction[item])
+      blendFunction: Object.keys(BlendFunction).map((item) => BlendFunction[item]),
+      kernelSize: Object.keys(KernelSize).map((item) => KernelSize[item])
     };
   }
-
-  // 默认配置
-  defaultConfig = {
-    bloom: {
-      blendFunction: BlendFunction.SCREEN,
-      smoothing: 1,
-      inverted: true,
-      ignoreBackground: false,
-      opacity: 1,
-      luminanceThreshold: 0.61,
-      luminanceSmoothing: 0.5,
-      mipmapBlur: true,
-      intensity: 10.0
-    },
-    outline: {
-      blendFunction: BlendFunction.SCREEN,
-      visibleEdgeColor: new THREE.Color('#00FFFF'),
-      hiddenEdgeColor: new THREE.Color('#00FFFF'),
-      pulseSpeed: 0.7,
-      edgeStrength: 4.42,
-      kernelSize: 2,
-      blur: false,
-      xRay: true,
-      outlineWidth: 2
-    }
-  };
 
   _setConfigValue() {
     if (this.bloomEffect) {
@@ -349,17 +351,19 @@ export default class SSPostProcessManagerModule extends SSModuleInterface {
         this.defaultConfig.outline.visibleEdgeColor.b
       );
       this.outlineEffect.hiddenEdgeColor.set(
-        this.defaultConfig.outline.hiddenEdgeColor.r,
-        this.defaultConfig.outline.hiddenEdgeColor.g,
-        this.defaultConfig.outline.hiddenEdgeColor.b
+        this.defaultConfig.outline.visibleEdgeColor.r,
+        this.defaultConfig.outline.visibleEdgeColor.g,
+        this.defaultConfig.outline.visibleEdgeColor.b
       );
+      // this.outlineEffect.hiddenEdgeColor.set(
+      //   this.defaultConfig.outline.hiddenEdgeColor.r,
+      //   this.defaultConfig.outline.hiddenEdgeColor.g,
+      //   this.defaultConfig.outline.hiddenEdgeColor.b
+      // );
       this.outlineEffect.pulseSpeed = this.defaultConfig.outline.pulseSpeed;
       this.outlineEffect.edgeStrength = this.defaultConfig.outline.edgeStrength;
-      this.outlineEffect.kernelSize = Math.abs(this.defaultConfig.outline.kernelSize);
+      this.outlineEffect.kernelSize = Math.abs(this.defaultConfig.outline.kernelSize) % 5;
       this.outlineEffect.blur = this.defaultConfig.outline.blur;
-      this.outlineEffect.xRay = this.defaultConfig.outline.xRay;
-      this.outlineEffect.outlineWidth = this.defaultConfig.outline.outlineWidth;
-      // this.outlineEffect.outlineColor.set(this.defaultConfig.outline.outlineColor);
     }
   }
 
@@ -371,18 +375,17 @@ export default class SSPostProcessManagerModule extends SSModuleInterface {
   }
 
   moduleUnmount() {
-    console.log(' 开发模块解除注册 ');
+    // console.log(' 开发模块解除注册 ');
   }
 
   moduleImport(e = {}) {
-    console.log(' 导入的文件配置 import ', e);
+    // console.log(' 导入的文件配置 import ', e);
     this.defaultConfig = e;
     this._setConfigValue();
   }
 
   moduleExport() {
     // console.log(' 处理完戯后的文件配置 export ', this.defaultConfig);
-
     return this.defaultConfig;
   }
 
@@ -391,7 +394,7 @@ export default class SSPostProcessManagerModule extends SSModuleInterface {
   }
 
   moduleGuiChange(e) {
-    console.log(' develop change ', e);
+    // console.log(' develop change ', e);
     if (!this.bloomEffect) return;
     this.defaultConfig = e.target;
     //

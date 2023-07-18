@@ -32,10 +32,10 @@
       "zoomSpeed": 1,
       "autoRotate": false,
       "autoRotateSpeed": 2,
-      "target": { "x": 0, "y": 0, "z": 0 }
+      "target": { "x": -0.12770136818985214, "y": -0.2977468432670712, "z": 0.2770071281954684 }
     },
     "camera": {
-      "position": { "x": -2.196146806243064, "y": 1.3661964753127127, "z": -3.7607576965873664 }
+      "position": { "x": 3.170336037415315, "y": 0.9905030939594897, "z": -2.603307685611266 }
     }
   },
   "SSPostProcessManagerModule": {
@@ -48,22 +48,15 @@
       "luminanceThreshold": 0.61,
       "luminanceSmoothing": 0.5,
       "mipmapBlur": true,
-      "intensity": 3
+      "intensity": 1
     },
     "outline": {
       "blendFunction": 28,
-      "visibleEdgeColor": { "r": 0.058823529411764705, "g": 0.16862745098039217, "b": 1 },
-      "hiddenEdgeColor": {
-        "r": 0.9647058823529412,
-        "g": 0.03529411764705882,
-        "b": 0.7647058823529411
-      },
+      "visibleEdgeColor": { "r": 0, "g": 1, "b": 1 },
       "pulseSpeed": 0.7,
       "edgeStrength": 4.42,
-      "kernelSize": 2,
-      "blur": false,
-      "xRay": true,
-      "outlineWidth": 2
+      "kernelSize": 1,
+      "blur": true
     }
   }
 }
