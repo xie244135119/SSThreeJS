@@ -101,8 +101,24 @@ export default class SSModuleCenter {
    */
   import(fileSetting = {}) {
     this._modules.forEach((e) => {
-      if (fileSetting[e.__name]) {
-        e.moduleImport(fileSetting[e.__name]);
+      const moduleObj = fileSetting[e.__name];
+      if (moduleObj) {
+        // 将深层次对象进行递墷
+        const moduleObjDeep = (obj) => {
+          Object.keys(obj).forEach((key) => {
+            const value = obj[key];
+            if (value instanceof Object) {
+              // color
+              if (value.r !== undefined && value.g !== undefined && value.b !== undefined) {
+                obj[key] = new THREE.Color(value.r, value.g, value.b);
+              }
+              // vector3 不处理
+              moduleObjDeep(value);
+            }
+          });
+        };
+        moduleObjDeep(moduleObj);
+        e.moduleImport(moduleObj);
         SSPubSubcribeInstance.publish(SSModuleUpdateScribe, e);
       }
     });

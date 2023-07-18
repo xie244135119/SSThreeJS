@@ -103,6 +103,7 @@ export default class SSPostProcessManagerModule extends SSModuleInterface {
     this.ssthreeObject.threeEffectComposer = composer;
     console.log('composer', composer);
 
+    this.ssthreeObject.cancelRender();
     ThreeLoop.add(() => {
       composer.render();
     }, 'PostProcessManager Render');
@@ -289,17 +290,21 @@ export default class SSPostProcessManagerModule extends SSModuleInterface {
     folder.add(params.outline, 'height', 0.0, 1000.0, 0.01).onChange((value) => {
       this.outlineEffect.height = value;
     });
-    folder.add(params.outline, 'blur').onChange((value) => {});
-    folder.add(params.outline, 'outlineWidth', 0.0, 5.0, 0.01).onChange((value) => {});
-    folder.addColor(params.outline, 'outlineColor', '#000000').onChange((value) => {});
-    folder.add(params.outline, 'outlineAlpha', 0.0, 1.0, 0.01).onChange((value) => {});
-
     folder.open();
   };
+
+  // 枚举 BlendFunction
+  getModuleConfigSource() {
+    return {
+      // lightType: ['AmbientLight', 'DirectionalLight', 'SpotLight', 'PointLight', 'RectAreaLight']
+      blendFunction: Object.keys(BlendFunction).map((item) => BlendFunction[item])
+    };
+  }
 
   // 默认配置
   defaultConfig = {
     bloom: {
+      blendFunction: BlendFunction.SCREEN,
       smoothing: 1,
       inverted: true,
       ignoreBackground: false,
@@ -310,6 +315,7 @@ export default class SSPostProcessManagerModule extends SSModuleInterface {
       intensity: 10.0
     },
     outline: {
+      blendFunction: BlendFunction.SCREEN,
       visibleEdgeColor: new THREE.Color('#00FFFF'),
       hiddenEdgeColor: new THREE.Color('#00FFFF'),
       pulseSpeed: 0.7,
@@ -322,21 +328,21 @@ export default class SSPostProcessManagerModule extends SSModuleInterface {
   };
 
   _setConfigValue() {
-    this.bloomEffect.smoothing = this.defaultConfig.bloom.smoothing;
-    this.bloomEffect.luminanceMaterial.setThreshold(this.defaultConfig.bloom.luminanceThreshold);
-    this.bloomEffect.intensity = this.defaultConfig.bloom.intensity;
-    this.bloomEffect.luminanceMaterial.setSmoothingFactor(
-      this.defaultConfig.bloom.luminanceSmoothing
-    );
-    this.bloomEffect.inverted = this.defaultConfig.bloom.inverted;
-    this.bloomEffect.ignoreBackground = this.defaultConfig.bloom.ignoreBackground;
-    this.bloomEffect.opacity = this.defaultConfig.bloom.opacity;
+    if (this.bloomEffect) {
+      this.bloomEffect.blendMode.setBlendFunction(this.defaultConfig.bloom.blendFunction);
+      this.bloomEffect.smoothing = this.defaultConfig.bloom.smoothing;
+      this.bloomEffect.luminanceMaterial.setThreshold(this.defaultConfig.bloom.luminanceThreshold);
+      this.bloomEffect.intensity = this.defaultConfig.bloom.intensity;
+      this.bloomEffect.luminanceMaterial.setSmoothingFactor(
+        this.defaultConfig.bloom.luminanceSmoothing
+      );
+      this.bloomEffect.inverted = this.defaultConfig.bloom.inverted;
+      this.bloomEffect.ignoreBackground = this.defaultConfig.bloom.ignoreBackground;
+      this.bloomEffect.opacity = this.defaultConfig.bloom.opacity;
+    }
 
     if (this.outlineEffect) {
-      console.log(
-        'this.defaultConfig.outline.visibleEdgeColor',
-        this.defaultConfig.outline.visibleEdgeColor
-      );
+      this.outlineEffect.blendMode.setBlendFunction(this.defaultConfig.outline.blendFunction);
       this.outlineEffect.visibleEdgeColor.set(
         this.defaultConfig.outline.visibleEdgeColor.r,
         this.defaultConfig.outline.visibleEdgeColor.g,
@@ -344,13 +350,12 @@ export default class SSPostProcessManagerModule extends SSModuleInterface {
       );
       this.outlineEffect.hiddenEdgeColor.set(
         this.defaultConfig.outline.hiddenEdgeColor.r,
-        this.defaultConfig.outline.hiddenEdgeColor.r,
         this.defaultConfig.outline.hiddenEdgeColor.g,
         this.defaultConfig.outline.hiddenEdgeColor.b
       );
       this.outlineEffect.pulseSpeed = this.defaultConfig.outline.pulseSpeed;
       this.outlineEffect.edgeStrength = this.defaultConfig.outline.edgeStrength;
-      this.outlineEffect.kernelSize = this.defaultConfig.outline.kernelSize;
+      this.outlineEffect.kernelSize = Math.abs(this.defaultConfig.outline.kernelSize);
       this.outlineEffect.blur = this.defaultConfig.outline.blur;
       this.outlineEffect.xRay = this.defaultConfig.outline.xRay;
       this.outlineEffect.outlineWidth = this.defaultConfig.outline.outlineWidth;
@@ -358,8 +363,8 @@ export default class SSPostProcessManagerModule extends SSModuleInterface {
     }
   }
 
-  moduleMount(threeobject) {
-    // console.log(' 开发模块注册 ', threeobject);
+  moduleMount() {
+    // console.log(' 开发模块注册 ', this.defaultConfig);
     this.createComposer(false);
     // 初始化赋值
     this._setConfigValue();
@@ -376,6 +381,8 @@ export default class SSPostProcessManagerModule extends SSModuleInterface {
   }
 
   moduleExport() {
+    // console.log(' 处理完戯后的文件配置 export ', this.defaultConfig);
+
     return this.defaultConfig;
   }
 
@@ -387,14 +394,6 @@ export default class SSPostProcessManagerModule extends SSModuleInterface {
     console.log(' develop change ', e);
     if (!this.bloomEffect) return;
     this.defaultConfig = e.target;
-
-    // this.defaultConfig.bloom.luminanceThreshold = e.target.bloom.luminanceThreshold;
-    // this.defaultConfig.bloom.intensity = e.target.bloom.intensity;
-    // this.defaultConfig.bloom.luminanceSmoothing = e.target.bloom.luminanceSmoothing;
-    // this.defaultConfig.bloom.inverted = e.target.bloom.inverted;
-    // this.defaultConfig.bloom.ignoreBackground = e.target.bloom.ignoreBackground;
-    // this.defaultConfig.bloom.opacity = e.target.bloom.opacity;
-
     //
     this._setConfigValue();
   }

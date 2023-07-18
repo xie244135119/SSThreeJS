@@ -1,12 +1,23 @@
 {
-  "SSDevelopMode": {},
+  "SSDevelopMode": {
+    "interinty": 10
+  },
   "SSLightModule": {
     "lights": [
-      { "type": "AmbientLight", "visible": true, "color": 16711680, "intensity": 0.5 },
+      {
+        "type": "AmbientLight",
+        "visible": true,
+        "color": 16711680,
+        "intensity": 0.5
+      },
       {
         "type": "DirectionalLight",
         "visible": true,
-        "position": { "x": 0, "y": 1, "z": 0 },
+        "position": {
+          "x": 0,
+          "y": 1,
+          "z": 0
+        },
         "castShadow": true,
         "color": 18943,
         "intensity": 1
@@ -14,7 +25,11 @@
       {
         "type": "SpotLight",
         "visible": true,
-        "position": { "x": 0, "y": 0, "z": 2 },
+        "position": {
+          "x": 0,
+          "y": 0,
+          "z": 2
+        },
         "color": 64841,
         "intensity": 1,
         "distance": 0,
@@ -24,6 +39,11 @@
       }
     ],
     "orbitControl": {
+      "target": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
       "minPolarAngle": 0,
       "maxPolarAngle": 3.141592653589793,
       "enableDamping": true,
@@ -31,16 +51,18 @@
       "enableZoom": true,
       "zoomSpeed": 1,
       "autoRotate": false,
-      "autoRotateSpeed": 2,
-      "target": { "x": 0, "y": 0, "z": 0 }
+      "autoRotateSpeed": 2
     },
     "camera": {
-      "position": { "x": -2.196146806243064, "y": 1.3661964753127127, "z": -3.7607576965873664 }
+      "position": {
+        "x": 2.3325369746365165,
+        "y": 3.2689004483370496,
+        "z": -2.6376227372065615
+      }
     }
   },
-  "SSPostProcessManagerModule": {
+  "PostProcessManager": {
     "bloom": {
-      "blendFunction": 28,
       "smoothing": 1,
       "inverted": true,
       "ignoreBackground": false,
@@ -48,22 +70,7 @@
       "luminanceThreshold": 0.61,
       "luminanceSmoothing": 0.5,
       "mipmapBlur": true,
-      "intensity": 3
-    },
-    "outline": {
-      "blendFunction": 28,
-      "visibleEdgeColor": { "r": 0.058823529411764705, "g": 0.16862745098039217, "b": 1 },
-      "hiddenEdgeColor": {
-        "r": 0.9647058823529412,
-        "g": 0.03529411764705882,
-        "b": 0.7647058823529411
-      },
-      "pulseSpeed": 0.7,
-      "edgeStrength": 4.42,
-      "kernelSize": 2,
-      "blur": false,
-      "xRay": true,
-      "outlineWidth": 2
+      "intensity": 10
     }
   }
 }
