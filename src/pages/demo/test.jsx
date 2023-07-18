@@ -135,6 +135,7 @@ export default function ParentIndex(props) {
 
   return (
     <div>
+      <span>三维测试</span>
       <div id="threecontainer" style={{ height: 800 }} />
     </div>
   );

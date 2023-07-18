@@ -90,22 +90,28 @@ export default class SSModuleInterface {
    */
   getModuleConfig() {
     return {
-      slide: 1
+      slide: 1,
+      number: 2
     };
   }
 
   /**
-   * @returns {Object} 调试工具类型
+   * @returns {Object} 调试工具数据结构
    */
-  getModuleSelectTypes() {
+  getModuleConfigSource() {
     return {
-      slide: [1, 2, 3, 4]
+      slide: [1, 2, 3, 4],
+      number: {
+        min: 0,
+        max: 100,
+        step: 1
+      }
     };
   }
 
   /**
    * 调试工具变化
-   * @param {{ key: string, value: any, data: any  }} params
+   * @param {{ key: string, value: any, data: object, target: object  }} params 参数
    */
   moduleGuiChange(params = {}) {
     //

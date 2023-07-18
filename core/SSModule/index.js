@@ -147,7 +147,7 @@ export default class SSModuleCenter {
     if (obj) {
       const gui = this._debugGui.addFolder(aModule.title || aModule.__name);
       aModule.__gui = gui;
-      const selectData = aModule.getModuleSelectTypes?.();
+      const configSource = aModule.getModuleConfigSource?.();
       this._addDebugForObject(
         obj,
         gui,
@@ -157,7 +157,7 @@ export default class SSModuleCenter {
             target: obj
           });
         },
-        selectData
+        configSource
       );
       return gui;
     }
@@ -230,15 +230,15 @@ export default class SSModuleCenter {
   /**
    * 新增 gui 事件
    * @param {object} options 配置对象
-   * @param {GUI} floder gui
-   * @param {Function} onDebugChange 调试改变的时候
-   * @param {object} selectSource select组件数据源
+   * @param {GUI} [floder] gui
+   * @param {function({key: string, value: string, data: object}):void} [onDebugChange] 调试改变的时候
+   * @param {object} [optionSource={}] select组件数据源
    */
   _addDebugForObject(
     options = {},
     floder = this._debugGui,
     onDebugChange = null,
-    selectSource = {}
+    optionSource = {}
   ) {
     const keys = Object.keys(options);
     for (let index = 0; index < keys.length; index++) {
@@ -269,7 +269,7 @@ export default class SSModuleCenter {
         value.forEach((e, index) => {
           if (e instanceof Object) {
             const objfolder = arrayfolder.addFolder(index + 1);
-            this._addDebugForObject(e, objfolder, onDebugChange, selectSource);
+            this._addDebugForObject(e, objfolder, onDebugChange, optionSource);
           }
         });
         continue;
@@ -278,13 +278,13 @@ export default class SSModuleCenter {
       if (value instanceof Object && !(value instanceof Function)) {
         // addGuiByObject(value, key);
         const objfolder = floder.addFolder(key);
-        this._addDebugForObject(value, objfolder, onDebugChange, selectSource);
+        this._addDebugForObject(value, objfolder, onDebugChange, optionSource);
         continue;
       }
 
       // select type
-      const types = selectSource[key];
-      if (types) {
+      const types = optionSource[key];
+      if (types instanceof Array) {
         floder.add(options, key, types)?.onChange((v) => {
           options[key] = v;
           onDebugChange?.({
@@ -295,7 +295,8 @@ export default class SSModuleCenter {
         });
         continue;
       }
-      floder.add(options, key)?.onChange((v) => {
+      const optionData = optionSource[key] || {};
+      floder.add(options, key, optionData.min, optionData.max, optionData.step)?.onChange((v) => {
         options[key] = v;
         onDebugChange?.({
           key,

@@ -57,7 +57,7 @@ export default class SSDevelopMode extends SSModuleInterface {
     this._addEvent();
 
     // 获取几何体的大小
-    /* const defaultMeshName = this.getModuleSelectTypes().targetMesh?.[0];
+    /* const defaultMeshName = this.getModuleConfigSource().targetMesh?.[0];
     const { targetMeshName = defaultMeshName } = this._guiData;
     const targetMesh = this.ssthreeObject.threeScene.getObjectByName(targetMeshName);
     const { min, max } = SSThreeTool.setBoundingBox(targetMesh);
@@ -226,13 +226,13 @@ export default class SSDevelopMode extends SSModuleInterface {
   getModuleConfig() {
     return this._dynamicConfig;
     // points: this._lineVectors.length > 0 ? JSON.stringify(this._lineVectors) : '选择的点位',
-    // targetMeshName: this.getModuleSelectTypes().targetMeshName?.[0]
+    // targetMeshName: this.getModuleConfigSource().targetMeshName?.[0]
   }
 
   // /**
   //  * @returns {Object} 调试工具类型
   //  */
-  // getModuleSelectTypes() {
+  // getModuleConfigSource() {
   //   const meshNames = this.ssthreeObject.threeScene.children.reduce((prev, cur) => {
   //     if (cur instanceof THREE.Mesh || cur instanceof THREE.Group) {
   //       return [...prev, cur.name || cur.type];

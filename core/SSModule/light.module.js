@@ -166,9 +166,9 @@ export default class SSLightModule extends SSModuleInterface {
 
   getModuleConfig() {
     const options = {
-      lightType: this.getModuleSelectTypes().lightType[2],
+      lightType: this.getModuleConfigSource().lightType[2],
       addOne: () => {
-        const { lightType = this.getModuleSelectTypes().lightType[2] } = this._dynamicConfig;
+        const { lightType = this.getModuleConfigSource().lightType[2] } = this._dynamicConfig;
         console.log(' add one light ', lightType);
         const light = new THREE[lightType]();
         this.ssthreeObject.threeScene.add(light);
@@ -202,9 +202,13 @@ export default class SSLightModule extends SSModuleInterface {
     return options;
   }
 
-  getModuleSelectTypes() {
+  getModuleConfigSource() {
     return {
-      lightType: ['AmbientLight', 'DirectionalLight', 'SpotLight', 'PointLight', 'RectAreaLight']
+      lightType: ['AmbientLight', 'DirectionalLight', 'SpotLight', 'PointLight', 'RectAreaLight'],
+      intensity: {
+        min: 0,
+        step: 0.1
+      }
     };
   }
 
