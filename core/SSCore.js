@@ -615,7 +615,7 @@ export default class SSThreeJs {
     this._statsJs = stats;
     stats.showPanel(0);
     aContainer.appendChild(stats.domElement);
-    stats.domElement.style.postion = 'absolute';
+    stats.domElement.style.position = 'absolute';
     stats.domElement.style.top = 'unset';
     stats.domElement.style.bottom = '0px';
     this._fpsFrame = ThreeLoop.add(() => {
