@@ -8,6 +8,8 @@
 import React, { useEffect, useRef } from 'react';
 // import SSThreejs, { THREE, ThreeEvent } from '../../../core/index';
 // import PostProcessUtil from '../../../core/PostProcessUtil';
+
+import SSWater from '../../../core/Water/SSWater';
 import SSThreeJs, { THREE, SSCssRenderer } from '../../../core/index';
 import SSModuleCenter from '../../../core/SSModule/index';
 import SceneSetting from './ssthreejs.setting.json';
@@ -96,7 +98,8 @@ export default function ParentIndex(props) {
     jsRef.current.ssmoduleCenter.registerModules([
       SSDevelopMode,
       SSLightModule,
-      SSPostProcessManagerModule
+      SSPostProcessManagerModule,
+      SSWater
     ]);
     jsRef.current.ssmoduleCenter.import(SceneSetting);
     // 开启调试
@@ -114,19 +117,19 @@ export default function ParentIndex(props) {
     const ssPostProcessManagerModule = jsRef.current.ssmoduleCenter.getModuleByClassName(
       'SSPostProcessManagerModule'
     );
-    console.log(' ssPostProcessManagerModule ', ssPostProcessManagerModule);
 
     jsRef.current.threeEvent.addEventListener(SSEvent.SSEventType.CLICK, (event) => {
       const models = jsRef.current.ssthreeObject.getModelsByPoint({ x: event.x, y: event.y });
       if (models.length > 0) {
         const castObj = models[0].object;
         console.log('models[0].object ', models[0].object);
-        // postProcessManager.outlineObjects([castObj]);
-        // ssPostProcessManagerModule.outlineObjects([castObj]);
         ssPostProcessManagerModule.outlineObjects([castObj]);
       }
     });
-    // ssPostProcessManagerModule.outlineObjects([mesh]);
+    /**
+     * @type {SSWater}
+     */
+    const ssWater = jsRef.current.ssmoduleCenter.getModuleByClassName('SSWater');
 
     return () => {
       jsRef.current.destroy();
