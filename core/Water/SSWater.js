@@ -41,6 +41,9 @@ export default class SSWater extends SSModuleInterface {
 
   moduleUnmount() {
     // console.log(' 开发模块解除注册 ');
+    if (!this.ssthreeObject || !this.water) {
+      return;
+    }
     this.ssthreeObject.threeScene.remove(this.water);
     this.water = null;
   }
