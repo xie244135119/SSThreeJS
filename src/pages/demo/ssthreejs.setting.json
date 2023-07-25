@@ -1,76 +1,51 @@
 {
   "SSLightModule": {
     "lights": [
-      {
-        "type": "AmbientLight",
-        "visible": true,
-        "color": 16733011,
-        "intensity": 0.5
-      },
+      { "type": "AmbientLight", "visible": true, "color": 12566463, "intensity": 0.3 },
       {
         "type": "DirectionalLight",
         "visible": true,
-        "position": {
-          "x": 0,
-          "y": 1,
-          "z": 0
-        },
+        "position": { "x": 0, "y": 1, "z": 0 },
         "castShadow": true,
-        "color": 18943,
-        "intensity": 1
+        "color": 16777215,
+        "intensity": 0.5
       },
       {
         "type": "SpotLight",
         "visible": true,
-        "position": {
-          "x": 0,
-          "y": 0,
-          "z": 2
-        },
-        "color": 64841,
-        "intensity": 1,
-        "distance": 0,
-        "angle": 1.0471975511965976,
-        "penumbra": 0,
+        "position": { "x": 1, "y": 2, "z": -4 },
+        "color": 16766720,
+        "intensity": 2,
+        "distance": 50,
+        "angle": 1,
+        "penumbra": 1,
         "decay": 2
       },
       {
         "type": "SpotLight",
         "visible": true,
-        "position": {
-          "x": 1,
-          "y": 0,
-          "z": 0
-        },
-        "color": 8255160,
-        "intensity": 1,
-        "distance": 0,
+        "position": { "x": 1, "y": 2, "z": 4 },
+        "color": 9038841,
+        "intensity": 2,
+        "distance": 50,
         "angle": 1.0471975511965976,
-        "penumbra": 0,
+        "penumbra": 1,
         "decay": 2
       }
     ],
     "orbitControl": {
       "minPolarAngle": 0,
       "maxPolarAngle": 3.141592653589793,
-      "enableDamping": false,
-      "dampingFactor": 0.05,
+      "enableDamping": true,
+      "dampingFactor": 0.25,
       "enableZoom": true,
       "zoomSpeed": 1,
       "autoRotate": false,
       "autoRotateSpeed": 2,
-      "target": {
-        "x": -0.12770136818985214,
-        "y": -0.2977468432670712,
-        "z": 0.2770071281954684
-      }
+      "target": { "x": 0.060544172909349624, "y": 0.12931160690221696, "z": -0.2734582628668419 }
     },
     "camera": {
-      "position": {
-        "x": -1.644143460445816,
-        "y": 1.645385870985608,
-        "z": -3.5645408269659815
-      }
+      "position": { "x": 11.166276606221986, "y": 7.523311633273936, "z": -0.10120023347370644 }
     }
   },
   "SSPostProcessManagerModule": {
@@ -104,45 +79,45 @@
     "cameraAnchorMeshName": "sxt001",
     "cameraList": [
       {
-        "uuid": "0113fb29-23fe-4891-ae26-34cfbc21ce80",
+        "uuid": "58fe878f-e27f-47c2-9bc7-fd80ba45159f",
         "type": "ball",
-        "position": {
-          "x": 1.8598104855339053,
-          "y": 0.5049648493195579,
-          "z": 0.3648556077498384
-        },
-        "rotation": {
-          "x": 0,
-          "y": 0,
-          "z": 0
-        },
-        "scale": {
-          "x": 1,
-          "y": 1,
-          "z": 1
-        },
+        "position": { "x": 1.8598104855339053, "y": 0.5049648493195579, "z": 0.3648556077498384 },
+        "rotation": { "x": 0, "y": 0, "z": 0 },
+        "scale": { "x": 1, "y": 1, "z": 1 },
         "name": ""
       },
       {
-        "uuid": "7c187726-de84-435e-928b-9cd1d3dd3e66",
+        "uuid": "ac6e7445-baf6-4a18-9123-81d4cd9e6fab",
         "type": "ball",
         "position": {
           "x": -0.15355519161760584,
           "y": 0.5526174514394281,
           "z": -1.5222261323666386
         },
-        "rotation": {
-          "x": -180,
-          "y": 86.69891119947629,
-          "z": -180
-        },
-        "scale": {
-          "x": 1,
-          "y": 1,
-          "z": 1
-        },
+        "rotation": { "x": -180, "y": 86.69891119947629, "z": -180 },
+        "scale": { "x": 1, "y": 1, "z": 1 },
         "name": ""
       }
     ]
-  }
+  },
+  "VideoSceneViewerManager": [
+    {
+      "visible": true,
+      "camera": {
+        "name": "视频融合_test",
+        "fov": 27,
+        "aspect": 1,
+        "near": 0.1,
+        "far": 164,
+        "position": { "x": 0.7180480205018174, "y": 1.2705360638579253, "z": 2.052677400678885 },
+        "rotation": { "x": -0.6313513526773442, "y": 0.20934010887576412, "z": 0.1507975959985109 },
+        "target": { "x": 0, "y": 0, "z": 0 }
+      },
+      "video": { "poster": "../../../core/assets/default_ground1.png", "stream": "" },
+      "eye": {
+        "position": { "x": -22.26714020755176, "y": 96.87804310841558, "z": -144.87257420359424 },
+        "target": { "x": -21.692831852230174, "y": 96.54080558055747, "z": -93.53923082919695 }
+      }
+    }
+  ]
 }

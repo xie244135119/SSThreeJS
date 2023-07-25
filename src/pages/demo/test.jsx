@@ -9,8 +9,9 @@ import React, { useEffect, useRef } from 'react';
 // import SSThreejs, { THREE, ThreeEvent } from '../../../core/index';
 // import PostProcessUtil from '../../../core/PostProcessUtil';
 
+import MeshReflectorMaterial from '../../../core/SSMaterial/MeshReflectorMaterial';
 import SSWater from '../../../core/Water/SSWater';
-import SSThreeJs, { THREE, SSCssRenderer } from '../../../core/index';
+import SSThreeJs, { THREE, SSCssRenderer, SSThreeLoop } from '../../../core/index';
 import SceneSetting from './ssthreejs.setting.json';
 import SSPickPointMode from '../../../core/SSModule/pickpoint.module';
 import SSLightModule from '../../../core/SSModule/light.module';
@@ -43,6 +44,44 @@ export default function ParentIndex(props) {
     );
   };
 
+  // --------反射---------
+  const reflectorTest = () => {
+    const { ssthreeObject } = jsRef.current;
+    // 透過geometry以及material來建立Mesh物件
+    const geometry2 = new THREE.PlaneGeometry(60, 60, 1, 1);
+    const material2 = new THREE.MeshBasicMaterial();
+    const mesh2 = new THREE.Mesh(geometry2, material2);
+    // 將材質置換成MeshReflectorMaterial
+    // 添加到程式碼
+    const fadingReflectorOptions = {
+      mixBlur: 2,
+      mixStrength: 1.5,
+      resolution: 2048, // 材質圖的解析度
+      blur: [0, 0], // 高斯模糊的材質解析度為何
+      minDepthThreshold: 0.7, // 從多遠的地方開始淡出
+      maxDepthThreshold: 2, // 到多遠的地方會淡出到沒畫面
+      depthScale: 2,
+      depthToBlurRatioBias: 2,
+      mirror: 0,
+      distortion: 2,
+      mixContrast: 2,
+      reflectorOffset: 0, // 鏡面跟物理中間是否要留一段距離才開始反射
+      bufferSamples: 8
+    };
+    mesh2.material = new MeshReflectorMaterial(
+      ssthreeObject.threeRenderer,
+      ssthreeObject.threeCamera,
+      ssthreeObject.threeScene,
+      mesh2,
+      fadingReflectorOptions
+    );
+    ssthreeObject.threeScene.add(mesh2);
+    mesh2.position.y = 0.1;
+    mesh2.position.x = 5;
+    // 旋轉mesh角度以作為地面
+    mesh2.rotateX(Math.PI * -0.5);
+  };
+
   useEffect(() => {
     jsRef.current.setup('threecontainer');
     jsRef.current.ssthreeObject.threeScene.background = new THREE.Color(0, 0, 0);
@@ -67,31 +106,33 @@ export default function ParentIndex(props) {
     //
     testcssrender();
 
+    reflectorTest();
+
     // js.closeWebglRender();
 
-    // 视频融合Data
-    const videoFusionData = [
-      {
-        camera: {
-          name: '视频融合_test',
-          fov: 27,
-          aspect: 1,
-          near: 0.1,
-          far: 164,
-          position: { x: 0.7180480205018174, y: 1.2705360638579253, z: 2.052677400678885 },
-          rotation: { x: -0.6313513526773442, y: 0.20934010887576412, z: 0.1507975959985109 },
-          target: { x: 0, y: 0, z: 0 }
-        },
-        video: { poster: videoBlendImg, stream: '' },
-        // video: { poster: '', stream: './public/threeTextures/videoBlendVideoTest3.mp4' },
-        eye: {
-          position: { x: -22.26714020755176, y: 96.87804310841558, z: -144.87257420359424 },
-          target: { x: -21.692831852230174, y: 96.54080558055747, z: -93.53923082919695 }
-        }
-      }
-    ];
+    // // 视频融合Data
+    // const videoFusionData = [
+    //   {
+    //     camera: {
+    //       name: '视频融合_test',
+    //       fov: 27,
+    //       aspect: 1,
+    //       near: 0.1,
+    //       far: 164,
+    //       position: { x: 0.7180480205018174, y: 1.2705360638579253, z: 2.052677400678885 },
+    //       rotation: { x: -0.6313513526773442, y: 0.20934010887576412, z: 0.1507975959985109 },
+    //       target: { x: 0, y: 0, z: 0 }
+    //     },
+    //     video: { poster: videoBlendImg, stream: '' },
+    //     // video: { poster: '', stream: './public/threeTextures/videoBlendVideoTest3.mp4' },
+    //     eye: {
+    //       position: { x: -22.26714020755176, y: 96.87804310841558, z: -144.87257420359424 },
+    //       target: { x: -21.692831852230174, y: 96.54080558055747, z: -93.53923082919695 }
+    //     }
+    //   }
+    // ];
     // // 视频融合
-    // const videoBlend = new VideoSceneViewerManager(jsRef.current, videoFusionData, false);
+    // const videoBlend = new VideoSceneViewerManager(jsRef.current, videoFusionData, true);
     // videoBlend.openVideoFusion(videoFusionData);
 
     // 引用配置
@@ -99,8 +140,9 @@ export default function ParentIndex(props) {
       SSPickPointMode,
       SSLightModule,
       SSPostProcessManagerModule,
-      SSWater,
-      SSWatchLookModule
+      // SSWater,
+      SSWatchLookModule,
+      VideoSceneViewerManager
     ]);
     jsRef.current.ssmoduleCenter.import(SceneSetting);
     // 开启调试

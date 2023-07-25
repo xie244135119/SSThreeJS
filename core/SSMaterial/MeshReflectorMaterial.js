@@ -1,5 +1,8 @@
 // original implementation is from https://github.com/pmndrs/drei
-import POSTPROCESSING from 'postprocessing';
+// import POSTPROCESSING from 'postprocessing';
+import * as THREE from 'three';
+import { KawaseBlurPass } from 'postprocessing';
+import SSThreeLoop from '../SSThreeLoop';
 
 const {
   DepthFormat,
@@ -13,7 +16,6 @@ const {
   Vector3,
   Vector4,
   WebGLRenderTarget
-  // eslint-disable-next-line no-undef
 } = THREE;
 
 export default class MeshReflectorMaterial extends MeshStandardMaterial {
@@ -46,7 +48,7 @@ export default class MeshReflectorMaterial extends MeshStandardMaterial {
     this.camera = camera;
     this.scene = scene;
     this.parent = object;
-
+    this.kawaseBlurPass = null;
     this.hasBlur = blur[0] + blur[1] > 0;
     this.reflectorPlane = new Plane();
     this.normal = new Vector3();
@@ -85,6 +87,9 @@ export default class MeshReflectorMaterial extends MeshStandardMaterial {
       'defines-USE_DEPTH': depthScale > 0 ? '' : undefined,
       'defines-USE_DISTORTION': distortionMap ? '' : undefined
     };
+    SSThreeLoop.add(() => {
+      this.update();
+    });
   }
 
   setupBuffers(resolution, blur, bufferSamples) {
@@ -109,7 +114,7 @@ export default class MeshReflectorMaterial extends MeshStandardMaterial {
     this.fbo1 = fbo1;
     this.fbo2 = fbo2;
 
-    this.kawaseBlurPass = new POSTPROCESSING.KawaseBlurPass();
+    this.kawaseBlurPass = new KawaseBlurPass();
     this.kawaseBlurPass.setSize(blur[0], blur[1]);
   }
 
@@ -230,12 +235,8 @@ export default class MeshReflectorMaterial extends MeshStandardMaterial {
       this.defines.USE_UV = '';
     }
 
-    if (this.reflectorProps['defines-USE_BLUR'] !== undefined) {
-      this.defines.USE_BLUR = '';
-    }
-    if (this.reflectorProps['defines-USE_DEPTH'] !== undefined) {
-      this.defines.USE_DEPTH = '';
-    }
+    if (this.reflectorProps['defines-USE_BLUR'] !== undefined) this.defines.USE_BLUR = '';
+    if (this.reflectorProps['defines-USE_DEPTH'] !== undefined) this.defines.USE_DEPTH = '';
     if (this.reflectorProps['defines-USE_DISTORTION'] !== undefined) {
       this.defines.USE_DISTORTION = '';
     }
@@ -252,107 +253,107 @@ export default class MeshReflectorMaterial extends MeshStandardMaterial {
     }
 
     shader.vertexShader = `
-              uniform mat4 textureMatrix;
-              varying vec4 my_vUv;     
-            ${shader.vertexShader}`;
+            uniform mat4 textureMatrix;
+            varying vec4 my_vUv;     
+          ${shader.vertexShader}`;
 
     shader.vertexShader = shader.vertexShader.replace(
       '#include <project_vertex>',
       /* glsl */ `
-            #include <project_vertex>
-            my_vUv = textureMatrix * vec4( position, 1.0 );
-            gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );
-            `
+          #include <project_vertex>
+          my_vUv = textureMatrix * vec4( position, 1.0 );
+          gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );
+          `
     );
 
     shader.fragmentShader = /* glsl */ `
-              uniform sampler2D tDiffuse;
-              uniform sampler2D tDiffuseBlur;
-              uniform sampler2D tDepth;
-              uniform sampler2D distortionMap;
-              uniform float distortion;
-              uniform float cameraNear;
-              uniform float cameraFar;
-              uniform bool hasBlur;
-              uniform float mixBlur;
-              uniform float mirror;
-              uniform float mixStrength;
-              uniform float minDepthThreshold;
-              uniform float maxDepthThreshold;
-              uniform float mixContrast;
-              uniform float depthScale;
-              uniform float depthToBlurRatioBias;
-              varying vec4 my_vUv;        
-              ${shader.fragmentShader}`;
+            uniform sampler2D tDiffuse;
+            uniform sampler2D tDiffuseBlur;
+            uniform sampler2D tDepth;
+            uniform sampler2D distortionMap;
+            uniform float distortion;
+            uniform float cameraNear;
+            uniform float cameraFar;
+            uniform bool hasBlur;
+            uniform float mixBlur;
+            uniform float mirror;
+            uniform float mixStrength;
+            uniform float minDepthThreshold;
+            uniform float maxDepthThreshold;
+            uniform float mixContrast;
+            uniform float depthScale;
+            uniform float depthToBlurRatioBias;
+            varying vec4 my_vUv;        
+            ${shader.fragmentShader}`;
 
     shader.fragmentShader = shader.fragmentShader.replace(
       '#include <emissivemap_fragment>',
       /* glsl */ `
-            #include <emissivemap_fragment>
-          
-            float distortionFactor = 0.0;
-            #ifdef USE_DISTORTION
-              distortionFactor = texture2D(distortionMap, vUv).r * distortion;
-            #endif
-      
-            vec4 new_vUv = my_vUv;
-            new_vUv.x += distortionFactor;
-            new_vUv.y += distortionFactor;
-      
-            vec4 base = texture2DProj(tDiffuse, new_vUv);
-            vec4 blur = texture2DProj(tDiffuseBlur, new_vUv);
-            
-            vec4 merge = base;
-            
-            #ifdef USE_NORMALMAP
-              vec2 normal_uv = vec2(0.0);
-              vec4 normalColor = texture2D(normalMap, vUv);
-              vec3 my_normal = normalize( vec3( normalColor.r * 2.0 - 1.0, normalColor.b,  normalColor.g * 2.0 - 1.0 ) );
-              vec3 coord = new_vUv.xyz / new_vUv.w;
-              normal_uv = coord.xy + coord.z * my_normal.xz * 0.05 * normalScale;
-              vec4 base_normal = texture2D(tDiffuse, normal_uv);
-              vec4 blur_normal = texture2D(tDiffuseBlur, normal_uv);
-              merge = base_normal;
-              blur = blur_normal;
-            #endif
-      
-            float depthFactor = 0.0001;
-            float blurFactor = 0.0;
-      
-            #ifdef USE_DEPTH
-              vec4 depth = texture2DProj(tDepth, new_vUv);
-              depthFactor = smoothstep(minDepthThreshold, maxDepthThreshold, 1.0-(depth.r * depth.a));
-              depthFactor *= depthScale;
-              depthFactor = max(0.0001, min(1.0, depthFactor));
-      
-              #ifdef USE_BLUR
-                blur = blur * min(1.0, depthFactor + depthToBlurRatioBias);
-                merge = merge * min(1.0, depthFactor + 0.5);
-              #else
-                merge = merge * depthFactor;
-              #endif
+          #include <emissivemap_fragment>
         
-            #endif
-      
-            float reflectorRoughnessFactor = roughness;
-            #ifdef USE_ROUGHNESSMAP
-              vec4 reflectorTexelRoughness = texture2D( roughnessMap, vUv );
-              
-              reflectorRoughnessFactor *= reflectorTexelRoughness.g;
-            #endif
-            
+          float distortionFactor = 0.0;
+          #ifdef USE_DISTORTION
+            distortionFactor = texture2D(distortionMap, vUv).r * distortion;
+          #endif
+    
+          vec4 new_vUv = my_vUv;
+          new_vUv.x += distortionFactor;
+          new_vUv.y += distortionFactor;
+    
+          vec4 base = texture2DProj(tDiffuse, new_vUv);
+          vec4 blur = texture2DProj(tDiffuseBlur, new_vUv);
+          
+          vec4 merge = base;
+          
+          #ifdef USE_NORMALMAP
+            vec2 normal_uv = vec2(0.0);
+            vec4 normalColor = texture2D(normalMap, vUv);
+            vec3 my_normal = normalize( vec3( normalColor.r * 2.0 - 1.0, normalColor.b,  normalColor.g * 2.0 - 1.0 ) );
+            vec3 coord = new_vUv.xyz / new_vUv.w;
+            normal_uv = coord.xy + coord.z * my_normal.xz * 0.05 * normalScale;
+            vec4 base_normal = texture2D(tDiffuse, normal_uv);
+            vec4 blur_normal = texture2D(tDiffuseBlur, normal_uv);
+            merge = base_normal;
+            blur = blur_normal;
+          #endif
+    
+          float depthFactor = 0.0001;
+          float blurFactor = 0.0;
+    
+          #ifdef USE_DEPTH
+            vec4 depth = texture2DProj(tDepth, new_vUv);
+            depthFactor = smoothstep(minDepthThreshold, maxDepthThreshold, 1.0-(depth.r * depth.a));
+            depthFactor *= depthScale;
+            depthFactor = max(0.0001, min(1.0, depthFactor));
+    
             #ifdef USE_BLUR
-              blurFactor = min(1.0, mixBlur * reflectorRoughnessFactor);
-              merge = mix(merge, blur, blurFactor);
+              blur = blur * min(1.0, depthFactor + depthToBlurRatioBias);
+              merge = merge * min(1.0, depthFactor + 0.5);
+            #else
+              merge = merge * depthFactor;
             #endif
       
-            vec4 newMerge = vec4(0.0, 0.0, 0.0, 1.0);
-            newMerge.r = (merge.r - 0.5) * mixContrast + 0.5;
-            newMerge.g = (merge.g - 0.5) * mixContrast + 0.5;
-            newMerge.b = (merge.b - 0.5) * mixContrast + 0.5;
+          #endif
+    
+          float reflectorRoughnessFactor = roughness;
+          #ifdef USE_ROUGHNESSMAP
+            vec4 reflectorTexelRoughness = texture2D( roughnessMap, vUv );
             
-            diffuseColor.rgb = diffuseColor.rgb * ((1.0 - min(1.0, mirror)) + newMerge.rgb * mixStrength);
-            `
+            reflectorRoughnessFactor *= reflectorTexelRoughness.g;
+          #endif
+          
+          #ifdef USE_BLUR
+            blurFactor = min(1.0, mixBlur * reflectorRoughnessFactor);
+            merge = mix(merge, blur, blurFactor);
+          #endif
+    
+          vec4 newMerge = vec4(0.0, 0.0, 0.0, 1.0);
+          newMerge.r = (merge.r - 0.5) * mixContrast + 0.5;
+          newMerge.g = (merge.g - 0.5) * mixContrast + 0.5;
+          newMerge.b = (merge.b - 0.5) * mixContrast + 0.5;
+          
+          diffuseColor.rgb = diffuseColor.rgb * ((1.0 - min(1.0, mirror)) + newMerge.rgb * mixStrength);
+          `
     );
   }
 }

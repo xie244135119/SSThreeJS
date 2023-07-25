@@ -157,8 +157,8 @@ export default class SSThreeJs {
     this.ssmoduleCenter = new SSModuleCenter(this.ssthreeObject);
     //
     ThreeLoop.add(() => {
-      if (this.ssthreeObject.threeOrbitControl?.autoRotate) {
-        this.ssthreeObject.threeOrbitControl?.update();
+      if (this.ssthreeObject.threeOrbitControl) {
+        this.ssthreeObject.threeOrbitControl.update();
       }
     }, 'control update');
 
@@ -571,8 +571,14 @@ export default class SSThreeJs {
    */
   _addOrbitControl = (aCamera = new THREE.Camera(), aDomElement = document.getElementById()) => {
     const control = new OrbitControls(aCamera, aDomElement);
-    control.enablePan = true;
+    control.enableDamping = true;
+    control.dampingFactor = 0.25;
+    control.enableZoom = true;
     control.autoRotate = false;
+    control.autoRotateSpeed = 2;
+    control.minDistance = 2;
+    control.maxDistance = 1000;
+    control.enablePan = true;
     return control;
   };
 
