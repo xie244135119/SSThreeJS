@@ -19,13 +19,13 @@ module.exports = {
       jsx: true
     }
   },
-  settings: {
-    'import/resolver': {
-      webpack: {
-        config: './webpack/webpack.config.base.js'
-      }
-    }
-  },
+  // settings: {
+  //   'import/resolver': {
+  //     webpack: {
+  //       config: './webpack/webpack.config.base.js'
+  //     }
+  //   }
+  // },
   // 特定规则
   rules: {
     'comma-dangle': ['error', 'never'],

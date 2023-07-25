@@ -17,6 +17,8 @@ const defaultControlKeys = [
 ];
 
 export default class SSLightModule extends SSModuleInterface {
+  title = '灯光模块';
+
   /**
    * @type {Object} 动态配置
    */
@@ -169,7 +171,7 @@ export default class SSLightModule extends SSModuleInterface {
       lightType: this.getModuleConfigSource().lightType[2],
       addOne: () => {
         const { lightType = this.getModuleConfigSource().lightType[2] } = this._dynamicConfig;
-        console.log(' add one light ', lightType);
+        // console.log(' add one light ', lightType);
         const light = new THREE[lightType]();
         this.ssthreeObject.threeScene.add(light);
         // 更新 调试

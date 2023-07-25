@@ -28,6 +28,12 @@ export default class SSModuleCenter {
   _modules = null;
 
   /**
+   * 当前正在调试的模块
+   * @type {SSModuleInterface}
+   */
+  _currentEnableModule = null;
+
+  /**
    * @param {SSThreeObject} ssthreeObject 构造参数
    */
   constructor(ssthreeObject) {
@@ -161,6 +167,8 @@ export default class SSModuleCenter {
   _addModuleGui = (aModule) => {
     const obj = aModule.getModuleConfig?.();
     if (obj) {
+      // 调试过程中，只能单一模块生效
+      obj['模块调试'] = false;
       const gui = this._debugGui.addFolder(aModule.title || aModule.__name);
       aModule.__gui = gui;
       const configSource = aModule.getModuleConfigSource?.();
@@ -168,10 +176,27 @@ export default class SSModuleCenter {
         obj,
         gui,
         (params) => {
-          aModule.moduleGuiChange?.({
-            ...params,
-            target: obj
-          });
+          // 开启新模块
+          if (params.key === '模块调试') {
+            if (params.value) {
+              // 取消原有的效果处理
+              if (this._currentEnableModule) {
+                this._currentEnableModule.moduleUpdateGuiValue('模块调试', false);
+              }
+              aModule.moduleOpenDebug();
+              this._currentEnableModule = aModule;
+            } else {
+              aModule.moduleCloseDebug();
+              this._currentEnableModule = null;
+            }
+          }
+          //
+          if (obj['模块调试']) {
+            aModule.moduleGuiChange?.({
+              ...params,
+              target: obj
+            });
+          }
         },
         configSource
       );

@@ -11,14 +11,14 @@ import React, { useEffect, useRef } from 'react';
 
 import SSWater from '../../../core/Water/SSWater';
 import SSThreeJs, { THREE, SSCssRenderer } from '../../../core/index';
-import SSModuleCenter from '../../../core/SSModule/index';
 import SceneSetting from './ssthreejs.setting.json';
-import SSDevelopMode from '../../../core/SSModule/develop.module';
+import SSPickPointMode from '../../../core/SSModule/pickpoint.module';
 import SSLightModule from '../../../core/SSModule/light.module';
 import VideoSceneViewerManager from '../../../core/VideoSceneViewer/VideoSceneViewerManager';
 import videoBlendImg from '../../../core/assets/default_ground1.png';
 import SSEvent from '../../../core/SSEvent';
 import SSPostProcessManagerModule from '../../../core/PostProcessManager';
+import SSWatchLookModule from '../../../core/SSModule/watchlook.module';
 
 export default function ParentIndex(props) {
   // eslint-disable-next-line react/prop-types
@@ -96,10 +96,11 @@ export default function ParentIndex(props) {
 
     // 引用配置
     jsRef.current.ssmoduleCenter.registerModules([
-      SSDevelopMode,
+      SSPickPointMode,
       SSLightModule,
       SSPostProcessManagerModule,
-      SSWater
+      SSWater,
+      SSWatchLookModule
     ]);
     jsRef.current.ssmoduleCenter.import(SceneSetting);
     // 开启调试
@@ -108,8 +109,8 @@ export default function ParentIndex(props) {
     /**
      * @type {SSDevelopMode}
      */
-    const developModule = jsRef.current.ssmoduleCenter.getModuleByClassName('SSDevelopMode');
-    console.log(' developModule ', developModule);
+    // const developModule = jsRef.current.ssmoduleCenter.getModuleByClassName('SSDevelopMode');
+    // console.log(' developModule ', developModule);
 
     /**
      * @type {SSPostProcessManagerModule}
@@ -118,8 +119,8 @@ export default function ParentIndex(props) {
       'SSPostProcessManagerModule'
     );
 
-    jsRef.current.threeEvent.addEventListener(SSEvent.SSEventType.CLICK, (event) => {
-      const models = jsRef.current.ssthreeObject.getModelsByPoint({ x: event.x, y: event.y });
+    /* jsRef.current.threeEvent.addEventListener(SSEvent.SSEventType.CLICK, (event) => {
+      const models = jsRef.current.ssthreeObject.getModelsByPoint(event);
       if (models.length > 0) {
         const castObj = models[0].object;
         console.log('models[0].object ', models[0].object);

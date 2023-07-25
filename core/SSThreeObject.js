@@ -71,51 +71,58 @@ export default class SSThreeObject {
 
   /**
    * 根据二维坐标 拾取模型数据
-   * @param {THREE.Vector2} aPoint 点位信息
+   * @param {PointerEvent} pointEvent 点位信息
    * @param {Array<THREE.Object3D>} targetObject3Ds 目标模型
    * @param {Array<string>} [ignoreMeshNames] 忽略的材质名称
-   * @param {boolean} [needOffset=false] 是否需要偏移
    * @returns
    */
   getModelsByPoint = (
-    aPoint,
+    pointEvent,
     targetObject3Ds = this.threeScene.children,
-    ignoreMeshNames = [],
-    needOffset = false
+    ignoreMeshNames = []
+    // needOffset = false
   ) => {
-    const point = new THREE.Vector2();
-    if (needOffset) {
-      point.x =
-        ((aPoint.x - this.threeContainer.getBoundingClientRect().left) /
-          this.threeContainer.offsetWidth) *
-          2 -
-        1; // 规范设施横坐标
-      point.y =
-        -(
-          (aPoint.y - this.threeContainer.getBoundingClientRect().top) /
-          this.threeContainer.offsetHeight
-        ) *
-          2 +
-        1;
-    } else {
-      point.x = (aPoint.x / this.threeContainer.offsetWidth) * 2 - 1; // 规范设施横坐标
-      point.y = -(aPoint.y / this.threeContainer.offsetHeight) * 2 + 1;
-    }
-
+    const point = new THREE.Vector2(
+      (pointEvent.offsetX / this.threeContainer.offsetWidth) * 2 - 1, // 规范设施横坐标
+      -(pointEvent.offsetY / this.threeContainer.offsetHeight) * 2 + 1
+    );
+    // if (needOffset) {
+    //   point.x =
+    //     ((aPoint.x - this.threeContainer.getBoundingClientRect().left) /
+    //       this.threeContainer.offsetWidth) *
+    //       2 -
+    //     1; // 规范设施横坐标
+    //   point.y =
+    //     -(
+    //       (aPoint.y - this.threeContainer.getBoundingClientRect().top) /
+    //       this.threeContainer.offsetHeight
+    //     ) *
+    //       2 +
+    //     1;
+    // } else {
+    //     point.x = (aPoint.x / this.threeContainer.offsetWidth) * 2 - 1; // 规范设施横坐标
+    //     point.y = -(aPoint.y / this.threeContainer.offsetHeight) * 2 + 1;
+    // }
+    const invalidTypes = [
+      'AmbientLight',
+      'PointLight',
+      'PointLightHelper',
+      'SpotLight',
+      'SpotLightHelper',
+      'DirectionalLight',
+      'DirectionalLightHelper',
+      'TransformControls',
+      'CameraHelper',
+      'AxesHelper'
+    ];
+    const object3Ds = targetObject3Ds.filter(
+      (item) => invalidTypes.indexOf(item.constructor.name) === -1
+    );
     const raycaster = new THREE.Raycaster();
     raycaster.setFromCamera(point, this.threeCamera);
-
-    let models = raycaster.intersectObjects(targetObject3Ds, true);
+    let models = raycaster.intersectObjects(object3Ds, true);
     //
-    const commonMeshTypes = [
-      'CameraHelper',
-      'AxesHelper',
-      'Line',
-      'Line2',
-      'Line3',
-      'TransformControls',
-      'DirectionalLightHelper'
-    ];
+    const commonMeshTypes = ['Line', 'Line2', 'Line3'];
     const commonMeshNames = ['可视域视锥体'];
     const checkMeshNameFunc = (aMesh) => {
       if (commonMeshNames.indexOf(aMesh.name) !== -1) {
@@ -164,7 +171,6 @@ export default class SSThreeObject {
       camera.position.set(0, 4, 0);
       this.threeCamera = camera;
       this.threeOrbitControl = new OrbitControls(this.threeCamera, this.threeContainer);
-      // this.threeOrbitControl.enableRotate = false;
     }
     this.render();
     this.threeOrbitControl.update();

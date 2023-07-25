@@ -14,10 +14,10 @@ export default class SSLoader {
    * @param {string} aObjPath obj path
    * @param {string} aMaterialPath material path
    * @param {THREE.MaterialCreatorOptions} aMaterialOptions material
-   * @param {THREE.LoadingManager} manager loading manager
+   * @param {THREE.LoadingManager} [manager] loading manager
    * @returns {Promise<THREE.Group>}
    */
-  static loadObj = (aObjPath, aMaterialPath, aMaterialOptions, manager = null) => {
+  static loadObj = (aObjPath, aMaterialPath, aMaterialOptions, manager) => {
     const mtlloader = new MTLLoader(manager);
     mtlloader.setMaterialOptions(aMaterialOptions);
     return mtlloader.loadAsync(aMaterialPath).then((materil) => {
@@ -29,8 +29,8 @@ export default class SSLoader {
 
   /**
    * load fbx
-   * @param {string} aFbxpath fbx path
-   * @param {THREE.LoadingManager} manager loading manager
+   * @param {string} path fbx path
+   * @param {THREE.LoadingManager} [manager] loading manager
    * @returns {Promise<THREE.Group>}
    */
   static loadFbx = (path, manager) => {
@@ -41,7 +41,7 @@ export default class SSLoader {
   /**
    * @param {ArrayBuffer|string} buffer 数据
    * @param {string} directory directory path
-   * @param {THREE.LoadingManager} manager loading manager
+   * @param {THREE.LoadingManager} [manager] loading manager
    * @returns {Promise<THREE.Group>}
    */
   static loadFbxBuffer = (buffer, directory, manager) =>
@@ -54,22 +54,22 @@ export default class SSLoader {
   /**
    * load gltf
    * @param {string} path model path
-   * @param {THREE.LoadingManager} manager loading manager
+   * @param {THREE.LoadingManager} [manager] loading manager
    * @returns {Promise<GLTF>}
    */
-  static loadGltf = (path, manager = null) => {
+  static loadGltf = (path, manager) => {
     const gltfLoader = new GLTFLoader(manager);
     return gltfLoader.loadAsync(path);
   };
 
   /**
    * load gltf
-   * @param {string} path model path
+   * @param {ArrayBuffer|string} buffer 数据
    * @param {string} directory directory目录
-   * @param {THREE.LoadingManager} manager loading manager
+   * @param {THREE.LoadingManager} [manager] loading manager
    * @returns {Promise<GLTF>}
    */
-  static loadGltfBuffer = (buffer, directory, manager = null) => {
+  static loadGltfBuffer = (buffer, directory, manager) => {
     const gltfLoader = new GLTFLoader(manager);
     return gltfLoader.parseAsync(buffer, directory);
   };
@@ -78,10 +78,10 @@ export default class SSLoader {
    * load gltf
    * @param {ArrayBuffer|string} aBuffer 数据
    * @param {string} directory directory目录
-   * @param {THREE.LoadingManager} manager loading manager
+   * @param {THREE.LoadingManager} [manager] loading manager
    * @returns {Promise<GLTF>}
    */
-  static loadGltfDracoBuffer = (aBuffer, directory, manager = null) => {
+  static loadGltfDracoBuffer = (aBuffer, directory, manager) => {
     const gltfLoader = new GLTFLoader(manager);
     const dracoLoader = new DRACOLoader(manager);
     dracoLoader.setDecoderPath('/static/three/draco/');
@@ -104,10 +104,10 @@ export default class SSLoader {
   /**
    * load gltf Draco
    * @param {string} path model path
-   * @param {THREE.LoadingManager} manager loading manager
+   * @param {THREE.LoadingManager} [manager] loading manager
    * @returns {Promise<GLTF>}
    */
-  static loadGltfDraco(path, manager = null) {
+  static loadGltfDraco(path, manager) {
     const gltfLoader = new GLTFLoader(manager);
     const dracoLoader = new DRACOLoader(manager);
     dracoLoader.setDecoderPath('/static/three/draco/');
@@ -133,10 +133,10 @@ export default class SSLoader {
    * load gltf ktx
    * @param {ArrayBuffer | string} buffer model buffer
    * @param {string} directory directory path
-   * @param {THREE.LoadingManager} manager loading manager
+   * @param {THREE.LoadingManager} [manager] loading manager
    * @returns {Promise<GLTF>}
    */
-  static loadGltfOptKTXBuffer = (buffer, directory = '', manager = null) => {
+  static loadGltfOptKTXBuffer = (buffer, directory, manager) => {
     const ktx2Loader = new KTX2Loader(manager)
       .setTranscoderPath('/static/three/basis/')
       .detectSupport(this.ssthreeObject.threeRenderer);
@@ -160,10 +160,10 @@ export default class SSLoader {
   /**
    * load gltf ktx
    * @param {string} path model path
-   * @param {THREE.LoadingManager} manager loading manager
+   * @param {THREE.LoadingManager} [manager] loading manager
    * @returns {Promise<GLTF>}
    */
-  static loadGltfOptKTX = (path = '', manager = null) => {
+  static loadGltfOptKTX = (path, manager) => {
     const ktx2Loader = new KTX2Loader(manager)
       .setTranscoderPath('/static/three/basis/')
       .detectSupport(this.ssthreeObject.threeRenderer);
@@ -245,10 +245,10 @@ export default class SSLoader {
   /**
    * load svg
    * @param {string} aSVGpath svg path
-   * @param {THREE.LoadingManager} manager loading manager
+   * @param {THREE.LoadingManager} [manager] loading manager
    * @returns {Promise<THREE.SVGResult>}
    */
-  static loadSVG = (aSVGpath = '', manager = null) => {
+  static loadSVG = (aSVGpath, manager) => {
     const svgloader = new SVGLoader(manager);
     return new Promise((reslove, reject) => {
       svgloader.load(

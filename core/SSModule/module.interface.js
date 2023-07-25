@@ -27,14 +27,15 @@ export default class SSModuleInterface {
 
   /**
    * 挂载
-   * @param {SSThreeObject} obj
+   * @override
    */
-  moduleMount(obj) {
+  moduleMount() {
     //
   }
 
   /**
    * 卸载
+   * @override
    */
   moduleUnmount() {
     this.ssthreeObject = null;
@@ -42,14 +43,16 @@ export default class SSModuleInterface {
 
   /**
    * 导出配置
+   * @override
    * @returns {Object} 导出的配置项
    */
   moduleExport() {
-    return {};
+    return null;
   }
 
   /**
    * 导入配置
+   * @override
    */
   moduleImport(obj) {
     //
@@ -64,6 +67,9 @@ export default class SSModuleInterface {
 
   /**
    * 模块数值 更新调试
+   * @param {string} key 唯一key值
+   * @param {*} value 更新的数据值
+   * @returns
    */
   moduleUpdateGuiValue(key, value) {
     if (!this.__gui) {
@@ -71,7 +77,7 @@ export default class SSModuleInterface {
     }
     // 普通控制器
     const controler = this.__gui.controllers.find((item) => item.property === key);
-    if (controler) {
+    if (controler && controler.getValue() !== value) {
       controler.setValue(value);
       return;
     }
@@ -79,13 +85,17 @@ export default class SSModuleInterface {
     const childgui = this.__gui.folders.find((item) => item._title === key);
     if (childgui) {
       Object.keys(value).forEach((item) => {
-        childgui.controllers.find((item2) => item2.property === item)?.setValue(value[item]);
+        const con = childgui.controllers.find((item2) => item2.property === item);
+        if (con && con.getValue() !== value[item]) {
+          con.setValue(value[item]);
+        }
       });
     }
   }
 
   /**
    * 获取模块调试配置
+   * @override
    * @returns {Object} 调试工具配置
    */
   getModuleConfig() {
@@ -96,6 +106,7 @@ export default class SSModuleInterface {
   }
 
   /**
+   * @override
    * @returns {Object} 调试工具数据结构
    */
   getModuleConfigSource() {
@@ -110,10 +121,27 @@ export default class SSModuleInterface {
   }
 
   /**
+   * 模块开启功能调试
+   * @override
+   */
+  moduleOpenDebug() {
+    //
+  }
+
+  /**
    * 调试工具变化
+   * @override
    * @param {{ key: string, value: any, data: object, target: object  }} params 参数
    */
   moduleGuiChange(params = {}) {
+    //
+  }
+
+  /**
+   * 模块关闭功能调试
+   * @override
+   */
+  moduleCloseDebug() {
     //
   }
 }

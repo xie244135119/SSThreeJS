@@ -9,6 +9,7 @@ import SSThreeTool from './SSTool/index';
 import SSThreeLoop from './SSThreeLoop';
 import SSThreeObject from './SSThreeObject';
 import SSLoader from './SSLoader';
+import LineStartPng from './assets/line_start.png';
 
 /**
  * @description css2d 渲染器
@@ -302,7 +303,7 @@ export default class SSCssRenderer {
     const line = new Line2(geo, material);
     group.add(line);
     if (centerIcon) {
-      SSLoader.loadSprite(require('./assets/line_start.png')).then((obj) => {
+      SSLoader.loadSprite(LineStartPng).then((obj) => {
         obj.position.copy(startPoint);
         obj.scale.set(0.2, 0.2, 0.2);
         group.attach(obj);

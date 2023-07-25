@@ -17,6 +17,8 @@
  * @property {string} MOUSEOVER 鼠标划过事件
  * @property {string} MOUSECANCEL 鼠标取消事件
  */
+import SSThreeTool from './SSTool/index';
+
 const SSEventType = {
   // 单击事件
   CLICK: 'click',
@@ -39,7 +41,11 @@ const SSEventType = {
   // 键盘按下 字符按键
   KEYPRESS: 'keypress',
   // 键盘弹起
-  KEYUP: 'keyup'
+  KEYUP: 'keyup',
+  // 撤销
+  REVOKE: 'revoke',
+  // 确定
+  CONFIRM: 'Confirm'
 };
 export default class SSEvent {
   /**
@@ -47,7 +53,14 @@ export default class SSEvent {
    */
   _targetElement = null;
 
-  // all model event
+  /**
+   * @type Array<function>
+   */
+  list = null;
+
+  /**
+   * @type {{ string: Array }}
+   */
   _modelEventFunc = {};
 
   // timeout
@@ -70,7 +83,7 @@ export default class SSEvent {
   }
 
   destory() {
-    this.#removeListeners();
+    this._removeListeners();
     clearTimeout(this._timeroutId);
     this._timeroutId = 0;
     this._isLongPress = false;
@@ -82,7 +95,7 @@ export default class SSEvent {
   /**
    * 注册事件
    * @param {SSEventType} aType 详见 ThreeEvent.SSEventType
-   * @param {function (Event | KeyboardEvent):void} aListener 监听事件
+   * @param {function (KeyboardEvent | PointerEvent):void} aListener 监听事件
    * @returns {string | Symbol}
    */
   addEventListener = (aType = SSEventType.CLICK, aListener = () => {}) => {
@@ -110,52 +123,86 @@ export default class SSEvent {
   };
 
   /**
+   * skip event
+   * @param {SSEventType} aType 详见 SSEventType
+   * @param {string | Symbol} aHandle 句柄
+   */
+  skipEvent = (aType, aHandle) => {
+    const list = this._modelEventFunc[aType] || [];
+    const item = list.find((item) => item.handle === aHandle);
+    if (item) {
+      item.skip = true;
+    }
+  };
+
+  /**
+   * cancel skip event
+   * @param {SSEventType} aType 详见 SSEventType
+   * @param {string | Symbol} aHandle 句柄
+   */
+  cancelSkipEvent = (aType, aHandle) => {
+    const list = this._modelEventFunc[aType] || [];
+    const item = list.find((item) => item.handle === aHandle);
+    if (item) {
+      item.skip = false;
+    }
+  };
+
+  /**
    * 内部增加全系列注册事件
    */
   _addListeners = () => {
-    this._targetElement.addEventListener('pointerdown', this.#onElementPointDown);
-    this._targetElement.addEventListener('pointerup', this.#onElementPointUp);
-    this._targetElement.addEventListener('click', this.#onElementClick);
-    this._targetElement.addEventListener('dblclick', this.#onElementDbClick);
-    this._targetElement.addEventListener('contextmenu', this.#onElementContextMenu);
-    this._targetElement.addEventListener('pointermove', this.#onElementMouseMove);
-    this._targetElement.addEventListener('pointerover', this.#onElementMouseOver);
-    this._targetElement.addEventListener('pointercancel', this.#onElementMouseCancel);
-    window.addEventListener('keydown', this.#onKeyboardDown);
-    window.addEventListener('keypress', this.#onKeyboardPress);
-    window.addEventListener('keyup', this.#onKeyboardUp);
+    this._targetElement.addEventListener('pointerdown', this._onElementPointDown);
+    this._targetElement.addEventListener('pointerup', this._onElementPointUp);
+    this._targetElement.addEventListener('click', this._onElementClick);
+    this._targetElement.addEventListener('dblclick', this._onElementDbClick);
+    this._targetElement.addEventListener('contextmenu', this._onElementContextMenu);
+    this._targetElement.addEventListener('pointermove', this._onElementMouseMove);
+    this._targetElement.addEventListener('pointerover', this._onElementMouseOver);
+    this._targetElement.addEventListener('pointercancel', this._onElementMouseCancel);
+    window.addEventListener('keydown', this._onKeyboardDown);
+    window.addEventListener('keypress', this._onKeyboardPress);
+    window.addEventListener('keyup', this._onKeyboardUp);
   };
 
   /**
    * 移除注册事件
    */
-  #removeListeners = () => {
-    this._targetElement.removeEventListener('pointerdown', this.#onElementPointDown);
-    this._targetElement.removeEventListener('pointerup', this.#onElementPointUp);
-    this._targetElement.removeEventListener('click', this.#onElementClick);
-    this._targetElement.removeEventListener('dblclick', this.#onElementDbClick);
-    this._targetElement.removeEventListener('contextmenu', this.#onElementContextMenu);
-    this._targetElement.removeEventListener('pointermove', this.#onElementMouseMove);
-    this._targetElement.removeEventListener('pointerover', this.#onElementMouseOver);
-    this._targetElement.removeEventListener('pointercancel', this.#onElementMouseCancel);
-    window.removeEventListener('keydown', this.#onKeyboardDown);
-    window.removeEventListener('keypress', this.#onKeyboardPress);
-    window.removeEventListener('keyup', this.#onKeyboardUp);
+  _removeListeners = () => {
+    this._targetElement.removeEventListener('pointerdown', this._onElementPointDown);
+    this._targetElement.removeEventListener('pointerup', this._onElementPointUp);
+    this._targetElement.removeEventListener('click', this._onElementClick);
+    this._targetElement.removeEventListener('dblclick', this._onElementDbClick);
+    this._targetElement.removeEventListener('contextmenu', this._onElementContextMenu);
+    this._targetElement.removeEventListener('pointermove', this._onElementMouseMove);
+    this._targetElement.removeEventListener('pointerover', this._onElementMouseOver);
+    this._targetElement.removeEventListener('pointercancel', this._onElementMouseCancel);
+    window.removeEventListener('keydown', this._onKeyboardDown);
+    window.removeEventListener('keypress', this._onKeyboardPress);
+    window.removeEventListener('keyup', this._onKeyboardUp);
   };
 
   /**
-   * register event
-   * @param {*} aCamera
+   * 查询相关的点击事件
+   * @param {string} type 事件类型
+   * @returns {{ handle: string | symbol, fn: function (KeyboardEvent|PointerEvent):void , skip: boolean}[]}
    */
-  #onElementClick = (e) => {
+  _getFuncsFromType = (type) =>
+    this._modelEventFunc[type]?.filter((item) => item.skip !== true) || [];
+
+  /**
+   * register event
+   * @param {KeyboardEvent | PointerEvent} e
+   */
+  _onElementClick = (e) => {
     if (this._isDrag) {
-      this._modelEventFunc[SSEventType.DRAG]?.forEach((element) => {
+      this._getFuncsFromType(SSEventType.DRAG).forEach((element) => {
         element.fn?.(e);
       });
       return;
     }
     if (this._isLongPress) {
-      this._modelEventFunc[SSEventType.LONGPRESS]?.forEach((element) => {
+      this._getFuncsFromType(SSEventType.LONGPRESS)?.forEach((element) => {
         element.fn?.(e);
       });
       return;
@@ -165,7 +212,7 @@ export default class SSEvent {
       this._timeroutId = null;
     }
     this._timeroutId = setTimeout(() => {
-      this._modelEventFunc[SSEventType.CLICK]?.forEach((element) => {
+      this._getFuncsFromType(SSEventType.CLICK)?.forEach((element) => {
         element.fn?.(e);
       });
     }, 50);
@@ -175,27 +222,18 @@ export default class SSEvent {
    * 注册双击事件
    * @param {*} aCamera
    */
-  #onElementDbClick = (e) => {
+  _onElementDbClick = (e) => {
     clearTimeout(this._timeroutId);
-    this._modelEventFunc[SSEventType.DBLCLICK]?.forEach((element) => {
+    this._getFuncsFromType(SSEventType.DBLCLICK)?.forEach((element) => {
       element.fn?.(e);
     });
   };
 
-  // /**
-  //  * 注册鼠标移动事件
-  //  */
-  // #onElementMouseMove = SSThreeTool.throttle((e) => {
-  //   this._modelEventFunc?.[SSEventType.MOUSEMOVE]?.forEach((element) => {
-  //     element.fn?.(e);
-  //   }, 0);
-  // });
-
   /**
    * 注册鼠标移动事件
    */
-  #onElementMouseMove = (e) => {
-    this._modelEventFunc?.[SSEventType.MOUSEMOVE]?.forEach((element) => {
+  _onElementMouseMove = (e) => {
+    this._getFuncsFromType(SSEventType.MOUSEMOVE)?.forEach((element) => {
       element.fn?.(e);
     }, 0);
   };
@@ -204,8 +242,8 @@ export default class SSEvent {
    * 注册鼠标覆盖事件
    * @param {*} aCamera
    */
-  #onElementMouseOver = (e) => {
-    this._modelEventFunc[SSEventType.MOUSEOVER]?.forEach((element) => {
+  _onElementMouseOver = (e) => {
+    this._getFuncsFromType(SSEventType.MOUSEOVER).forEach((element) => {
       element.fn?.(e);
     });
   };
@@ -214,8 +252,8 @@ export default class SSEvent {
    * 注册鼠标覆盖事件
    * @param {*} aCamera
    */
-  #onElementMouseCancel = (e) => {
-    this._modelEventFunc[SSEventType.MOUSECANCEL]?.forEach((element) => {
+  _onElementMouseCancel = (e) => {
+    this._getFuncsFromType(SSEventType.MOUSECANCEL).forEach((element) => {
       element.fn?.(e);
     });
   };
@@ -224,7 +262,7 @@ export default class SSEvent {
    * register event
    * @param {*} aCamera
    */
-  #onElementPointDown = (e) => {
+  _onElementPointDown = (e) => {
     clearTimeout(this._timeroutId);
     this._isDrag = false;
     this._isLongPress = false;
@@ -239,7 +277,7 @@ export default class SSEvent {
    * register point up
    * @param {*} aCamera
    */
-  #onElementPointUp = (e) => {
+  _onElementPointUp = (e) => {
     // 是否为长按
     const now = new Date().valueOf();
     const { clientX, clientY } = e;
@@ -261,7 +299,7 @@ export default class SSEvent {
    * 注册鼠标右键事件
    * @param {Event} e
    */
-  #onElementContextMenu = (e) => {
+  _onElementContextMenu = (e) => {
     clearTimeout(this._timeroutId);
     this._isDrag = false;
     this._isLongPress = false;
@@ -270,7 +308,7 @@ export default class SSEvent {
       clientX: e.clientX,
       clientY: e.clientY
     };
-    this._modelEventFunc[SSEventType.CONTEXTMENU]?.forEach((element) => {
+    this._getFuncsFromType(SSEventType.CONTEXTMENU).forEach((element) => {
       element.fn?.(e);
     });
   };
@@ -278,8 +316,27 @@ export default class SSEvent {
   /**
    * 注册键盘按下事件
    */
-  #onKeyboardDown = (e) => {
-    this._modelEventFunc[SSEventType.KEYDOWN]?.forEach((element) => {
+  _onKeyboardDown = (e) => {
+    this._getFuncsFromType(SSEventType.KEYDOWN).forEach((element) => {
+      element.fn?.(e);
+    });
+
+    if (['Backspace', 'Escape'].indexOf(e.key) !== -1) {
+      this._getFuncsFromType(SSEventType.REVOKE).forEach((fnobj) => {
+        fnobj.fn?.(e);
+      });
+    } else if (['Enter'].indexOf(e.key) !== -1) {
+      this._getFuncsFromType(SSEventType.CONFIRM).forEach((fnobj) => {
+        fnobj.fn?.(e);
+      });
+    }
+  };
+
+  /**
+   * 注册键盘按下事件
+   */
+  _onKeyboardPress = (e) => {
+    this._getFuncsFromType(SSEventType.KEYPRESS).forEach((element) => {
       element.fn?.(e);
     });
   };
@@ -287,17 +344,8 @@ export default class SSEvent {
   /**
    * 注册键盘按下事件
    */
-  #onKeyboardPress = (e) => {
-    this._modelEventFunc[SSEventType.KEYPRESS]?.forEach((element) => {
-      element.fn?.(e);
-    });
-  };
-
-  /**
-   * 注册键盘按下事件
-   */
-  #onKeyboardUp = (e) => {
-    this._modelEventFunc[SSEventType.KEYUP]?.forEach((element) => {
+  _onKeyboardUp = (e) => {
+    this._getFuncsFromType(SSEventType.KEYUP).forEach((element) => {
       element.fn?.(e);
     });
   };

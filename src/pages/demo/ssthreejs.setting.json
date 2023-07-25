@@ -1,12 +1,20 @@
 {
-  "SSDevelopMode": {},
   "SSLightModule": {
     "lights": [
-      { "type": "AmbientLight", "visible": true, "color": 16711680, "intensity": 0.5 },
+      {
+        "type": "AmbientLight",
+        "visible": true,
+        "color": 16733011,
+        "intensity": 0.5
+      },
       {
         "type": "DirectionalLight",
         "visible": true,
-        "position": { "x": 0, "y": 1, "z": 0 },
+        "position": {
+          "x": 0,
+          "y": 1,
+          "z": 0
+        },
         "castShadow": true,
         "color": 18943,
         "intensity": 1
@@ -14,8 +22,27 @@
       {
         "type": "SpotLight",
         "visible": true,
-        "position": { "x": 0, "y": 0, "z": 2 },
+        "position": {
+          "x": 0,
+          "y": 0,
+          "z": 2
+        },
         "color": 64841,
+        "intensity": 1,
+        "distance": 0,
+        "angle": 1.0471975511965976,
+        "penumbra": 0,
+        "decay": 2
+      },
+      {
+        "type": "SpotLight",
+        "visible": true,
+        "position": {
+          "x": 1,
+          "y": 0,
+          "z": 0
+        },
+        "color": 8255160,
         "intensity": 1,
         "distance": 0,
         "angle": 1.0471975511965976,
@@ -26,16 +53,24 @@
     "orbitControl": {
       "minPolarAngle": 0,
       "maxPolarAngle": 3.141592653589793,
-      "enableDamping": true,
-      "dampingFactor": 0.1,
+      "enableDamping": false,
+      "dampingFactor": 0.05,
       "enableZoom": true,
       "zoomSpeed": 1,
       "autoRotate": false,
       "autoRotateSpeed": 2,
-      "target": { "x": -0.12770136818985214, "y": -0.2977468432670712, "z": 0.2770071281954684 }
+      "target": {
+        "x": -0.12770136818985214,
+        "y": -0.2977468432670712,
+        "z": 0.2770071281954684
+      }
     },
     "camera": {
-      "position": { "x": -1.644143460445816, "y": 1.645385870985608, "z": -3.5645408269659815 }
+      "position": {
+        "x": -1.644143460445816,
+        "y": 1.645385870985608,
+        "z": -3.5645408269659815
+      }
     }
   },
   "SSPostProcessManagerModule": {
@@ -52,18 +87,62 @@
     },
     "outline": {
       "blendFunction": 28,
-      "visibleEdgeColor": { "r": 0, "g": 1, "b": 1 },
+      "visibleEdgeColor": 4551423,
+      "hiddenEdgeColor": 16463331,
       "pulseSpeed": 0.7,
       "edgeStrength": 4.42,
-      "kernelSize": 1,
-      "blur": true
-    }
+      "kernelSize": 2,
+      "blur": false,
+      "xRay": true,
+      "outlineWidth": 2
+    },
+    "启用模块": false,
+    "模块调试": false
   },
-  "SSWater": {
-    "visible": true,
-    "color": { "r": 0.47843137254901963, "g": 0.9137254901960784, "b": 1 },
-    "scale": 10,
-    "flowX": 7,
-    "flowY": 0
+  "SSWatchLookModule": {
+    "cameraModelPath": "public/yuntai/sxt01.FBX",
+    "cameraAnchorMeshName": "sxt001",
+    "cameraList": [
+      {
+        "uuid": "0113fb29-23fe-4891-ae26-34cfbc21ce80",
+        "type": "ball",
+        "position": {
+          "x": 1.8598104855339053,
+          "y": 0.5049648493195579,
+          "z": 0.3648556077498384
+        },
+        "rotation": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        },
+        "scale": {
+          "x": 1,
+          "y": 1,
+          "z": 1
+        },
+        "name": ""
+      },
+      {
+        "uuid": "7c187726-de84-435e-928b-9cd1d3dd3e66",
+        "type": "ball",
+        "position": {
+          "x": -0.15355519161760584,
+          "y": 0.5526174514394281,
+          "z": -1.5222261323666386
+        },
+        "rotation": {
+          "x": -180,
+          "y": 86.69891119947629,
+          "z": -180
+        },
+        "scale": {
+          "x": 1,
+          "y": 1,
+          "z": 1
+        },
+        "name": ""
+      }
+    ]
   }
 }

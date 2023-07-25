@@ -71,9 +71,9 @@ class GuiIndex {
     this.addCameraControlView();
     this.addCameraPositionAction();
     // add debug
-    this.addNewMeshControllerView();
+    // this.addNewMeshControllerView();
     // add watch controller
-    this.addWatchLookControllerView();
+    // this.addWatchLookControllerView();
   }
 
   /**

@@ -1,10 +1,49 @@
 import * as THREE from 'three';
+import TWEEN from '@tweenjs/tween.js';
 import { BufferGeometry } from 'three';
 import { Line2 } from 'three/examples/jsm/lines/Line2';
 import { LineGeometry } from 'three/examples/jsm/lines/LineGeometry';
 import { LineMaterial } from 'three/examples/jsm/lines/LineMaterial';
+import SSThreeLoop from '../SSThreeLoop';
 
 export default class SSThreeTool {
+  /**
+   * use tween animation
+   * @param {object} aStartPoint 开始的起点
+   * @param {object} aEndPoint 结束的起点
+   * @param {function(object, number): void} onUpdate 更新过程
+   * @param {number} [speed=1] 运行速度
+   * @param {function ():void} onComplete
+   */
+  static useTweenAnimate = (
+    aStartPoint = {},
+    aEndPoint = {},
+    onUpdate = () => {},
+    speed = 1,
+    onComplete = () => {}
+  ) => {
+    let _animateFrameRef;
+    const tweenAnimate = new TWEEN.Tween(aStartPoint);
+    tweenAnimate.to(aEndPoint, speed * 1000);
+    tweenAnimate.onUpdate(onUpdate);
+    tweenAnimate.onStop(() => {
+      TWEEN.remove(tweenAnimate);
+      SSThreeLoop.removeId(_animateFrameRef);
+    });
+    tweenAnimate.onComplete(() => {
+      SSThreeLoop.removeId(_animateFrameRef);
+      onComplete?.();
+    });
+    tweenAnimate.easing(TWEEN.Easing.Linear.None);
+    tweenAnimate.start();
+
+    _animateFrameRef = SSThreeLoop.add(() => {
+      if (tweenAnimate.isPlaying()) {
+        TWEEN.update();
+      }
+    });
+  };
+
   /**
    * 经过拆分后的模型数据，根据子物体获取拆分前 原始物体名称
    * @param {THREE.Object3D} obj3d object
@@ -190,35 +229,35 @@ export default class SSThreeTool {
     return box;
   };
 
-  /**
-   * 场景无用模型过滤
-   * @param {模型name列表} nameList 模型name列表
-   * @param {过滤name列表} castNameList 过滤name列表
-   * @returns
-   */
-  static _modelsFilter = (nameList = [], castNameList = []) => {
-    if (nameList?.length === 0) {
-      return [];
-    }
-    // 筛选掉可视域视锥体mesh
-    // eslint-disable-next-line no-param-reassign
-    nameList =
-      nameList?.length === 0
-        ? []
-        : nameList.filter(
-          (item) => item.object.name !== '可视域视锥体' && item.object.visible === true
-        );
-    // 墙体过滤 , 不过滤地板
-    const newarray = [];
-    nameList.forEach((item) => {
-      if (!castNameList.includes(item.object.name)) {
-        newarray.push(item);
-      }
-    });
-    // eslint-disable-next-line no-param-reassign
-    nameList = newarray;
-    return nameList;
-  };
+  // /**
+  //  * 场景无用模型过滤
+  //  * @param {模型name列表} nameList 模型name列表
+  //  * @param {过滤name列表} castNameList 过滤name列表
+  //  * @returns
+  //  */
+  // static _modelsFilter = (nameList = [], castNameList = []) => {
+  //   if (nameList?.length === 0) {
+  //     return [];
+  //   }
+  //   // 筛选掉可视域视锥体mesh
+  //   // eslint-disable-next-line no-param-reassign
+  //   nameList =
+  //     nameList?.length === 0
+  //       ? []
+  //       : nameList.filter(
+  //         (item) => item.object.name !== '可视域视锥体' && item.object.visible === true
+  //       );
+  //   // 墙体过滤 , 不过滤地板
+  //   const newarray = [];
+  //   nameList.forEach((item) => {
+  //     if (!castNameList.includes(item.object.name)) {
+  //       newarray.push(item);
+  //     }
+  //   });
+  //   // eslint-disable-next-line no-param-reassign
+  //   nameList = newarray;
+  //   return nameList;
+  // };
 
   /**
    * 几何体合并
@@ -293,5 +332,236 @@ export default class SSThreeTool {
       line = new Line2(lineGeometry, lineMaterial);
     }
     return line;
+  };
+
+  /**
+   * set mesh opacity
+   * @param {number} [aOpacity=0.5] opacity  range:[0,1]
+   * @param {Array<string>} meshNames material names defaut all
+   * @param {THREE.Object3D} targetObject3D target object
+   */
+  static setOpacity = (aOpacity, targetObject3D, meshNames = []) => {
+    let opacity = aOpacity;
+    if (opacity === undefined || opacity === null) {
+      opacity = 0.5;
+    }
+    const setMeshTransparent = (aMesh) => {
+      if (aMesh instanceof THREE.Mesh) {
+        let materialChildren = aMesh.material;
+        if (materialChildren instanceof THREE.Material) {
+          materialChildren = [materialChildren];
+        }
+        for (let index = 0; index < materialChildren.length; index++) {
+          const material = materialChildren[index];
+          if (material instanceof THREE.Material) {
+            material.transparent = opacity !== 1;
+            material.opacity = opacity;
+          }
+        }
+      }
+    };
+    if (meshNames.length === 0) {
+      targetObject3D.traverse((e) => {
+        setMeshTransparent(e);
+      });
+    }
+    //
+    meshNames.forEach((mesh) => {
+      const obj = targetObject3D.getObjectByName(mesh);
+      obj.traverse((e) => {
+        setMeshTransparent(e);
+      });
+    });
+  };
+
+  /**
+   * set mesh visible
+   * @param {number} aVisible 可见  range:[0,1]
+   * @param {Array<string} meshNames material names defaut all
+   * @param {THREE.Object3D} targetObject3D 目标object3d
+   */
+  static setVisible = (aVisible = true, targetObject3D = null, meshNames = []) => {
+    // set material transpant
+    const setObjVisible = (aObj) => {
+      if (aObj instanceof THREE.Object3D) {
+        // current
+        aObj.visible = aVisible;
+        if (aVisible) {
+          // visible true parent > parent true
+          let { parent } = aObj;
+          while (parent) {
+            parent.visible = aVisible;
+            parent = parent.parent;
+          }
+        }
+        // visible false child false
+        aObj.traverse((e) => {
+          e.visible = aVisible;
+        });
+      }
+    };
+    // reset obj
+    const resetAllObj = (resetVisible) => {
+      targetObject3D.traverse((e) => {
+        e.visible = resetVisible;
+      });
+    };
+    resetAllObj(meshNames.length > 0 ? !aVisible : aVisible);
+    if (meshNames.length === 0) {
+      return;
+    }
+    //
+    meshNames.forEach((e) => {
+      const obj = targetObject3D.getObjectByName(e);
+      setObjVisible(obj);
+    });
+  };
+
+  /**
+   * zoom
+   * @param {number} aValue 放大缩小的倍数
+   * @param {THREE.PerspectiveCamera} camera 目标相机
+   */
+  static zoom = (aValue, camera) => {
+    const endPosition = camera.position.clone().multiplyScalar(aValue);
+    this.useTweenAnimate(
+      {
+        position: camera.position.clone()
+      },
+      {
+        position: endPosition
+      },
+      (e) => {
+        camera.position.copy(e.position);
+        camera.updateProjectionMatrix();
+      },
+      0.5
+    );
+  };
+
+  /**
+   * 模型爆炸效果 ，距离中心线等距离增加长度
+   * @param {number} [aValue] 爆炸比例
+   * @param {THREE.Object3D} [targetObject3D] 目标物体
+   */
+  static explode = (aValue, targetObject3D) => {
+    const startPoint = {};
+    const endPoint = {};
+    const objs = {};
+    targetObject3D.traverse((aObj) => {
+      if (aObj instanceof THREE.Mesh) {
+        const postion = aObj.position.clone();
+        objs[aObj.name] = aObj;
+        startPoint[`${aObj.name}_x`] = postion.x;
+        startPoint[`${aObj.name}_y`] = postion.y;
+        startPoint[`${aObj.name}_z`] = postion.z;
+        postion.multiplyScalar(aValue);
+        endPoint[`${aObj.name}_x`] = postion.x;
+        endPoint[`${aObj.name}_y`] = postion.y;
+        endPoint[`${aObj.name}_z`] = postion.z;
+      }
+    });
+    const objNames = Object.keys(objs);
+    this.useTweenAnimate(startPoint, endPoint, (e) => {
+      objNames.forEach((objName) => {
+        const obj = objs[objName];
+        obj.position.set(e[`${objName}_x`], e[`${objName}_y`], e[`${objName}_z`]);
+      });
+    });
+  };
+
+  /**
+   * 设置物体其他颜色
+   * @param {Array<string} meshNames 材质物体
+   * @param { string | number} materialColor color 物体颜色
+   * @param {THREE.Object3D} targetObject3D object 目标物体
+   * @returns
+   */
+  static setMeshColorByNames = (meshNames, materialColor, targetObject3D) => {
+    if (meshNames?.length === 0) {
+      return;
+    }
+    const changeMaterials = (aMaterials = []) =>
+      aMaterials.map((e) => {
+        const newMaterial = e.clone();
+        newMaterial.color = new THREE.Color(materialColor || '#DDFF00');
+        return newMaterial;
+      });
+    const setMesh = (mesh) => {
+      if (mesh instanceof THREE.Mesh) {
+        let list = [mesh.material];
+        if (mesh.material instanceof Array) {
+          list = mesh.material;
+        }
+        if (!mesh.userData?.changeMaterials) {
+          const newMaterials = changeMaterials(list);
+          mesh.userData = {
+            originMaterials: list.length === 1 ? list[0] : list,
+            changeMaterials: newMaterials.length === 1 ? newMaterials[0] : newMaterials
+          };
+        }
+        mesh.material = mesh.userData.changeMaterials;
+      }
+    };
+    for (let index = 0; index < meshNames.length; index++) {
+      const meshName = meshNames[index];
+      const obj3d = targetObject3D.getObjectByName(meshName);
+      obj3d.traverse((e) => {
+        setMesh(e);
+      });
+    }
+  };
+
+  /**
+   * 重置物体颜色
+   * @param {Array<string} meshNames 一组meshname
+   * @param {THREE.Object3D} targetObject3D 目标物体
+   * @returns
+   */
+  static resetMeshNames = (meshNames, targetObject3D) => {
+    if (meshNames?.length === 0) {
+      return;
+    }
+    const setMesh = (mesh) => {
+      if (mesh instanceof THREE.Mesh) {
+        if (mesh.userData?.originMaterials) {
+          mesh.material = mesh.userData.originMaterials;
+        }
+      }
+    };
+    if (!(targetObject3D instanceof THREE.Object3D)) {
+      return;
+    }
+    for (let index = 0; index < meshNames.length; index++) {
+      const meshName = meshNames[index];
+      const obj3d = targetObject3D.getObjectByName(meshName);
+      obj3d.traverse((e) => {
+        setMesh(e);
+      });
+    }
+  };
+
+  /**
+   * 根据物体生成包围盒子
+   * @param {THREE.Object3D} object
+   * @param {THREE.MeshBasicMaterialParameters} materialParams 参数
+   */
+  static addBoundingBoxByObject = (object, materialParams) => {
+    const box = new THREE.Box3().setFromObject(object);
+    const v = {
+      x: Math.abs(box.max.x - box.min.x),
+      y: Math.abs(box.max.y - box.min.y),
+      z: Math.abs(box.max.z - box.min.z)
+    };
+    const geometry = new THREE.BoxBufferGeometry(v.x + 0.01, v.y + 0.01, v.z + 0.01);
+    const material = new THREE.MeshBasicMaterial({
+      color: new THREE.Color(0, 1, 1),
+      transparent: true,
+      opacity: 0.2,
+      ...materialParams
+    });
+    const cube = new THREE.Mesh(geometry, material);
+    cube.position.copy(SSThreeTool.getObjectCenter(object));
+    return cube;
   };
 }

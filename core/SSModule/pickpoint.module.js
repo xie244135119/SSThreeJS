@@ -5,7 +5,7 @@ import SSDispose from '../SSDispose';
 import SSModuleInterface from './module.interface';
 import SSEvent from '../SSEvent';
 
-export default class SSDevelopMode extends SSModuleInterface {
+export default class SSPickPointMode extends SSModuleInterface {
   /**
    * 类标题
    */
@@ -42,7 +42,6 @@ export default class SSDevelopMode extends SSModuleInterface {
   _dynamicConfig = {
     pointWidth: 0.05,
     lineWidth: 0.001,
-    enable: false,
     remark: '完成(ENTER)后退(ESC)',
     points: '选择的点位',
     color: new THREE.Color(0xffffff)
@@ -109,13 +108,7 @@ export default class SSDevelopMode extends SSModuleInterface {
     const threeEvent = new SSEvent(this.ssthreeObject.threeContainer);
     this._threeEvent = threeEvent;
     threeEvent.addEventListener(SSEvent.SSEventType.CLICK, (e) => {
-      if (!this._dynamicConfig.enable) {
-        return;
-      }
-      const models = this.ssthreeObject.getModelsByPoint({
-        x: e.offsetX,
-        y: e.offsetY
-      });
+      const models = this.ssthreeObject.getModelsByPoint(e);
       if (models.length === 0) return;
 
       // 目标点位
@@ -150,16 +143,10 @@ export default class SSDevelopMode extends SSModuleInterface {
     });
 
     threeEvent.addEventListener(SSEvent.SSEventType.MOUSEMOVE, (e) => {
-      if (!this._dynamicConfig.enable) {
-        return;
-      }
       if (this._lineVectors.length === 0) {
         return;
       }
-      const models = this.ssthreeObject.getModelsByPoint({
-        x: e.x,
-        y: e.y
-      });
+      const models = this.ssthreeObject.getModelsByPoint(e);
       if (models.length === 0) return;
       this._currentVector = models[0].point;
       // 移除时刻渲染的一条
@@ -178,32 +165,35 @@ export default class SSDevelopMode extends SSModuleInterface {
       this._pathGroup.add(group);
     });
 
-    threeEvent.addEventListener(SSEvent.SSEventType.KEYDOWN, (e) => {
-      switch (e.key) {
-        case 'Escape':
-          // 回退
-          if (this._lineVectors.length === 0) {
-            return;
-          }
-          this._lineVectors.pop();
-          // 移除绘制的一条
-          this._pathGroup.getObjectByName('debug_line_moveline')?.removeFromParent();
-          this._pathGroup.children.pop();
-          this._pointGroup.children.pop();
-          break;
-        case 'Enter':
-          if (this._lineVectors.length === 0) {
-            return;
-          }
-          this.closeChoosePathMode();
-          this._dynamicConfig.enable = false;
-          this._dynamicConfig.points = JSON.stringify(this._lineVectors);
-          this.moduleUpdateGuiValue('points', JSON.stringify(this._lineVectors));
-          this.moduleUpdateGuiValue('enable', false);
-          break;
-        default:
-          break;
+    // 后退
+    threeEvent.addEventListener(SSEvent.SSEventType.REVOKE, (e) => {
+      // 回退
+      if (this._lineVectors.length === 0) {
+        return;
       }
+      this._lineVectors.pop();
+      // 移除绘制的一条
+      this._pathGroup.getObjectByName('debug_line_moveline')?.removeFromParent();
+      this._pathGroup.children.pop();
+      this._pointGroup.children.pop();
+    });
+
+    // 确认
+    threeEvent.addEventListener(SSEvent.SSEventType.CONFIRM, (e) => {
+      if (this._lineVectors.length === 0) {
+        return;
+      }
+      this._dynamicConfig.points = JSON.stringify(this._lineVectors);
+      this.moduleUpdateGuiValue('points', JSON.stringify(this._lineVectors));
+      this._lineVectors = [];
+      const pathmeshs = [...this._pathGroup.children];
+      pathmeshs.forEach((e) => {
+        e.removeFromParent();
+      });
+      const pointmeshs = [...this._pointGroup.children];
+      pointmeshs.forEach((e) => {
+        e.removeFromParent();
+      });
     });
   }
 
@@ -225,8 +215,6 @@ export default class SSDevelopMode extends SSModuleInterface {
 
   getModuleConfig() {
     return this._dynamicConfig;
-    // points: this._lineVectors.length > 0 ? JSON.stringify(this._lineVectors) : '选择的点位',
-    // targetMeshName: this.getModuleConfigSource().targetMeshName?.[0]
   }
 
   // /**
@@ -244,6 +232,14 @@ export default class SSDevelopMode extends SSModuleInterface {
   //   };
   // }
 
+  moduleOpenDebug() {
+    this.openChoosePathMode();
+  }
+
+  moduleCloseDebug() {
+    this.closeChoosePathMode();
+  }
+
   moduleGuiChange(params) {
     const { key, value, target } = params;
     this._dynamicConfig = target;
@@ -252,17 +248,6 @@ export default class SSDevelopMode extends SSModuleInterface {
       this._dynamicConfig.color.g,
       this._dynamicConfig.color.b
     );
-    if (key === 'enable') {
-      if (value) {
-        this.openChoosePathMode();
-      } else {
-        this.closeChoosePathMode();
-      }
-    }
-
-    if (!this._dynamicConfig.enable) {
-      return;
-    }
     if (key === 'color') {
       this._pathGroup.traverse((e) => {
         if (e instanceof THREE.Mesh) {
