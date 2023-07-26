@@ -4,7 +4,7 @@ import SSFile from '../SSTool/file';
 import styles from './index.css';
 import SSThreeObject from '../SSThreeObject';
 import SSModuleInterface, { SSModuleUpdateScribe } from './module.interface';
-import SSPubSubcribeInstance from '../SSTool/pubsubscribe';
+import SSPubSubcribeInstance from '../SSTool/PubSubscribe';
 
 export default class SSModuleCenter {
   /**

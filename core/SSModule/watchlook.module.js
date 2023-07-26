@@ -3,7 +3,7 @@ import SSEvent from '../SSEvent';
 import SSModuleInterface from './module.interface';
 import SSLoader from '../SSLoader';
 import SSThreeTool from '../SSTool';
-import SSTransformControl from '../SSTool/transformcontrol';
+import SSTransformControl from '../SSTool/TransformControl';
 import EyePng from '../assets/textures/eye.png';
 
 export default class SSWatchLookModule extends SSModuleInterface {
