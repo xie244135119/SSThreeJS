@@ -7,7 +7,7 @@ import SSTransformControl from '../SSTool/transformcontrol';
 import EyePng from '../assets/textures/eye.png';
 
 export default class SSWatchLookModule extends SSModuleInterface {
-  title = '指哪看哪模块';
+  title = '模块-指哪看哪';
 
   /**
    * @type {SSEvent} 指哪看哪事件
@@ -36,8 +36,10 @@ export default class SSWatchLookModule extends SSModuleInterface {
     指哪看哪: false,
     // 模型路径 和 模型格式
     cameraModelPath: 'public/yuntai/sxt01.FBX',
-    // 相机锚点名称
+    // 相机镜头 <可移动的镜头>
     cameraAnchorMeshName: 'sxt001',
+    // 相机桩位
+    cameraFixMeshName: 'Box001',
     // 全部相机的模式
     cameraListText: '[]',
     // 全部位置点位
@@ -241,9 +243,10 @@ export default class SSWatchLookModule extends SSModuleInterface {
    * @param {THREE.Vector3} targetVecor 目标点位
    * @param {THREE.Object3D} cameraMesh 相机Mesh
    * @param {THREE.Object3D} cameraGroup 相机组
+   * @param {string} cameraType 相机类型 yuntai ball
    * @returns {{ heading: number, pitch: number, roll: number }
    */
-  computeCameraAngle2 = (targetVecor, cameraMesh, cameraGroup) => {
+  computeCameraAngle2 = (targetVecor, cameraMesh, cameraGroup, cameraType) => {
     // 计算夹角
     const newcamworldpos = new THREE.Vector3();
     cameraMesh.getWorldPosition(newcamworldpos);
@@ -274,7 +277,15 @@ export default class SSWatchLookModule extends SSModuleInterface {
     //   back = true;
     // }
 
-    h = -h;
+    if (cameraType === 'yuntai') {
+      // 球机向下为正，向左为正 俯角: -180-180, 0~360 水平角: 0~360  -180~180
+      h = -h;
+    } else if (cameraType === 'ball') {
+      // 球机向下为正 向右为正 俯角: 0-180 水平角: 0~360  -180~180
+      v = v < 0 ? 0 : v;
+    }
+
+    // h = -h;
     // v = v < 0 ? 0 : v;
     return {
       heading: h,
@@ -425,11 +436,17 @@ export default class SSWatchLookModule extends SSModuleInterface {
 
       const list = [];
       this._allCameraMeshs.forEach((e) => {
+        // 需要移动的相机视角
         const cameraMesh = e.getObjectByName('sxt001');
         // 固定mesh
         const fixMesh = e.getObjectByName('Box001');
         const angelObj = this.computeCameraAngle(targetPoint, cameraMesh, fixMesh);
-        const angelObj2 = this.computeCameraAngle2(targetPoint, cameraMesh, fixMesh);
+        const angelObj2 = this.computeCameraAngle2(
+          targetPoint,
+          cameraMesh,
+          fixMesh,
+          e.userData.type || 'ball'
+        );
         const centerPositon = SSThreeTool.getObjectCenter(cameraMesh);
         list.push({
           cameraName: e.name,

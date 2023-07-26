@@ -17,7 +17,7 @@ const defaultControlKeys = [
 ];
 
 export default class SSLightModule extends SSModuleInterface {
-  title = '灯光模块';
+  title = '模块-灯光·控制器';
 
   /**
    * @type {Object} 动态配置

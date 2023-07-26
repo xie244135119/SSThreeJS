@@ -306,14 +306,16 @@ export default class SSModuleCenter {
       }
       // Array<Ob(ject>
       if (value instanceof Array) {
-        const arrayfolder = floder.addFolder(key);
-        value.forEach((e, index) => {
-          if (e instanceof Object) {
-            const objfolder = arrayfolder.addFolder(index + 1);
-            this._addDebugForObject(e, objfolder, onDebugChange, optionSource);
-          }
-        });
-        continue;
+        if (value.length > 0) {
+          const arrayfolder = floder.addFolder(key);
+          value.forEach((e, index) => {
+            if (e instanceof Object) {
+              const objfolder = arrayfolder.addFolder(index + 1);
+              this._addDebugForObject(e, objfolder, onDebugChange, optionSource);
+            }
+          });
+          continue;
+        }
       }
       // object
       if (value instanceof Object && !(value instanceof Function)) {

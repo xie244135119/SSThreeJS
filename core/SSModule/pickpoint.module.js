@@ -9,7 +9,7 @@ export default class SSPickPointMode extends SSModuleInterface {
   /**
    * 类标题
    */
-  title = '路径取点工具';
+  title = '工具-路径取点';
 
   /**
    * @type THREE.Group
