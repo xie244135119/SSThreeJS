@@ -229,35 +229,35 @@ export default class SSThreeTool {
     return box;
   };
 
-  // /**
-  //  * 场景无用模型过滤
-  //  * @param {模型name列表} nameList 模型name列表
-  //  * @param {过滤name列表} castNameList 过滤name列表
-  //  * @returns
-  //  */
-  // static _modelsFilter = (nameList = [], castNameList = []) => {
-  //   if (nameList?.length === 0) {
-  //     return [];
-  //   }
-  //   // 筛选掉可视域视锥体mesh
-  //   // eslint-disable-next-line no-param-reassign
-  //   nameList =
-  //     nameList?.length === 0
-  //       ? []
-  //       : nameList.filter(
-  //         (item) => item.object.name !== '可视域视锥体' && item.object.visible === true
-  //       );
-  //   // 墙体过滤 , 不过滤地板
-  //   const newarray = [];
-  //   nameList.forEach((item) => {
-  //     if (!castNameList.includes(item.object.name)) {
-  //       newarray.push(item);
-  //     }
-  //   });
-  //   // eslint-disable-next-line no-param-reassign
-  //   nameList = newarray;
-  //   return nameList;
-  // };
+  /**
+   * 场景无用模型过滤
+   * @param {模型name列表} nameList 模型name列表
+   * @param {过滤name列表} castNameList 过滤name列表
+   * @returns
+   */
+  static _modelsFilter = (nameList = [], castNameList = []) => {
+    if (nameList?.length === 0) {
+      return [];
+    }
+    // 筛选掉可视域视锥体mesh
+    // eslint-disable-next-line no-param-reassign
+    nameList =
+      nameList?.length === 0
+        ? []
+        : nameList.filter(
+            (item) => item.object.name !== '可视域视锥体' && item.object.visible === true
+          );
+    // 墙体过滤 , 不过滤地板
+    const newarray = [];
+    nameList.forEach((item) => {
+      if (!castNameList.includes(item.object.name)) {
+        newarray.push(item);
+      }
+    });
+    // eslint-disable-next-line no-param-reassign
+    nameList = newarray;
+    return nameList;
+  };
 
   /**
    * 几何体合并

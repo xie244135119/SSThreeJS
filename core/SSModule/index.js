@@ -156,7 +156,7 @@ export default class SSModuleCenter {
    * 移除调试
    */
   closeDebugModel() {
-    this._menuContainer.parentElement.remove();
+    this._menuContainer?.parentElement?.remove();
   }
 
   /**
