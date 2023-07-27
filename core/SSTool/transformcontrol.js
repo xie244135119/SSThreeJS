@@ -7,7 +7,7 @@ export default class SSTransformControl {
   /**
    * @type {SSThreeObject} 物体
    */
-  _ssthreeObject = null;
+  _ssThreeObject = null;
 
   /**
    * 函数构造 t：平移，r：旋转，s：放大缩小
@@ -27,18 +27,18 @@ export default class SSTransformControl {
 
   /**
    * 构造函数
-   * @param {SSThreeObject} ssthreeObject 绑定的物体
+   * @param {SSThreeObject} ssThreeObject 绑定的物体
    * @param {function ({ position: THREE.Vector3, rotation: THREE.Vector3, scale: THREE.Vector3, name: string, uuid: string, delete: boolean }):void} callBack 回调事件
    */
-  constructor(ssthreeObject, callBack) {
-    this._ssthreeObject = ssthreeObject;
+  constructor(ssThreeObject, callBack) {
+    this._ssThreeObject = ssThreeObject;
     this._controlChange = callBack;
   }
 
   destory() {
     this._event?.destory();
     this._event = null;
-    this._ssthreeObject = null;
+    this._ssThreeObject = null;
     this._control?.dispose();
     this._controlChange = null;
     this._control = null;
@@ -51,14 +51,14 @@ export default class SSTransformControl {
   attach(object3d) {
     if (!this._control) {
       this._control = new TransformControls(
-        this._ssthreeObject.threeCamera,
-        this._ssthreeObject.threeContainer
+        this._ssThreeObject.threeCamera,
+        this._ssThreeObject.threeContainer
       );
       this._control.enabled = false;
-      this._ssthreeObject.threeScene.add(this._control);
+      this._ssThreeObject.threeScene.add(this._control);
       this._control.addEventListener('change', (e) => {
         // 禁用轨道控制器
-        this._ssthreeObject.threeOrbitControl.enabled = !this._control.dragging;
+        this._ssThreeObject.threeOrbitControl.enabled = !this._control.dragging;
         //
         if (!this._control.object) {
           return;
@@ -82,7 +82,7 @@ export default class SSTransformControl {
       this._control.addEventListener('objectChange', (e) => {
         // console.log(' 选中的物体改变的时候 ', e);
       });
-      this._event = new SSEvent(this._ssthreeObject.threeContainer);
+      this._event = new SSEvent(this._ssThreeObject.threeContainer);
       this._event.addEventListener(SSEvent.SSEventType.KEYDOWN, (e) => {
         // console.log(' 键盘按下的时候 ', e);
         // tranlate 平移 t
