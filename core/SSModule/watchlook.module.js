@@ -420,10 +420,10 @@ export default class SSWatchLookModule extends SSModuleInterface {
     //
     this._event.skipEvent(SSEvent.SSEventType.CLICK, this._eventAddMeshHandle);
     this._eventLookHandler = this._event.addEventListener(SSEvent.SSEventType.CLICK, (e) => {
-      const scenechildren = this.ssthreeObject.threeScene.children.filter(
+      const scenechildren = this.ssThreeObject.threeScene.children.filter(
         (item) => item.uuid !== this._lookGroup.uuid
       );
-      const models = this.ssthreeObject.getModelsByPoint(e, scenechildren);
+      const models = this.ssThreeObject.getModelsByPoint(e, scenechildren);
       const finalModels = filterModelFunc?.(models, e) || models;
       if (finalModels.length === 0) return;
       const [model] = finalModels;
@@ -522,11 +522,11 @@ export default class SSWatchLookModule extends SSModuleInterface {
     const group = new THREE.Group();
     group.name = '指哪看哪';
     this._lookGroup = group;
-    this.ssthreeObject.threeScene.add(group);
+    this.ssThreeObject.threeScene.add(group);
     //
     this._allCameraMeshs = [];
     //
-    this._event = new SSEvent(this.ssthreeObject.threeContainer);
+    this._event = new SSEvent(this.ssThreeObject.threeContainer);
   }
 
   /**
@@ -581,7 +581,7 @@ export default class SSWatchLookModule extends SSModuleInterface {
   moduleOpenDebug() {
     // 添加镜头调试事件
     this._eventAddMeshHandle = this._event.addEventListener(SSEvent.SSEventType.CLICK, (e) => {
-      const models = this.ssthreeObject.getModelsByPoint(e);
+      const models = this.ssThreeObject.getModelsByPoint(e);
       if (models.length === 0) {
         return;
       }
@@ -598,7 +598,7 @@ export default class SSWatchLookModule extends SSModuleInterface {
       });
       // 添加转换
       if (this._sstransformControl === null) {
-        this._sstransformControl = new SSTransformControl(this.ssthreeObject, (e) => {
+        this._sstransformControl = new SSTransformControl(this.ssThreeObject, (e) => {
           const findMeshIndex = this._defaultConfig.cameraList.findIndex(
             (item) => item.uuid === e.uuid
           );

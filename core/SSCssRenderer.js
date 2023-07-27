@@ -4,7 +4,7 @@ import { CSS3DRenderer, CSS3DObject } from 'three/examples/jsm/renderers/CSS3DRe
 import { SVGRenderer } from 'three/examples/jsm/renderers/SVGRenderer';
 import { Line2 } from 'three/examples/jsm/lines/Line2';
 import { LineGeometry } from 'three/examples/jsm/lines/LineGeometry';
-import { LineMaterial, LineMaterialParameters } from 'three/examples/jsm/lines/LineMaterial';
+import { LineMaterial } from 'three/examples/jsm/lines/LineMaterial';
 import SSThreeTool from './SSTool/index';
 import SSThreeLoop from './SSThreeLoop';
 import SSThreeObject from './SSThreeObject';
@@ -34,17 +34,17 @@ export default class SSCssRenderer {
    * @description three object<scene，camera>
    * @type SSThreeObject
    */
-  _ssthreeObject = null;
+  _ssThreeObject = null;
 
-  constructor(ssthreeObject) {
-    this._ssthreeObject = ssthreeObject;
+  constructor(ssThreeObject) {
+    this._ssThreeObject = ssThreeObject;
   }
 
   /**
    * 文件损毁
    */
   destory = () => {
-    this._ssthreeObject = null;
+    this._ssThreeObject = null;
     this._removeResizeOBserver();
     SSThreeLoop.removeIds(['svgFrameHandle', 'css2dFrameHandle', 'css3dFrameHandle']);
   };
@@ -56,7 +56,7 @@ export default class SSCssRenderer {
    * @param {*} aDomElement 标签元素
    */
   setup2D = () => {
-    const { threeScene, threeCamera, threeContainer } = this._ssthreeObject;
+    const { threeScene, threeCamera, threeContainer } = this._ssThreeObject;
     this._addResizeObserver(threeContainer);
     //
     let labelrender = _css2dRender;
@@ -84,7 +84,7 @@ export default class SSCssRenderer {
    * @param {*} aDomElement 标签元素
    */
   setup3D = () => {
-    const { threeScene, threeCamera, threeContainer } = this._ssthreeObject;
+    const { threeScene, threeCamera, threeContainer } = this._ssThreeObject;
     this._addResizeObserver(threeContainer);
     //
     let labelrender = _css3dRender;
@@ -112,7 +112,7 @@ export default class SSCssRenderer {
    * @param {*} aDomElement 标签元素
    */
   setupSVG = () => {
-    const { threeScene, threeCamera, threeContainer } = this._ssthreeObject;
+    const { threeScene, threeCamera, threeContainer } = this._ssThreeObject;
     this._addResizeObserver(threeContainer);
     //
     let labelrender = _svgRender;

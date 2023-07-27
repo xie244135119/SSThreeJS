@@ -67,10 +67,10 @@ export default class VideoSceneViewerManager extends SSModuleInterface {
   //   this.ssThreeJs = ssThreeJs;
   //   this.cameraData = cameraData;
   //   this.videoSceneView = new VideoSceneViewer({
-  //     scene: this.ssthreeObject.threeScene,
-  //     camera: this.ssthreeObject.threeCamera,
-  //     renderer: this.ssthreeObject.threeRenderer,
-  //     orbitControl: this.ssthreeObject.threeOrbitControl,
+  //     scene: this.ssThreeObject.threeScene,
+  //     camera: this.ssThreeObject.threeCamera,
+  //     renderer: this.ssThreeObject.threeRenderer,
+  //     orbitControl: this.ssThreeObject.threeOrbitControl,
   //     camerasData: cameraData,
   //     openDebug
   //   });
@@ -81,10 +81,10 @@ export default class VideoSceneViewerManager extends SSModuleInterface {
   #initVideoSceneViewer = () => {
     if (!this.videoSceneView) {
       this.videoSceneView = new VideoSceneViewer({
-        scene: this.ssthreeObject.threeScene,
-        camera: this.ssthreeObject.threeCamera,
-        renderer: this.ssthreeObject.threeRenderer,
-        orbitControl: this.ssthreeObject.threeOrbitControl,
+        scene: this.ssThreeObject.threeScene,
+        camera: this.ssThreeObject.threeCamera,
+        renderer: this.ssThreeObject.threeRenderer,
+        orbitControl: this.ssThreeObject.threeOrbitControl,
         openDebug: false
       });
     }
@@ -92,8 +92,8 @@ export default class VideoSceneViewerManager extends SSModuleInterface {
     // this.videoSceneView.initialize([camdata]); // 打开视频融合
     this.videoSceneView.ignoreObjectList = this.ignoreObjectList;
 
-    console.log(' this.ssthreeObject', this.ssthreeObject);
-    // this.ssthreeObject.cancelRender();
+    console.log(' this.ssThreeObject', this.ssThreeObject);
+    // this.ssThreeObject.cancelRender();
   };
 
   /**
@@ -115,14 +115,14 @@ export default class VideoSceneViewerManager extends SSModuleInterface {
     if (this.videoSceneView) {
       this.videoSceneView._mode = VideoSceneViewer.NORMAL;
 
-      if (this.ssthreeObject) {
-        this.ssthreeObject.render();
+      if (this.ssThreeObject) {
+        this.ssThreeObject.render();
       }
     }
     // 关闭按钮
     if (this._videoViewerCameraIconList.length > 0) {
       this._videoViewerCameraIconList.forEach((icon) => {
-        this.ssthreeObject.threeScene.remove(icon);
+        this.ssThreeObject.threeScene.remove(icon);
         // SSDispose.dispose(icon);
       });
       this._videoViewerCameraIconList = [];
@@ -145,7 +145,7 @@ export default class VideoSceneViewerManager extends SSModuleInterface {
         console.log(icon.name);
         icon.position.copy(camera.camera.position);
         icon.position.y += 1;
-        this.ssthreeObject.threeScene.add(icon);
+        this.ssThreeObject.threeScene.add(icon);
         this._videoViewerCameraIconList.push(icon);
       });
       this._videoViewerCameraDataList = cameraData;
@@ -190,10 +190,10 @@ export default class VideoSceneViewerManager extends SSModuleInterface {
   _setConfigValue = () => {
     if (!this.videoSceneView) {
       this.videoSceneView = new VideoSceneViewer({
-        scene: this.ssthreeObject.threeScene,
-        camera: this.ssthreeObject.threeCamera,
-        renderer: this.ssthreeObject.threeRenderer,
-        orbitControl: this.ssthreeObject.threeOrbitControl,
+        scene: this.ssThreeObject.threeScene,
+        camera: this.ssThreeObject.threeCamera,
+        renderer: this.ssThreeObject.threeRenderer,
+        orbitControl: this.ssThreeObject.threeOrbitControl,
         camerasData: this.defaultConfig,
         openDebug: true
       });
@@ -217,7 +217,7 @@ export default class VideoSceneViewerManager extends SSModuleInterface {
 
   moduleUnmount() {
     // console.log(' 开发模块解除注册 ');
-    if (!this.ssthreeObject || !this.water) {
+    if (!this.ssThreeObject || !this.water) {
       return;
     }
     this.closeVideoFusion();

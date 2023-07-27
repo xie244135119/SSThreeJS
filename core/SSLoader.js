@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader';
 import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader';
 import { MTLLoader } from 'three/examples/jsm/loaders/MTLLoader';
-import { GLTFLoader, GLTF } from 'three/examples/jsm/loaders/GLTFLoader';
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader';
 import { KTX2Loader } from 'three/examples/jsm/loaders/KTX2Loader';
 import { SVGLoader } from 'three/examples/jsm/loaders/SVGLoader';
@@ -139,7 +139,7 @@ export default class SSLoader {
   static loadGltfOptKTXBuffer = (buffer, directory, manager) => {
     const ktx2Loader = new KTX2Loader(manager)
       .setTranscoderPath('/static/three/basis/')
-      .detectSupport(this.ssthreeObject.threeRenderer);
+      .detectSupport(this.ssThreeObject.threeRenderer);
     const gltfLoader = new GLTFLoader(manager);
     gltfLoader.setKTX2Loader(ktx2Loader);
     gltfLoader.setMeshoptDecoder(MeshoptDecoder);
@@ -166,7 +166,7 @@ export default class SSLoader {
   static loadGltfOptKTX = (path, manager) => {
     const ktx2Loader = new KTX2Loader(manager)
       .setTranscoderPath('/static/three/basis/')
-      .detectSupport(this.ssthreeObject.threeRenderer);
+      .detectSupport(this.ssThreeObject.threeRenderer);
     const gltfLoader = new GLTFLoader(manager);
     gltfLoader.setKTX2Loader(ktx2Loader);
     gltfLoader.setMeshoptDecoder(MeshoptDecoder);
@@ -194,7 +194,7 @@ export default class SSLoader {
   // LoadingManager.shareInstance.getModelDataByUrl(path).then((data) => {
   //   const ktx2Loader = new KTX2Loader(LoadingManager.shareInstance.threeLoadingManager)
   //     .setTranscoderPath('/public/static/three/basis/')
-  //     .detectSupport(this.ssthreeObject.threeRenderer);
+  //     .detectSupport(this.ssThreeObject.threeRenderer);
   //   const gltfLoader = new GLTFLoader(LoadingManager.shareInstance.threeLoadingManager);
   //   gltfLoader.setKTX2Loader(ktx2Loader);
   //   gltfLoader.setMeshoptDecoder(MeshoptDecoder);
@@ -207,7 +207,7 @@ export default class SSLoader {
   //       (gltf) => {
   //         const obj = gltf.scene;
   //         if (addToScene) {
-  //           this.ssthreeObject.threeScene.add(obj);
+  //           this.ssThreeObject.threeScene.add(obj);
   //         }
   //         reslove(gltf);
   //       },

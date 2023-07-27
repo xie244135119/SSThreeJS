@@ -409,7 +409,7 @@ export default class BaseLightSetting {
       .add(params, 'background')
       .name('启用背景')
       .onChange((e) => {
-        this.threeJs.ssthreeObject.threeScene.background = e ? this.cubeMap : null;
+        this.threeJs.ssThreeObject.threeScene.background = e ? this.cubeMap : null;
       });
     cubeMapFolder.add(params, 'environment', { none: 'none', blueSky: 'blueSky' }).onChange((e) => {
       if (e === 'blueSky') {

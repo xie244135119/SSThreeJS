@@ -30,8 +30,8 @@ import { LuminosityShader } from 'three/examples/jsm/shaders/LuminosityShader';
 import { BleachBypassShader } from 'three/examples/jsm/shaders/BleachBypassShader';
 import { SSRPass } from 'three/examples/jsm/postprocessing/SSRPass';
 import { ReflectorForSSRPass } from 'three/examples/jsm/objects/ReflectorForSSRPass';
-import GUI from 'lil-gui';
 import ThreeLoop from './SSThreeLoop';
+import SSDispose from './SSDispose';
 
 export default class PostProcess {
   /**

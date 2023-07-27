@@ -157,7 +157,7 @@ class GuiIndex {
    * @param {*} obj3d
    */
   addCameraPositionAction = () => {
-    this.#threeJs.ssthreeObject.threeOrbitControl.addEventListener(
+    this.#threeJs.ssThreeObject.threeOrbitControl.addEventListener(
       'change',
       ThreeTool.debounce(() => {
         if (!this.#selectObject) {
@@ -419,7 +419,7 @@ class GuiIndex {
     // 默认的group
     const debugBoxGroup = new THREE.Group();
     debugBoxGroup.name = 'debug_box_position_group';
-    this.#threeJs.ssthreeObject.threeScene.add(debugBoxGroup);
+    this.#threeJs.ssThreeObject.threeScene.add(debugBoxGroup);
 
     const object = {
       add_mesh: false,
@@ -478,7 +478,7 @@ class GuiIndex {
    */
   addNewMeshListener = () => {
     const {
-      ssthreeObject: { threeScene, threeContainer, threeCamera },
+      ssThreeObject: { threeScene, threeContainer, threeCamera },
       threeEvent,
       getModelsByPoint
     } = this.#threeJs;
@@ -629,7 +629,7 @@ class GuiIndex {
    * add watch look
    */
   addWatchLookControllerView = () => {
-    const { threeScene } = this.#threeJs.ssthreeObject;
+    const { threeScene } = this.#threeJs.ssThreeObject;
     if (!(threeScene instanceof THREE.Scene)) return;
     const groups = [];
     threeScene.children.forEach((e) => {

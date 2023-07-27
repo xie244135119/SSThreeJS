@@ -1,7 +1,7 @@
 import GUI from 'lil-gui';
 import * as THREE from 'three';
 import SSFile from '../SSTool/file';
-import styles from './index.css';
+import styles from './index.module.css';
 import SSThreeObject from '../SSThreeObject';
 import SSModuleInterface, { SSModuleUpdateScribe } from './module.interface';
 import SSPubSubcribeInstance from '../SSTool/PubSubscribe';
@@ -15,7 +15,7 @@ export default class SSModuleCenter {
   /**
    * @type SSThreeObject
    */
-  _ssthreeObject = null;
+  _ssThreeObject = null;
 
   /**
    * @type HTMLElement dom
@@ -34,10 +34,10 @@ export default class SSModuleCenter {
   _currentEnableModule = null;
 
   /**
-   * @param {SSThreeObject} ssthreeObject 构造参数
+   * @param {SSThreeObject} ssThreeObject 构造参数
    */
-  constructor(ssthreeObject) {
-    this._ssthreeObject = ssthreeObject;
+  constructor(ssThreeObject) {
+    this._ssThreeObject = ssThreeObject;
   }
 
   destroy() {
@@ -54,9 +54,9 @@ export default class SSModuleCenter {
     this._modules = [];
     modules.forEach((E) => {
       const e = new E();
-      e.ssthreeObject = this._ssthreeObject;
+      e.ssThreeObject = this._ssThreeObject;
       e.__name = E.name;
-      e.moduleMount?.(this._ssthreeObject);
+      e.moduleMount?.(this._ssThreeObject);
       this._modules.push(e);
     });
     SSPubSubcribeInstance.subscribe(SSModuleUpdateScribe, (aModule) => {
@@ -73,8 +73,8 @@ export default class SSModuleCenter {
    * 模块解除注册
    */
   unregisterModules() {
-    this._modules.forEach((e) => {
-      e.ssthreeObject = null;
+    this._modules?.forEach((e) => {
+      e.ssThreeObject = null;
       e.moduleUnmount?.();
     });
     this._modules = null;
@@ -212,14 +212,14 @@ export default class SSModuleCenter {
     const menudiv = document.createElement('div');
     menudiv.innerText = '调';
     menudiv.className = styles.menuicon;
-    this._ssthreeObject.threeContainer.parentElement.append(menudiv);
+    this._ssThreeObject.threeContainer.parentElement.append(menudiv);
     // adjust style
     if (
       ['relative', 'absolute'].indexOf(
-        this._ssthreeObject.threeContainer.parentElement.style.position
+        this._ssThreeObject.threeContainer.parentElement.style.position
       ) === -1
     ) {
-      this._ssthreeObject.threeContainer.parentElement.style.position = 'relative';
+      this._ssThreeObject.threeContainer.parentElement.style.position = 'relative';
     }
     menudiv.onclick = () => {
       this._menuContainer.parentElement.style.right = '0px';
@@ -233,7 +233,7 @@ export default class SSModuleCenter {
   _addDrawerView = () => {
     const drawer = document.createElement('div');
     drawer.className = styles.drawer;
-    this._ssthreeObject.threeContainer.parentElement.append(drawer);
+    this._ssThreeObject.threeContainer.parentElement.append(drawer);
 
     const header = document.createElement('div');
     header.className = styles.drawerheader;

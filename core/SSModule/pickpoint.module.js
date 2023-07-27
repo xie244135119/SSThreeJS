@@ -52,13 +52,13 @@ export default class SSPickPointMode extends SSModuleInterface {
    */
   openChoosePathMode() {
     this._lineVectors = [];
-    this.ssthreeObject.changeCameraMode(SSThreeObject.CameraType.Orthographic);
+    this.ssThreeObject.changeCameraMode(SSThreeObject.CameraType.Orthographic);
     this._addEvent();
 
     // 获取几何体的大小
     /* const defaultMeshName = this.getModuleConfigSource().targetMesh?.[0];
     const { targetMeshName = defaultMeshName } = this._guiData;
-    const targetMesh = this.ssthreeObject.threeScene.getObjectByName(targetMeshName);
+    const targetMesh = this.ssThreeObject.threeScene.getObjectByName(targetMeshName);
     const { min, max } = SSThreeTool.setBoundingBox(targetMesh);
     const width = (max.x - min.x) * 2;
     const height = (max.z - min.z) * 2;
@@ -75,12 +75,12 @@ export default class SSPickPointMode extends SSModuleInterface {
     const linegroup = new THREE.Group();
     linegroup.position.set(0, 0, 0);
     linegroup.name = 'debug_linepath';
-    this.ssthreeObject?.threeScene.add(linegroup);
+    this.ssThreeObject?.threeScene.add(linegroup);
     this._pathGroup = linegroup;
     const pointgroup = new THREE.Group();
     pointgroup.position.set(0, 0, 0);
     pointgroup.name = 'debug_linepoint';
-    this.ssthreeObject?.threeScene.add(pointgroup);
+    this.ssThreeObject?.threeScene.add(pointgroup);
     this._pointGroup = pointgroup;
   }
 
@@ -89,7 +89,7 @@ export default class SSPickPointMode extends SSModuleInterface {
    */
   closeChoosePathMode() {
     this._removeEvent();
-    this.ssthreeObject.changeCameraMode(SSThreeObject.CameraType.Perspective);
+    this.ssThreeObject.changeCameraMode(SSThreeObject.CameraType.Perspective);
 
     if (this._pathGroup) {
       SSDispose.dispose(this._pathGroup);
@@ -105,10 +105,10 @@ export default class SSPickPointMode extends SSModuleInterface {
    * 注册事件
    */
   _addEvent() {
-    const threeEvent = new SSEvent(this.ssthreeObject.threeContainer);
+    const threeEvent = new SSEvent(this.ssThreeObject.threeContainer);
     this._threeEvent = threeEvent;
     threeEvent.addEventListener(SSEvent.SSEventType.CLICK, (e) => {
-      const models = this.ssthreeObject.getModelsByPoint(e);
+      const models = this.ssThreeObject.getModelsByPoint(e);
       if (models.length === 0) return;
 
       // 目标点位
@@ -146,7 +146,7 @@ export default class SSPickPointMode extends SSModuleInterface {
       if (this._lineVectors.length === 0) {
         return;
       }
-      const models = this.ssthreeObject.getModelsByPoint(e);
+      const models = this.ssThreeObject.getModelsByPoint(e);
       if (models.length === 0) return;
       this._currentVector = models[0].point;
       // 移除时刻渲染的一条
@@ -221,7 +221,7 @@ export default class SSPickPointMode extends SSModuleInterface {
   //  * @returns {Object} 调试工具类型
   //  */
   // getModuleConfigSource() {
-  //   const meshNames = this.ssthreeObject.threeScene.children.reduce((prev, cur) => {
+  //   const meshNames = this.ssThreeObject.threeScene.children.reduce((prev, cur) => {
   //     if (cur instanceof THREE.Mesh || cur instanceof THREE.Group) {
   //       return [...prev, cur.name || cur.type];
   //     }

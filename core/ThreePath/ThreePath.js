@@ -1,20 +1,23 @@
 import * as THREE from 'three';
-import ThreeJs from '../SSCore';
 import { PathGeometry, PathTubeGeometry, PathPointList } from './three.path.module';
-import ThreeLoop from '../SSThreeLoop';
+import SSThreeLoop from '../SSThreeLoop';
+import SSDispose from '../SSDispose';
+import SSThreeObject from '../SSThreeObject';
 
 class ThreePath {
   // 创建 更新的标记
   #isLoopRender = false;
 
-  // 绑定 核心threejs
-  threeJs = null;
+  /**
+   * @type {SSThreeObject}
+   */
+  ssThreeObject = null;
 
   // 所有测点数据
   #pathDataList = [];
 
-  constructor(aThreeJs) {
-    this.threeJs = aThreeJs;
+  constructor(object) {
+    this.ssThreeObject = object;
   }
 
   /**
@@ -34,20 +37,11 @@ class ThreePath {
     emissiveIntensity = 1,
     progress = 1
   }) => {
-    // // random vector3 points
-    // const points = [
-    //   new THREE.Vector3(-726.8485068426608, 0.037200927734375, -389.0138678873509),
-    // ];
     const type = 'path';
-    if (!(this.threeJs instanceof ThreeJs)) {
-      console.error('【ThreePath】尚未配置 threejs');
-      return null;
-    }
-
-    const { threeScene, threeRenderer } = this.threeJs;
+    const { threeScene, threeRenderer } = this.ssThreeObject;
     if (!this.#isLoopRender) {
       this.#isLoopRender = true;
-      ThreeLoop.add(this.update, 'roadpath render');
+      SSThreeLoop.add(this.update, 'roadpath render');
     }
 
     const up = new THREE.Vector3(0, 1, 0);
@@ -153,16 +147,11 @@ class ThreePath {
     depthTest = true
   }) => {
     const type = 'tube';
-    if (!(this.threeJs instanceof ThreeJs)) {
-      console.error('【ThreePath】尚未配置 threejs');
-      return null;
-    }
-
-    const { threeScene, threeRenderer } = this.threeJs;
+    const { threeScene, threeRenderer } = this.ssThreeObject;
     if (!this.#isLoopRender) {
       this.#isLoopRender = true;
-      // threeLoop.add({ id: 'path', update: this.update });
-      ThreeLoop.add(this.update, 'roadpath render');
+      // SSThreeLoop.add({ id: 'path', update: this.update });
+      SSThreeLoop.add(this.update, 'roadpath render');
     }
 
     const up = new THREE.Vector3(0, 1, 0);
@@ -246,24 +235,24 @@ class ThreePath {
    */
   removeRoad = (data) => {
     if (data) {
-      if (this.threeJs instanceof ThreeJs) {
-        this.threeJs.threeDisposeQueue.dispose(data.mesh);
-        this.threeJs.threeScene.remove(data.mesh);
+      if (data.mesh) {
+        SSDispose.dispose(data.mesh);
+        this.ssThreeObject.threeScene.remove(data.mesh);
       }
       const findIndex = this.#pathDataList.findIndex((item) => item === data);
       this.#pathDataList.splice(findIndex, 1);
       if (this.#pathDataList.length === 0) {
         this.#isLoopRender = false;
-        ThreeLoop.removeId('roadpath render');
+        SSThreeLoop.removeId('roadpath render');
       }
     }
   };
 
   destroy = () => {
-    ThreeLoop.removeId('roadpath render');
+    SSThreeLoop.removeId('roadpath render');
     this.#pathDataList.forEach((data) => {
       // console.log(' data ', data);
-      this.threeJs.threeDisposeQueue.dispose(data.mesh);
+      SSDispose.dispose(data.mesh);
       this.threeJs.threeScene.remove(data.mesh);
     });
     this.#pathDataList = [];

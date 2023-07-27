@@ -4,30 +4,35 @@ import WEBGL from 'three/examples/jsm/capabilities/WebGL';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 import { RGBELoader } from 'three/examples/jsm/loaders/RGBELoader';
 import { HDRCubeTextureLoader } from 'three/examples/jsm/loaders/HDRCubeTextureLoader';
-import { GLTF } from 'three/examples/jsm/loaders/GLTFLoader';
-// import { DebugEnvironment } from 'three/examples/jsm/environments/DebugEnvironment';
-import ThreeLoop from './SSThreeLoop';
+// import { GLTF } from 'three/examples/jsm/loaders/GLTFLoader';
+import SSThreeLoop from './SSThreeLoop';
 import SSDispose from './SSDispose';
 import SSEvent from './SSEvent';
-import ThreeGUI from './Gui/index';
 import SSThreeTool from './SSTool';
 import LoadingManager from './SSTool/LoadingManager';
 import SSThreeObject from './SSThreeObject';
 import SSLoader from './SSLoader';
 import SSModuleCenter from './SSModule';
-// import PostProcessManager from './PostProcessManager';
+import SSMessageQueue from './SSTool/MessageQueue';
 
 export default class SSThreeJs {
   /**
    * @description 场景存储类
-   * @type SSThreeObject
+   * @type {SSThreeObject}
    */
-  ssthreeObject = null;
+  ssThreeObject = null;
 
   /**
-   * @type SSModuleCenter
+   * 模块中心
+   * @type {SSModuleCenter}
    */
-  ssmoduleCenter = null;
+  ssModuleCenter = null;
+
+  /**
+   * 消息队列
+   * @type { SSMessageQueue }
+   */
+  ssMessageQueue = null;
 
   /**
    * @type THREE.DirectionalLight direction light
@@ -38,9 +43,6 @@ export default class SSThreeJs {
    * @type THREE.AmbientLight  ambient light
    */
   threeAmbientLight = null;
-
-  // gui
-  threeGUI = new ThreeGUI();
 
   /**
    * @type SSEvent
@@ -63,33 +65,35 @@ export default class SSThreeJs {
    */
   destroy(loop = true) {
     this._threeJsDestoryed = true;
-    this.ssthreeObject?.destory();
+    this.ssThreeObject?.destory();
+    this.ssMessageQueue?.destory();
+    this.ssMessageQueue = null;
     if (loop) {
-      ThreeLoop.destory();
+      SSThreeLoop.destory();
     }
 
-    this.ssmoduleCenter?.destroy();
-    this.ssmoduleCenter = null;
+    this.ssModuleCenter?.destroy();
+    this.ssModuleCenter = null;
 
     this._removeOrbitControl();
 
     this.threeEvent.destory();
     this.threeEvent = null;
 
-    if (this.ssthreeObject.threeScene !== null) {
-      SSDispose.dispose(this.ssthreeObject.threeScene);
-      if (this.ssthreeObject.threeRenderer.info.programs.length !== 0) {
-        console.log('scene material has not released', this.ssthreeObject.threeRenderer.info);
-      } else if (this.ssthreeObject.threeRenderer.info.memory.geometries) {
-        console.log('scene geometries has not released', this.ssthreeObject.threeRenderer.info);
-      } else if (this.ssthreeObject.threeRenderer.info.memory.textures) {
-        console.log('scene textures has not released', this.ssthreeObject.threeRenderer.info);
+    if (this.ssThreeObject.threeScene !== null) {
+      SSDispose.dispose(this.ssThreeObject.threeScene);
+      if (this.ssThreeObject.threeRenderer.info.programs.length !== 0) {
+        console.log('scene material has not released', this.ssThreeObject.threeRenderer.info);
+      } else if (this.ssThreeObject.threeRenderer.info.memory.geometries) {
+        console.log('scene geometries has not released', this.ssThreeObject.threeRenderer.info);
+      } else if (this.ssThreeObject.threeRenderer.info.memory.textures) {
+        console.log('scene textures has not released', this.ssThreeObject.threeRenderer.info);
       }
     }
-    if (this.ssthreeObject.threeRenderer !== null) {
-      this.ssthreeObject.threeRenderer.dispose();
-      this.ssthreeObject.threeRenderer.forceContextLoss();
-      this.ssthreeObject.threeContainer.removeChild(this.ssthreeObject.threeRenderer.domElement);
+    if (this.ssThreeObject.threeRenderer !== null) {
+      this.ssThreeObject.threeRenderer.dispose();
+      this.ssThreeObject.threeRenderer.forceContextLoss();
+      this.ssThreeObject.threeContainer.removeChild(this.ssThreeObject.threeRenderer.domElement);
     }
   }
 
@@ -139,9 +143,9 @@ export default class SSThreeJs {
     // loading manager
     LoadingManager.shareInstance.addProgressView(container);
     //
-    ThreeLoop.setup();
+    SSThreeLoop.setup();
     //
-    this.ssthreeObject = new SSThreeObject({
+    this.ssThreeObject = new SSThreeObject({
       container,
       scene,
       camera,
@@ -149,15 +153,15 @@ export default class SSThreeJs {
       renderer: render
     });
     // window resize
-    this.ssthreeObject.autoWindowResize();
+    this.ssThreeObject.autoWindowResize();
     // add webgl render
-    this.ssthreeObject.render();
+    this.ssThreeObject.render();
     // module center
-    this.ssmoduleCenter = new SSModuleCenter(this.ssthreeObject);
+    this.ssModuleCenter = new SSModuleCenter(this.ssThreeObject);
     //
-    ThreeLoop.add(() => {
-      if (this.ssthreeObject.threeOrbitControl) {
-        this.ssthreeObject.threeOrbitControl.update();
+    SSThreeLoop.add(() => {
+      if (this.ssThreeObject.threeOrbitControl) {
+        this.ssThreeObject.threeOrbitControl.update();
       }
     }, 'control update');
 
@@ -170,15 +174,15 @@ export default class SSThreeJs {
    * @returns
    */
   addSky = (skys = []) => {
-    const pmremGenerator = new THREE.PMREMGenerator(this.ssthreeObject.threeRenderer);
+    const pmremGenerator = new THREE.PMREMGenerator(this.ssThreeObject.threeRenderer);
     const hdrLoader = new THREE.CubeTextureLoader(LoadingManager.shareInstance.threeLoadingManager);
     return new Promise((reslove, reject) => {
       hdrLoader.load(
         skys,
         (texture) => {
           const cubetexure = pmremGenerator.fromCubemap(texture).texture;
-          this.ssthreeObject.threeScene.environment = cubetexure;
-          this.ssthreeObject.threeScene.background = cubetexure;
+          this.ssThreeObject.threeScene.environment = cubetexure;
+          this.ssThreeObject.threeScene.background = cubetexure;
           pmremGenerator.dispose();
           reslove(texture);
         },
@@ -195,7 +199,7 @@ export default class SSThreeJs {
    * addHdr
    */
   addHDR = (hdrs = []) => {
-    const pmremGenerator = new THREE.PMREMGenerator(this.ssthreeObject.threeRenderer);
+    const pmremGenerator = new THREE.PMREMGenerator(this.ssThreeObject.threeRenderer);
     if (hdrs.length === 1) {
       return new Promise((reslove, reject) => {
         const rgbeLoader = new RGBELoader(LoadingManager.shareInstance.threeLoadingManager);
@@ -203,8 +207,8 @@ export default class SSThreeJs {
           hdrs,
           (texture) => {
             const cubetexure = pmremGenerator.fromCubemap(texture).texture;
-            this.ssthreeObject.threeScene.background = cubetexure;
-            this.ssthreeObject.threeScene.environment = cubetexure;
+            this.ssThreeObject.threeScene.background = cubetexure;
+            this.ssThreeObject.threeScene.environment = cubetexure;
             pmremGenerator.dispose();
             reslove(texture);
           },
@@ -223,8 +227,8 @@ export default class SSThreeJs {
         hdrs,
         (texture) => {
           const cubetexure = pmremGenerator.fromCubemap(texture).texture;
-          this.ssthreeObject.threeScene.environment = cubetexure;
-          this.ssthreeObject.threeScene.background = cubetexure;
+          this.ssThreeObject.threeScene.environment = cubetexure;
+          this.ssThreeObject.threeScene.background = cubetexure;
           pmremGenerator.dispose();
           reslove(texture);
         },
@@ -271,31 +275,31 @@ export default class SSThreeJs {
     speed = 0.5,
     cb = null
   ) => {
-    if (!this.ssthreeObject.threeCamera) {
+    if (!this.ssThreeObject.threeCamera) {
       return;
     }
     if (!animate) {
-      if (this.ssthreeObject.threeCamera instanceof THREE.Camera) {
-        this.ssthreeObject.threeCamera.position.set(
+      if (this.ssThreeObject.threeCamera instanceof THREE.Camera) {
+        this.ssThreeObject.threeCamera.position.set(
           aCameraPosition.x,
           aCameraPosition.y,
           aCameraPosition.z
         );
       }
-      if (this.ssthreeObject.threeOrbitControl instanceof OrbitControls) {
+      if (this.ssThreeObject.threeOrbitControl instanceof OrbitControls) {
         const center = new THREE.Vector3(aCenterPosition.x, aCenterPosition.y, aCenterPosition.z);
-        this.ssthreeObject.threeOrbitControl.target.set(center.x, center.y, center.z);
-        this.ssthreeObject.threeOrbitControl.update();
+        this.ssThreeObject.threeOrbitControl.target.set(center.x, center.y, center.z);
+        this.ssThreeObject.threeOrbitControl.update();
       }
     } else {
       //
       const startPoint = {
-        camera_x: this.ssthreeObject.threeCamera.position.x,
-        camera_y: this.ssthreeObject.threeCamera.position.y,
-        camera_z: this.ssthreeObject.threeCamera.position.z,
-        orbitControl_x: this.ssthreeObject.threeOrbitControl.target.x,
-        orbitControl_y: this.ssthreeObject.threeOrbitControl.target.y,
-        orbitControl_z: this.ssthreeObject.threeOrbitControl.target.z
+        camera_x: this.ssThreeObject.threeCamera.position.x,
+        camera_y: this.ssThreeObject.threeCamera.position.y,
+        camera_z: this.ssThreeObject.threeCamera.position.z,
+        orbitControl_x: this.ssThreeObject.threeOrbitControl.target.x,
+        orbitControl_y: this.ssThreeObject.threeOrbitControl.target.y,
+        orbitControl_z: this.ssThreeObject.threeOrbitControl.target.z
       };
       const endPoint = {
         camera_x: aCameraPosition.x,
@@ -309,13 +313,13 @@ export default class SSThreeJs {
         startPoint,
         endPoint,
         (e) => {
-          this.ssthreeObject.threeCamera.position.set(e.camera_x, e.camera_y, e.camera_z);
-          this.ssthreeObject.threeOrbitControl.target.set(
+          this.ssThreeObject.threeCamera.position.set(e.camera_x, e.camera_y, e.camera_z);
+          this.ssThreeObject.threeOrbitControl.target.set(
             e.orbitControl_x,
             e.orbitControl_y,
             e.orbitControl_z
           );
-          this.ssthreeObject.threeOrbitControl.update();
+          this.ssThreeObject.threeOrbitControl.update();
         },
         speed,
         cb?.()
@@ -324,25 +328,15 @@ export default class SSThreeJs {
   };
 
   /**
-   * gui debug
-   * @param {*} aCamera
-   */
-  #addGui = () => {
-    this.threeGUI.bindThreeJs(this);
-    this.threeGUI.setup();
-  };
-
-  /**
    * dynamic debug
    */
   addDymaicDebug = () => {
-    this._addAxisControl(this.ssthreeObject.threeScene);
+    this._addAxisControl(this.ssThreeObject.threeScene);
     this._addStatAnalyse();
-    this.#addGui();
     window.ssthreeJs = this;
-    window.ssthreeObject = this.ssthreeObject;
+    window.ssThreeObject = this.ssThreeObject;
     window.THREE = THREE;
-    // window.ssthreeObject.threeCamera.setFov = (aValue) => {
+    // window.ssThreeObject.threeCamera.setFov = (aValue) => {
     //   aCamera.fov = aValue;
     //   aCamera.updateProjectionMatrix();
     // };
@@ -354,107 +348,79 @@ export default class SSThreeJs {
   removeDymaicDebug = () => {
     this._removeStatAnalyse();
     this._removeAxisControl();
-    if (this.threeGUI) {
-      this.threeGUI.destroy();
-      this.threeGUI = null;
-    }
     window.ssthreeJs = null;
     window.THREE = null;
-    window.ssthreeObject = null;
+    window.ssThreeObject = null;
   };
 
   /**
-   * v2.0方案 根据配置文件加载模型
+   * v3.0方案 根据配置文件加载模型
    * @param {Array<{type: string, obj: string, mtl: string, gltf: string, draco:string}>} list 模型配置
-   * @param {function(Array<THREE.Object3D>): void} [onComplete] 页面熏染完成 参数：全部模型
+   * @param {function(THREE.Object3D[]): void} [onComplete] 页面熏染完成 参数：全部模型
    * @param {function({type: string, obj: string, mtl: string, gltf: string, draco:string}, THREE.Group | GLTF):void} [onBeforeRender] 场景添加前 参数：(对象条目, 模型)
    * @param {function({type: string, obj: string, mtl: string, gltf: string, draco:string}, THREE.Group | GLTF):void} [onAfterRender] 场景添加后 参数：(对象条目, 模型)
-   * @param {number} [maxQueueCount=3] min>1 , default = 3
    * @returns
    */
-  loadModelQueue = (list, onComplete, onBeforeRender, onAfterRender, maxQueueCount) => {
+  loadModelQueue = (list, onComplete, onBeforeRender, onAfterRender) => {
     if (list.length === 0) {
+      onComplete?.([]);
       return;
     }
-    let queueIndex = 0;
-    const modelqueue = {};
+    if (this.ssMessageQueue === null) {
+      this.ssMessageQueue = new SSMessageQueue();
+    }
     const objList = [];
-    const resuseBlock = () => {
-      // has destoryed
-      if (this._threeJsDestoryed) {
-        return;
-      }
-      //
-      if (queueIndex !== 0 && Object.getOwnPropertyNames(modelqueue).length === 0) {
-        onComplete?.(objList);
-        return;
-      }
-      if (queueIndex >= list.length) {
-        return;
-      }
-      const model = list[queueIndex];
+    list.forEach((config) => {
       let promise = Promise.resolve();
-      switch (model.type) {
+      switch (config.type) {
         case 'obj':
-          // promise = this.loadObj(model.obj, model.mtl, false);
           promise = SSLoader.loadObj(
-            model.obj,
-            model.mtl,
+            config.obj,
+            config.mtl,
             null,
             LoadingManager.shareInstance.threeLoadingManager
           );
           break;
         case 'fbx':
-          promise = this.loadFbx(model.fbx);
+          promise = this.loadFbx(config.fbx);
           break;
         case 'gltf':
-          promise = this.loadGltf(model.gltf);
+          promise = this.loadGltf(config.gltf);
           break;
         case 'draco':
-          promise = this.loadGltfDraco(model.draco);
+          promise = this.loadGltfDraco(config.draco);
           break;
         case 'opt':
-          promise = this.loadGltfOptKTX(model.opt);
+          promise = this.loadGltfOptKTX(config.opt);
           break;
         default:
           break;
       }
-      const symbol = `${queueIndex} model`;
-      modelqueue[symbol] = promise;
-      promise
-        .then((obj) => {
-          onBeforeRender?.(model, obj);
-          if (obj instanceof THREE.Object3D) {
-            this.ssthreeObject.threeScene.add(obj);
-          } else if (obj.scene instanceof THREE.Object3D) {
-            this.ssthreeObject.threeScene.add(obj.scene);
-          }
+      this.ssMessageQueue.add(() => {
+        promise
+          .then((obj) => {
+            onBeforeRender?.(config, obj);
+            if (obj instanceof THREE.Object3D) {
+              this.ssThreeObject.threeScene.add(obj);
+            } else if (obj.scene instanceof THREE.Object3D) {
+              this.ssThreeObject.threeScene.add(obj.scene);
+            }
 
-          onAfterRender?.(model, obj);
-          objList.push(obj);
-          delete modelqueue[symbol];
-          if (Object.getOwnPropertyNames(modelqueue).length < maxQueueCount) {
-            queueIndex += 1;
-            resuseBlock();
-          }
-        })
-        .catch((e) => {
-          console.error('load model error', e);
-          delete modelqueue[symbol];
-          if (Object.getOwnPropertyNames(modelqueue).length < maxQueueCount) {
-            queueIndex += 1;
-            resuseBlock();
-          }
-        });
-      if (
-        Object.getOwnPropertyNames(modelqueue).length < maxQueueCount &&
-        list.length > queueIndex + 1
-      ) {
-        queueIndex += 1;
-        resuseBlock();
-      }
-    };
-    resuseBlock();
+            onAfterRender?.(config, obj);
+            objList.push(obj);
+            //
+            this.ssMessageQueue.remove();
+          })
+          .catch((e) => {
+            console.log(' 模型渲染失败 ', config, e);
+            this.ssMessageQueue.remove();
+          });
+      });
+    });
+    this.ssMessageQueue.add(() => {
+      onComplete?.(objList);
+      this.ssMessageQueue.remove();
+    });
   };
 
   // /**
@@ -479,7 +445,7 @@ export default class SSThreeJs {
   //       objloader.setMaterials(materials);
   //       const group = objloader.parse(objdata);
   //       if (addToScene) {
-  //         this.ssthreeObject.threeScene.add(group);
+  //         this.ssThreeObject.threeScene.add(group);
   //       }
   //       return group;
   //     });
@@ -585,9 +551,9 @@ export default class SSThreeJs {
    * remove orbitControl
    */
   _removeOrbitControl = () => {
-    if (this.ssthreeObject.threeOrbitControl !== null) {
-      this.ssthreeObject.threeOrbitControl.dispose();
-      this.ssthreeObject.threeOrbitControl = null;
+    if (this.ssThreeObject.threeOrbitControl !== null) {
+      this.ssThreeObject.threeOrbitControl.dispose();
+      this.ssThreeObject.threeOrbitControl = null;
     }
   };
 
@@ -595,7 +561,7 @@ export default class SSThreeJs {
    * create axis helper
    * @returns
    */
-  _addAxisControl = (aScene = this.ssthreeObject.threeScene) => {
+  _addAxisControl = (aScene = this.ssThreeObject.threeScene) => {
     const axis = new THREE.AxesHelper(100);
     aScene.add(axis);
     this.#axisControlHelper = axis;
@@ -614,7 +580,7 @@ export default class SSThreeJs {
   /**
    * add stats
    */
-  _addStatAnalyse = (aContainer = this.ssthreeObject.threeContainer) => {
+  _addStatAnalyse = (aContainer = this.ssThreeObject.threeContainer) => {
     const stats = new Stats();
     this._statsJs = stats;
     stats.showPanel(0);
@@ -622,7 +588,7 @@ export default class SSThreeJs {
     stats.domElement.style.position = 'absolute';
     stats.domElement.style.top = 'unset';
     stats.domElement.style.bottom = '0px';
-    this._fpsFrame = ThreeLoop.add(() => {
+    this._fpsFrame = SSThreeLoop.add(() => {
       stats.update();
     }, 'fps render');
   };
@@ -635,7 +601,7 @@ export default class SSThreeJs {
       this._statsJs.domElement.remove();
       this._statsJs.end();
       this._statsJs = null;
-      ThreeLoop.removeId(this._fpsFrame);
+      SSThreeLoop.removeId(this._fpsFrame);
     }
   };
 
@@ -643,11 +609,11 @@ export default class SSThreeJs {
    * 将屏幕坐标转化为世界坐标 <目前不是很准确>
    */
   transformPositionToVector3 = (aPoint = { x: 0, y: 0 }) => {
-    const canvas = this.ssthreeObject.threeContainer;
+    const canvas = this.ssThreeObject.threeContainer;
     const mousex = ((aPoint.x - canvas.getBoundingClientRect().left) / canvas.offsetWidth) * 2 - 1;
     const mousey = -((aPoint.y - canvas.getBoundingClientRect().top) / canvas.offsetHeight) * 2 + 1;
     const sdvector = new THREE.Vector3(mousex, mousey, 0.5);
-    const worldVector = sdvector.unproject(this.ssthreeObject.threeCamera);
+    const worldVector = sdvector.unproject(this.ssThreeObject.threeCamera);
     return worldVector;
   };
 
@@ -735,7 +701,7 @@ export default class SSThreeJs {
   //   // });
   //   const mesh = new THREE.Mesh(geometry, material);
   //   // const mesh = new THREE.Mesh(geometry, material);
-  //   // this.ssthreeObject.threeScene.add(mesh);
+  //   // this.ssThreeObject.threeScene.add(mesh);
   //   return { mesh, curvePath };
   // };
 }

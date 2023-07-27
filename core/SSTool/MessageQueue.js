@@ -45,7 +45,7 @@ class SSMessageQueue {
    */
   _excute() {
     if (this._runing) {
-      console.log(`队列正在执行，${this._queueList.length}个人任务等待`);
+      // console.log(`队列正在执行，${this._queueList.length}个人任务等待`);
       return;
     }
     // 将进入的第一个函数移除

@@ -47,10 +47,10 @@ export default class VideoSceneViewerManager {
     this.ssThreeJs = ssThreeJs;
     this.cameraData = cameraData;
     this.videoSceneView = new VideoSceneViewer({
-      scene: this.ssThreeJs.ssthreeObject.threeScene,
-      camera: this.ssThreeJs.ssthreeObject.threeCamera,
-      renderer: this.ssThreeJs.ssthreeObject.threeRenderer,
-      orbitControl: this.ssThreeJs.ssthreeObject.threeOrbitControl,
+      scene: this.ssThreeJs.ssThreeObject.threeScene,
+      camera: this.ssThreeJs.ssThreeObject.threeCamera,
+      renderer: this.ssThreeJs.ssThreeObject.threeRenderer,
+      orbitControl: this.ssThreeJs.ssThreeObject.threeOrbitControl,
       camerasData: cameraData,
       openDebug
     });
@@ -61,10 +61,10 @@ export default class VideoSceneViewerManager {
   #initVideoSceneViewer = () => {
     if (!this.videoSceneView) {
       this.videoSceneView = new VideoSceneViewer({
-        scene: this.ssThreeJs.ssthreeObject.threeScene,
-        camera: this.ssThreeJs.ssthreeObject.threeCamera,
-        renderer: this.ssThreeJs.ssthreeObject.threeRenderer,
-        orbitControl: this.ssThreeJs.ssthreeObject.threeOrbitControl,
+        scene: this.ssThreeJs.ssThreeObject.threeScene,
+        camera: this.ssThreeJs.ssThreeObject.threeCamera,
+        renderer: this.ssThreeJs.ssThreeObject.threeRenderer,
+        orbitControl: this.ssThreeJs.ssThreeObject.threeOrbitControl,
         openDebug: false
       });
     }
@@ -72,7 +72,7 @@ export default class VideoSceneViewerManager {
     // this.videoSceneView.initialize([camdata]); // 打开视频融合
     this.videoSceneView.ignoreObjectList = this.ignoreObjectList;
 
-    this.ssThreeJs.ssthreeObject.cancelRender();
+    this.ssThreeJs.ssThreeObject.cancelRender();
   };
 
   /**
@@ -93,14 +93,14 @@ export default class VideoSceneViewerManager {
     if (this.videoSceneView) {
       this.videoSceneView._mode = VideoSceneViewer.NORMAL;
 
-      if (this.ssThreeJs?.ssthreeObject) {
-        this.ssThreeJs.ssthreeObject.render();
+      if (this.ssThreeJs?.ssThreeObject) {
+        this.ssThreeJs.ssThreeObject.render();
       }
     }
     // 关闭按钮
     if (this._videoViewerCameraIconList.length > 0) {
       this._videoViewerCameraIconList.forEach((icon) => {
-        this.ssThreeJs.ssthreeObject.threeScene.remove(icon);
+        this.ssThreeJs.ssThreeObject.threeScene.remove(icon);
         // SSDispose.dispose(icon);
       });
       this._videoViewerCameraIconList = [];
@@ -123,7 +123,7 @@ export default class VideoSceneViewerManager {
         console.log(icon.name);
         icon.position.copy(camera.camera.position);
         icon.position.y += 1;
-        this.ssThreeJs.ssthreeObject.threeScene.add(icon);
+        this.ssThreeJs.ssThreeObject.threeScene.add(icon);
         this._videoViewerCameraIconList.push(icon);
       });
       this._videoViewerCameraDataList = cameraData;

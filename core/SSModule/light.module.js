@@ -82,7 +82,7 @@ export default class SSLightModule extends SSModuleInterface {
 
   moduleImport(obj) {
     // 移除默认灯光
-    const originLights = this.ssthreeObject.threeScene.children.filter(
+    const originLights = this.ssThreeObject.threeScene.children.filter(
       (item) => item instanceof THREE.Light
     );
     originLights.forEach((e) => {
@@ -102,28 +102,28 @@ export default class SSLightModule extends SSModuleInterface {
           light[key] = rest[key];
         }
       });
-      this.ssthreeObject.threeScene.add(light);
+      this.ssThreeObject.threeScene.add(light);
     });
     // 轨道控制
     const defaultControlVect3Keys = ['target'];
     defaultControlKeys.forEach((key) => {
-      this.ssthreeObject.threeOrbitControl[key] = orbitControl[key];
+      this.ssThreeObject.threeOrbitControl[key] = orbitControl[key];
     });
     defaultControlVect3Keys.forEach((key) => {
-      this.ssthreeObject.threeOrbitControl[key].copy(orbitControl[key]);
+      this.ssThreeObject.threeOrbitControl[key].copy(orbitControl[key]);
     });
     // camera
     const defaultCameraVect3Keys = ['position'];
     defaultCameraVect3Keys.forEach((key) => {
-      this.ssthreeObject.threeCamera[key].copy(camera[key]);
+      this.ssThreeObject.threeCamera[key].copy(camera[key]);
     });
-    this.ssthreeObject.threeOrbitControl.update();
+    this.ssThreeObject.threeOrbitControl.update();
   }
 
   moduleExport() {
     // 灯光
     const lights = [];
-    this.ssthreeObject.threeScene.children.forEach((e) => {
+    this.ssThreeObject.threeScene.children.forEach((e) => {
       if (e instanceof THREE.Light) {
         if (e.visible) {
           const obj = {};
@@ -150,11 +150,11 @@ export default class SSLightModule extends SSModuleInterface {
     // 轨道控制
     const defaultControlVect3Keys = ['target'];
     [...defaultControlKeys, ...defaultControlVect3Keys].forEach((key) => {
-      orbitControl[key] = this.ssthreeObject.threeOrbitControl[key];
+      orbitControl[key] = this.ssThreeObject.threeOrbitControl[key];
     });
 
     // camera
-    const { position } = this.ssthreeObject.threeCamera;
+    const { position } = this.ssThreeObject.threeCamera;
     const camera = {
       position
     };
@@ -173,13 +173,13 @@ export default class SSLightModule extends SSModuleInterface {
         const { lightType = this.getModuleConfigSource().lightType[2] } = this._dynamicConfig;
         // console.log(' add one light ', lightType);
         const light = new THREE[lightType]();
-        this.ssthreeObject.threeScene.add(light);
+        this.ssThreeObject.threeScene.add(light);
         // 更新 调试
         this.moduleUpdateGui();
       }
     };
     // lights
-    this.ssthreeObject.threeScene.children.forEach((e) => {
+    this.ssThreeObject.threeScene.children.forEach((e) => {
       if (e instanceof THREE.Light) {
         const list = options[e.type] || [];
         // 从 _lightProps 读取赋值
@@ -198,7 +198,7 @@ export default class SSLightModule extends SSModuleInterface {
       objType: 'threeOrbitControl'
     };
     defaultControlKeys.forEach((key) => {
-      orbitControl[key] = this.ssthreeObject.threeOrbitControl[key];
+      orbitControl[key] = this.ssThreeObject.threeOrbitControl[key];
     });
     options.orbitControl = orbitControl;
     return options;
@@ -220,7 +220,7 @@ export default class SSLightModule extends SSModuleInterface {
     // 复用的对象结构 直接使用已有的结构
     // 非复用结构 需要赋值 <获取scene上的场景元素>
     if (params.data.__id) {
-      const obj3d = this.ssthreeObject.threeScene.getObjectById(params.data.__id);
+      const obj3d = this.ssThreeObject.threeScene.getObjectById(params.data.__id);
       if (obj3d) {
         if (params.key === 'color') {
           obj3d[params.key].setRGB(params.value.r, params.value.g, params.value.b);
@@ -233,7 +233,7 @@ export default class SSLightModule extends SSModuleInterface {
     //
     switch (params.data.objType) {
       case 'threeOrbitControl':
-        this.ssthreeObject.threeOrbitControl[params.key] = params.value;
+        this.ssThreeObject.threeOrbitControl[params.key] = params.value;
         break;
 
       default:

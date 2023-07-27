@@ -41,10 +41,10 @@ export default class SSWater extends SSModuleInterface {
 
   moduleUnmount() {
     // console.log(' 开发模块解除注册 ');
-    if (!this.ssthreeObject || !this.water) {
+    if (!this.ssThreeObject || !this.water) {
       return;
     }
-    this.ssthreeObject.threeScene.remove(this.water);
+    this.ssThreeObject.threeScene.remove(this.water);
     this.water = null;
   }
 
@@ -102,8 +102,8 @@ export default class SSWater extends SSModuleInterface {
     water.position.y = 0.2;
     water.rotation.x = Math.PI * -0.5;
     this.water = water;
-    this.ssthreeObject.threeScene.add(this.water);
-    // this.jsRef.current.ssthreeObject.threeScene.add(water);
+    this.ssThreeObject.threeScene.add(this.water);
+    // this.jsRef.current.ssThreeObject.threeScene.add(water);
     return water;
   };
 }

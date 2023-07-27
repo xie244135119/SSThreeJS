@@ -28,7 +28,7 @@ export default function ParentIndex(props) {
 
   // 测试 SS
   const testcssrender = () => {
-    // const cssrender = new SSCssRenderer(jsRef.current.ssthreeObject);
+    // const cssrender = new SSCssRenderer(jsRef.current.ssThreeObject);
     // cssrender.setup2D();
     SSCssRenderer.addLine(
       {
@@ -46,7 +46,7 @@ export default function ParentIndex(props) {
 
   // --------反射---------
   const reflectorTest = () => {
-    const { ssthreeObject } = jsRef.current;
+    const { ssThreeObject } = jsRef.current;
     // 透過geometry以及material來建立Mesh物件
     const geometry2 = new THREE.PlaneGeometry(60, 60, 1, 1);
     const material2 = new THREE.MeshBasicMaterial();
@@ -69,13 +69,13 @@ export default function ParentIndex(props) {
       bufferSamples: 8
     };
     mesh2.material = new MeshReflectorMaterial(
-      ssthreeObject.threeRenderer,
-      ssthreeObject.threeCamera,
-      ssthreeObject.threeScene,
+      ssThreeObject.threeRenderer,
+      ssThreeObject.threeCamera,
+      ssThreeObject.threeScene,
       mesh2,
       fadingReflectorOptions
     );
-    ssthreeObject.threeScene.add(mesh2);
+    ssThreeObject.threeScene.add(mesh2);
     mesh2.position.y = 0.1;
     mesh2.position.x = 5;
     // 旋轉mesh角度以作為地面
@@ -84,14 +84,14 @@ export default function ParentIndex(props) {
 
   useEffect(() => {
     jsRef.current.setup('threecontainer');
-    jsRef.current.ssthreeObject.threeScene.background = new THREE.Color(0, 0, 0);
+    jsRef.current.ssThreeObject.threeScene.background = new THREE.Color(0, 0, 0);
     jsRef.current.addDymaicDebug();
 
     const plane = new THREE.PlaneGeometry(5, 5);
     const planeMaterial = new THREE.MeshBasicMaterial({});
     const planeMesh = new THREE.Mesh(plane, planeMaterial);
     planeMesh.rotation.set(-Math.PI / 2, 0, 0);
-    jsRef.current.ssthreeObject.threeScene.add(planeMesh);
+    jsRef.current.ssThreeObject.threeScene.add(planeMesh);
     // 几何体
     const geomertry = new THREE.BoxGeometry(1, 1, 1);
     const material = new THREE.MeshStandardMaterial({
@@ -101,7 +101,7 @@ export default function ParentIndex(props) {
     const mesh = new THREE.Mesh(geomertry, material);
     mesh.position.set(0, 0.5, 0);
     mesh.name = 'TestBox';
-    jsRef.current.ssthreeObject.threeScene.add(mesh);
+    jsRef.current.ssThreeObject.threeScene.add(mesh);
 
     //
     testcssrender();
@@ -136,7 +136,7 @@ export default function ParentIndex(props) {
     // videoBlend.openVideoFusion(videoFusionData);
 
     // 引用配置
-    jsRef.current.ssmoduleCenter.registerModules([
+    jsRef.current.ssModuleCenter.registerModules([
       SSPickPointMode,
       SSLightModule,
       SSPostProcessManagerModule,
@@ -144,25 +144,25 @@ export default function ParentIndex(props) {
       SSWatchLookModule,
       VideoSceneViewerManager
     ]);
-    jsRef.current.ssmoduleCenter.import(SceneSetting);
+    jsRef.current.ssModuleCenter.import(SceneSetting);
     // 开启调试
-    jsRef.current.ssmoduleCenter.openDebugModel();
+    jsRef.current.ssModuleCenter.openDebugModel();
 
     /**
      * @type {SSDevelopMode}
      */
-    // const developModule = jsRef.current.ssmoduleCenter.getModuleByClassName('SSDevelopMode');
+    // const developModule = jsRef.current.ssModuleCenter.getModuleByClassName('SSDevelopMode');
     // console.log(' developModule ', developModule);
 
     /**
      * @type {SSPostProcessManagerModule}
      */
-    const ssPostProcessManagerModule = jsRef.current.ssmoduleCenter.getModuleByClassName(
+    const ssPostProcessManagerModule = jsRef.current.ssModuleCenter.getModuleByClassName(
       'SSPostProcessManagerModule'
     );
 
     /* jsRef.current.threeEvent.addEventListener(SSEvent.SSEventType.CLICK, (event) => {
-      const models = jsRef.current.ssthreeObject.getModelsByPoint(event);
+      const models = jsRef.current.ssThreeObject.getModelsByPoint(event);
       if (models.length > 0) {
         const castObj = models[0].object;
         console.log('models[0].object ', models[0].object);
@@ -172,7 +172,7 @@ export default function ParentIndex(props) {
     /**
      * @type {SSWater}
      */
-    const ssWater = jsRef.current.ssmoduleCenter.getModuleByClassName('SSWater');
+    const ssWater = jsRef.current.ssModuleCenter.getModuleByClassName('SSWater');
 
     return () => {
       jsRef.current.destroy();

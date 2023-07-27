@@ -23,7 +23,7 @@ export default class SSModuleInterface {
   /**
    * @type SSThreeObject 绑定的目标元素
    */
-  ssthreeObject = null;
+  ssThreeObject = null;
 
   /**
    * 挂载
@@ -38,7 +38,7 @@ export default class SSModuleInterface {
    * @override
    */
   moduleUnmount() {
-    this.ssthreeObject = null;
+    this.ssThreeObject = null;
   }
 
   /**

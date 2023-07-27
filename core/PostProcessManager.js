@@ -40,15 +40,15 @@ export default class SSPostProcessManagerModule extends SSModuleInterface {
 
   bloomEffect = null;
 
-  // constructor(ssthreeObject, openDebug = false) {
+  // constructor(ssThreeObject, openDebug = false) {
   //   super();
-  //   this.ssthreeObject = ssthreeObject;
+  //   this.ssThreeObject = ssThreeObject;
   // }
 
   createComposer = (openDebug) => {
-    const scene = this.ssthreeObject.threeScene;
-    const camera = this.ssthreeObject.threeCamera;
-    const renderer = this.ssthreeObject.threeRenderer;
+    const scene = this.ssThreeObject.threeScene;
+    const camera = this.ssThreeObject.threeCamera;
+    const renderer = this.ssThreeObject.threeRenderer;
     const composer = new EffectComposer(renderer);
     composer.addPass(new RenderPass(scene, camera));
     // composer.addPass(new EffectPass(camera, new BloomEffect()));
@@ -99,10 +99,10 @@ export default class SSPostProcessManagerModule extends SSModuleInterface {
     composer.addPass(effectPass);
 
     this.composer = composer;
-    this.ssthreeObject.threeEffectComposer = composer;
+    this.ssThreeObject.threeEffectComposer = composer;
     console.log('composer', composer);
 
-    this.ssthreeObject.cancelRender();
+    this.ssThreeObject.cancelRender();
     ThreeLoop.add(() => {
       composer.render();
     }, 'PostProcessManager Render');
