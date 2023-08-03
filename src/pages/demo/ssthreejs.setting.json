@@ -1,11 +1,20 @@
 {
   "SSLightModule": {
     "lights": [
-      { "type": "AmbientLight", "visible": true, "color": 12566463, "intensity": 0.3 },
+      {
+        "type": "AmbientLight",
+        "visible": true,
+        "color": 12566463,
+        "intensity": 0.3
+      },
       {
         "type": "DirectionalLight",
         "visible": true,
-        "position": { "x": 0, "y": 1, "z": 0 },
+        "position": {
+          "x": 0,
+          "y": 1,
+          "z": 0
+        },
         "castShadow": true,
         "color": 16777215,
         "intensity": 0.5
@@ -13,7 +22,11 @@
       {
         "type": "SpotLight",
         "visible": true,
-        "position": { "x": 1, "y": 2, "z": -4 },
+        "position": {
+          "x": 1,
+          "y": 2,
+          "z": -4
+        },
         "color": 16766720,
         "intensity": 2,
         "distance": 50,
@@ -24,7 +37,11 @@
       {
         "type": "SpotLight",
         "visible": true,
-        "position": { "x": 1, "y": 2, "z": 4 },
+        "position": {
+          "x": 1,
+          "y": 2,
+          "z": 4
+        },
         "color": 9038841,
         "intensity": 2,
         "distance": 50,
@@ -42,10 +59,18 @@
       "zoomSpeed": 1,
       "autoRotate": false,
       "autoRotateSpeed": 2,
-      "target": { "x": 0.060544172909349624, "y": 0.12931160690221696, "z": -0.2734582628668419 }
+      "target": {
+        "x": 0.060544172909349624,
+        "y": 0.12931160690221696,
+        "z": -0.2734582628668419
+      }
     },
     "camera": {
-      "position": { "x": 11.166276606221986, "y": 7.523311633273936, "z": -0.10120023347370644 }
+      "position": {
+        "x": 11.166276606221986,
+        "y": 7.523311633273936,
+        "z": -0.10120023347370644
+      }
     }
   },
   "SSPostProcessManagerModule": {
@@ -75,15 +100,27 @@
     "模块调试": false
   },
   "SSWatchLookModule": {
-    "cameraModelPath": "public/yuntai/sxt01.FBX",
+    "cameraModelPath": "/yuntai/sxt01.FBX",
     "cameraAnchorMeshName": "sxt001",
     "cameraList": [
       {
         "uuid": "58fe878f-e27f-47c2-9bc7-fd80ba45159f",
         "type": "ball",
-        "position": { "x": 1.8598104855339053, "y": 0.5049648493195579, "z": 0.3648556077498384 },
-        "rotation": { "x": 0, "y": 0, "z": 0 },
-        "scale": { "x": 1, "y": 1, "z": 1 },
+        "position": {
+          "x": 1.8598104855339053,
+          "y": 0.5049648493195579,
+          "z": 0.3648556077498384
+        },
+        "rotation": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        },
+        "scale": {
+          "x": 1,
+          "y": 1,
+          "z": 1
+        },
         "name": ""
       },
       {
@@ -94,8 +131,16 @@
           "y": 0.5526174514394281,
           "z": -1.5222261323666386
         },
-        "rotation": { "x": -180, "y": 86.69891119947629, "z": -180 },
-        "scale": { "x": 1, "y": 1, "z": 1 },
+        "rotation": {
+          "x": -180,
+          "y": 86.69891119947629,
+          "z": -180
+        },
+        "scale": {
+          "x": 1,
+          "y": 1,
+          "z": 1
+        },
         "name": ""
       }
     ]
@@ -109,14 +154,37 @@
         "aspect": 1,
         "near": 0.1,
         "far": 164,
-        "position": { "x": 0.7180480205018174, "y": 1.2705360638579253, "z": 2.052677400678885 },
-        "rotation": { "x": -0.6313513526773442, "y": 0.20934010887576412, "z": 0.1507975959985109 },
-        "target": { "x": 0, "y": 0, "z": 0 }
+        "position": {
+          "x": 0.7180480205018174,
+          "y": 1.2705360638579253,
+          "z": 2.052677400678885
+        },
+        "rotation": {
+          "x": -0.6313513526773442,
+          "y": 0.20934010887576412,
+          "z": 0.1507975959985109
+        },
+        "target": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        }
       },
-      "video": { "poster": "../../../core/assets/default_ground1.png", "stream": "" },
+      "video": {
+        "poster": "../../../core/assets/default_ground1.png",
+        "stream": ""
+      },
       "eye": {
-        "position": { "x": -22.26714020755176, "y": 96.87804310841558, "z": -144.87257420359424 },
-        "target": { "x": -21.692831852230174, "y": 96.54080558055747, "z": -93.53923082919695 }
+        "position": {
+          "x": -22.26714020755176,
+          "y": 96.87804310841558,
+          "z": -144.87257420359424
+        },
+        "target": {
+          "x": -21.692831852230174,
+          "y": 96.54080558055747,
+          "z": -93.53923082919695
+        }
       }
     }
   ]

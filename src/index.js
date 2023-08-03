@@ -1,4 +1,4 @@
 import RouteIndex from './routeIndex';
-import './index.less';
+import './index.module.css';
 
 RouteIndex.renderDom();

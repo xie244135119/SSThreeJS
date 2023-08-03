@@ -14,6 +14,8 @@ import SSThreeObject from './SSThreeObject';
 import SSLoader from './SSLoader';
 import SSModuleCenter from './SSModule';
 import SSMessageQueue from './SSTool/MessageQueue';
+import SSTransformControl from './SSTool/TransformControl';
+import SSPostProcessModule from './SSModule/basepostprocess.module';
 
 export default class SSThreeJs {
   /**
@@ -35,27 +37,33 @@ export default class SSThreeJs {
   ssMessageQueue = null;
 
   /**
-   * @type THREE.DirectionalLight direction light
+   * 位置调试工具
+   * @type {SSTransformControl}
    */
-  threeDirectionLight = null;
+  ssTransformControl = null;
 
   /**
-   * @type THREE.AmbientLight  ambient light
+   * @type { SSPostProcessModule } 基础后处理
+   */
+  ssPostProcessModule = null;
+
+  /**
+   * @type {THREE.AmbientLight}  ambient light
    */
   threeAmbientLight = null;
 
   /**
-   * @type SSEvent
+   * @type {SSEvent}
    */
   threeEvent = null;
 
   /**
-   * @type Stats
+   * @type {Stats}
    */
   _statsJs = null;
 
   // axis helper
-  #axisControlHelper = null;
+  _axisControlHelper = null;
 
   // has released
   _threeJsDestoryed = false;
@@ -123,18 +131,13 @@ export default class SSThreeJs {
     const camera = new THREE.PerspectiveCamera(45, aspect, 0.1, 20000);
     camera.position.set(10, 10, 10);
     // webgl render
-    const render = this.#addRender();
+    const render = this._addRender();
     container.append(render.domElement);
 
     // ambient light
-    const light = new THREE.AmbientLight(new THREE.Color(0xffffff), 1);
-    scene.add(light);
-    this.threeAmbientLight = light;
-    // direct light
-    const directLight = new THREE.DirectionalLight(new THREE.Color('#FFFFE0'), 1);
-    directLight.position.set(0, 1, 0);
-    scene.add(directLight);
-    this.threeDirectionLight = directLight;
+    const ambientlight = new THREE.AmbientLight(new THREE.Color(0xffffff), 1);
+    scene.add(ambientlight);
+    this.threeAmbientLight = ambientlight;
 
     // keyboard orbitcontrol
     const control = this._addOrbitControl(camera, container);
@@ -158,6 +161,8 @@ export default class SSThreeJs {
     this.ssThreeObject.render();
     // module center
     this.ssModuleCenter = new SSModuleCenter(this.ssThreeObject);
+    // postprocess module
+    this.ssPostProcessModule = new SSPostProcessModule(this.ssThreeObject);
     //
     SSThreeLoop.add(() => {
       if (this.ssThreeObject.threeOrbitControl) {
@@ -242,7 +247,7 @@ export default class SSThreeJs {
   };
 
   // render
-  #addRender = () => {
+  _addRender = () => {
     const render = new THREE.WebGLRenderer({
       antialias: true,
       alpha: true,
@@ -253,10 +258,9 @@ export default class SSThreeJs {
     render.setPixelRatio(window.devicePixelRatio);
     render.setClearColor('white', 0);
     render.autoClear = true;
-    render.toneMapping = THREE.ACESFilmicToneMapping; // 模拟、逼近高动态范围（HDR）效果 LinearToneMapping 为默认值，线性色调映射。
+    // 模拟、逼近高动态范围（HDR）效果 LinearToneMapping 为默认值，线性色调映射。
+    render.toneMapping = THREE.ACESFilmicToneMapping;
     render.toneMappingExposure = 1;
-    // render.textureEncoding = THREE.sRGBEncoding; // LinearEncoding
-    // render.outputEncoding = THREE.sRGBEncoding; // sRGBEncoding
     return render;
   };
 
@@ -279,18 +283,14 @@ export default class SSThreeJs {
       return;
     }
     if (!animate) {
-      if (this.ssThreeObject.threeCamera instanceof THREE.Camera) {
-        this.ssThreeObject.threeCamera.position.set(
-          aCameraPosition.x,
-          aCameraPosition.y,
-          aCameraPosition.z
-        );
-      }
-      if (this.ssThreeObject.threeOrbitControl instanceof OrbitControls) {
-        const center = new THREE.Vector3(aCenterPosition.x, aCenterPosition.y, aCenterPosition.z);
-        this.ssThreeObject.threeOrbitControl.target.set(center.x, center.y, center.z);
-        this.ssThreeObject.threeOrbitControl.update();
-      }
+      this.ssThreeObject.threeCamera.position.set(
+        aCameraPosition.x,
+        aCameraPosition.y,
+        aCameraPosition.z
+      );
+      const center = new THREE.Vector3(aCenterPosition.x, aCenterPosition.y, aCenterPosition.z);
+      this.ssThreeObject.threeOrbitControl.target.set(center.x, center.y, center.z);
+      this.ssThreeObject.threeOrbitControl.update();
     } else {
       //
       const startPoint = {
@@ -333,21 +333,35 @@ export default class SSThreeJs {
   addDymaicDebug = () => {
     this._addAxisControl(this.ssThreeObject.threeScene);
     this._addStatAnalyse();
-    window.ssthreeJs = this;
+    window.ssThreeJs = this;
     window.ssThreeObject = this.ssThreeObject;
     window.THREE = THREE;
+    //
+    this.ssTransformControl = new SSTransformControl(this.ssThreeObject);
     // window.ssThreeObject.threeCamera.setFov = (aValue) => {
     //   aCamera.fov = aValue;
     //   aCamera.updateProjectionMatrix();
     // };
+    this._clickEvent = this.threeEvent.addEventListener(SSEvent.SSEventType.CLICK, (aPoint) => {
+      const models = this.ssThreeObject.getModelsByPoint(aPoint);
+      if (models.length === 0) {
+        return;
+      }
+      this.ssTransformControl.attach(models[0].object);
+      this.ssPostProcessModule.addOutlineByObject3Ds([models[0].object]);
+      this.ssPostProcessModule.addMaskBoxByObject3Ds(models[0].object);
+    });
   };
 
   /**
    * remove debug
    */
   removeDymaicDebug = () => {
+    this.threeEvent.removeEventListener(SSEvent.SSEventType.CLICK, this._clickEvent);
     this._removeStatAnalyse();
     this._removeAxisControl();
+    this._transformControl?.destory();
+    this._transformControl = null;
     window.ssthreeJs = null;
     window.THREE = null;
     window.ssThreeObject = null;
@@ -401,8 +415,16 @@ export default class SSThreeJs {
           .then((obj) => {
             onBeforeRender?.(config, obj);
             if (obj instanceof THREE.Object3D) {
+              obj.traverse((e) => {
+                e.receiveShadow = true;
+                e.castShadow = true;
+              });
               this.ssThreeObject.threeScene.add(obj);
             } else if (obj.scene instanceof THREE.Object3D) {
+              obj.scene.traverse((e) => {
+                e.receiveShadow = true;
+                e.castShadow = true;
+              });
               this.ssThreeObject.threeScene.add(obj.scene);
             }
 
@@ -564,16 +586,16 @@ export default class SSThreeJs {
   _addAxisControl = (aScene = this.ssThreeObject.threeScene) => {
     const axis = new THREE.AxesHelper(100);
     aScene.add(axis);
-    this.#axisControlHelper = axis;
+    this._axisControlHelper = axis;
   };
 
   /**
    * remove axis helper
    */
   _removeAxisControl = () => {
-    if (this.#axisControlHelper !== null) {
-      this.#axisControlHelper.dispose();
-      this.#axisControlHelper = null;
+    if (this._axisControlHelper !== null) {
+      this._axisControlHelper.dispose();
+      this._axisControlHelper = null;
     }
   };
 
@@ -588,7 +610,7 @@ export default class SSThreeJs {
     stats.domElement.style.position = 'absolute';
     stats.domElement.style.top = 'unset';
     stats.domElement.style.bottom = '0px';
-    this._fpsFrame = SSThreeLoop.add(() => {
+    SSThreeLoop.add(() => {
       stats.update();
     }, 'fps render');
   };
@@ -601,7 +623,7 @@ export default class SSThreeJs {
       this._statsJs.domElement.remove();
       this._statsJs.end();
       this._statsJs = null;
-      SSThreeLoop.removeId(this._fpsFrame);
+      SSThreeLoop.removeId('fps render');
     }
   };
 

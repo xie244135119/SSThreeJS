@@ -40,11 +40,20 @@ export default class SSDispose {
     });
   };
 
+  static dispose2 = (obj) => {
+    console.log(' 销毁的元素 ', obj);
+  };
+
   /**
    * 2.0 dispose 元素
    * @param {THREE.Object3D} aObj
    */
   static dispose = (aObj) => {
+    const disposeTexture = (obj) => {
+      if (obj instanceof THREE.Texture) {
+        obj.dispose();
+      }
+    };
     const disposeGeometry = (geo) => {
       if (geo instanceof THREE.BufferGeometry) {
         geo.dispose();
@@ -101,8 +110,39 @@ export default class SSDispose {
         // aObj3D = null;
       }
     };
+    const disposeArray = (aList) => {
+      if (Array.isArray(aList)) {
+        aList.forEach((e) => {
+          this.dispose(e);
+        });
+      }
+    };
+    const disposeObject = (obj) => {
+      if (obj instanceof Object) {
+        const properyNames = Object.getOwnPropertyNames(obj);
+        properyNames.forEach((e) => {
+          if (e !== 'parent') {
+            const value = obj[e];
+            disposeTexture(value);
+            disposeGeometry(value);
+            disposeMaterial(value);
+            disposeObject3D(value);
+            disposeArray(value);
+            if (value && value.dispose) {
+              value.dispose();
+            }
+          }
+        });
+      }
+    };
+    disposeTexture(aObj);
     disposeGeometry(aObj);
     disposeMaterial(aObj);
     disposeObject3D(aObj);
+    disposeObject(aObj);
+    disposeArray(aObj);
+    if (aObj && aObj.dispose) {
+      aObj.dispose();
+    }
   };
 }

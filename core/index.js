@@ -6,7 +6,6 @@ import SSEvent from './SSEvent';
 import SSCssRenderer, { CSS2DObject, CSS3DObject } from './SSCssRenderer';
 import * as SSMaterial from './SSMaterial/index';
 import * as SSMesh from './SSMesh/index';
-import SSPostProcess from './SSPostProcess';
 import SSFileSetting from './SSModule';
 import SSThreeObject from './SSThreeObject';
 import SSDispose from './SSDispose';
@@ -24,11 +23,13 @@ export {
   SSThreeLoop,
   // three object
   SSThreeObject,
-  //
+  // material
   SSMaterial,
+  // mesh
   SSMesh,
-  SSPostProcess,
+  // file setting
   SSFileSetting,
+  // dispose
   SSDispose,
   CSS2DObject,
   CSS3DObject

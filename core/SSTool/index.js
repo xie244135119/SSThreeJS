@@ -245,8 +245,8 @@ export default class SSThreeTool {
       nameList?.length === 0
         ? []
         : nameList.filter(
-            (item) => item.object.name !== '可视域视锥体' && item.object.visible === true
-          );
+          (item) => item.object.name !== '可视域视锥体' && item.object.visible === true
+        );
     // 墙体过滤 , 不过滤地板
     const newarray = [];
     nameList.forEach((item) => {

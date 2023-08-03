@@ -1,5 +1,4 @@
-// max Storage 默认 1G
-// const MAX_STORAGE_USAGE = 1 * 1024 * 1024 * 1024;
+// max Storage 默认 500M
 const MAX_STORAGE_USAGE = 500 * 1024 * 1024;
 // data base name
 const DATABASE_NAME = 'threeJsdb';

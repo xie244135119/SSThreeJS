@@ -43,7 +43,7 @@ export default class SSModuleCenter {
   destroy() {
     this.unregisterModules();
     this.closeDebugModel();
-    this._debugGui.destroy();
+    this._debugGui?.destroy();
   }
 
   /**
@@ -85,7 +85,7 @@ export default class SSModuleCenter {
    * @param {string} moduleName
    * @returns {SSModuleInterface}
    */
-  getModuleByClassName = (moduleName) => this._modules.find((e) => e.__name === moduleName);
+  getModuleByClassName = (moduleName) => this._modules?.find((e) => e.__name === moduleName);
 
   /**
    * export setting to json
@@ -156,7 +156,9 @@ export default class SSModuleCenter {
    * 移除调试
    */
   closeDebugModel() {
-    this._menuContainer?.parentElement?.remove();
+    if (this._menuContainer) {
+      this._menuContainer.parentElement?.remove();
+    }
   }
 
   /**

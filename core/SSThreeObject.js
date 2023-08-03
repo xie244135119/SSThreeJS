@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 import SSThreeLoop from './SSThreeLoop';
+import SSThreeTool from './SSTool/index';
 
 export default class SSThreeObject {
   /**
@@ -70,8 +71,53 @@ export default class SSThreeObject {
   }
 
   /**
+   * 设置视角位置
+   * @param {THREE.Vector3} cameraPosition 相机位置
+   * @param {THREE.Vector3} controlPosition 场景位置
+   * @param {boolean} [animate=true] 是否开启动画
+   * @param {number} [animateSpeed] 动画速度
+   * @param {function ():void} [complete] 结束事件
+   */
+  setEye(cameraPosition, controlPosition, animate = true, animateSpeed = 0.5, complete) {
+    if (!animate) {
+      this.threeCamera.position.copy(cameraPosition);
+      this.threeOrbitControl.target.copy(controlPosition);
+      this.threeOrbitControl.update();
+    } else {
+      //
+      const startPoint = {
+        camera_x: this.threeCamera.position.x,
+        camera_y: this.threeCamera.position.y,
+        camera_z: this.threeCamera.position.z,
+        orbitControl_x: this.threeOrbitControl.target.x,
+        orbitControl_y: this.threeOrbitControl.target.y,
+        orbitControl_z: this.threeOrbitControl.target.z
+      };
+      const endPoint = {
+        camera_x: aCameraPosition.x,
+        camera_y: aCameraPosition.y,
+        camera_z: aCameraPosition.z,
+        orbitControl_x: aCenterPosition.x,
+        orbitControl_y: aCenterPosition.y,
+        orbitControl_z: aCenterPosition.z
+      };
+      SSThreeTool.useTweenAnimate(
+        startPoint,
+        endPoint,
+        (e) => {
+          this.threeCamera.position.set(e.camera_x, e.camera_y, e.camera_z);
+          this.threeOrbitControl.target.set(e.orbitControl_x, e.orbitControl_y, e.orbitControl_z);
+          this.threeOrbitControl.update();
+        },
+        animateSpeed,
+        complete
+      );
+    }
+  }
+
+  /**
    * 根据二维坐标 拾取模型数据
-   * @param {PointerEvent} pointEvent 点位信息
+   * @param {PointerEvent|KeyboardEvent} pointEvent 点位信息
    * @param {Array<THREE.Object3D>} targetObject3Ds 目标模型
    * @param {Array<string>} [ignoreMeshNames] 忽略的材质名称
    * @returns
@@ -80,7 +126,6 @@ export default class SSThreeObject {
     pointEvent,
     targetObject3Ds = this.threeScene.children,
     ignoreMeshNames = []
-    // needOffset = false
   ) => {
     const point = new THREE.Vector2(
       (pointEvent.offsetX / this.threeContainer.offsetWidth) * 2 - 1, // 规范设施横坐标
@@ -115,7 +160,8 @@ export default class SSThreeObject {
       'CameraHelper',
       'AxesHelper'
     ];
-    const object3Ds = targetObject3Ds.filter(
+    const object3ds = targetObject3Ds || this.threeScene.children;
+    const object3Ds = object3ds.filter(
       (item) => invalidTypes.indexOf(item.constructor.name) === -1
     );
     const raycaster = new THREE.Raycaster();

@@ -5,15 +5,15 @@ import SSThreeObject from '../SSThreeObject';
 
 export default class SSTransformControl {
   /**
+   * 函数构造 t：平移，r：旋转，s：放大缩小
+   * @type {function ({ target: THREE.Object3D,position: THREE.Vector3, rotation: THREE.Vector3, scale: THREE.Vector3, delete: boolean }):void}
+   */
+  onControlChange = null;
+
+  /**
    * @type {SSThreeObject} 物体
    */
   _ssThreeObject = null;
-
-  /**
-   * 函数构造 t：平移，r：旋转，s：放大缩小
-   * @type {function ({ position: THREE.Vector3, rotation: THREE.Vector3, scale: THREE.Vector3, delete: boolean }):void}
-   */
-  _controlChange = null;
 
   /**
    * @type {TransformControls} 控制器
@@ -32,15 +32,16 @@ export default class SSTransformControl {
    */
   constructor(ssThreeObject, callBack) {
     this._ssThreeObject = ssThreeObject;
-    this._controlChange = callBack;
+    this.onControlChange = callBack;
   }
 
   destory() {
     this._event?.destory();
     this._event = null;
     this._ssThreeObject = null;
+    this._control?.removeFromParent();
     this._control?.dispose();
-    this._controlChange = null;
+    this.onControlChange = null;
     this._control = null;
   }
 
@@ -54,7 +55,6 @@ export default class SSTransformControl {
         this._ssThreeObject.threeCamera,
         this._ssThreeObject.threeContainer
       );
-      this._control.enabled = false;
       this._ssThreeObject.threeScene.add(this._control);
       this._control.addEventListener('change', (e) => {
         // 禁用轨道控制器
@@ -63,9 +63,10 @@ export default class SSTransformControl {
         if (!this._control.object) {
           return;
         }
-        this._controlChange?.({
+        this.onControlChange?.({
           name: this._control.object.name,
           uuid: this._control.object.uuid,
+          target: this._control.object,
           position: {
             x: this._control.object.position.x,
             y: this._control.object.position.y,
@@ -84,7 +85,9 @@ export default class SSTransformControl {
       });
       this._event = new SSEvent(this._ssThreeObject.threeContainer);
       this._event.addEventListener(SSEvent.SSEventType.KEYDOWN, (e) => {
-        // console.log(' 键盘按下的时候 ', e);
+        if (!this._control.object) {
+          return;
+        }
         // tranlate 平移 t
         // rotate 旋转 r
         // scale 放大缩小 s
@@ -121,18 +124,18 @@ export default class SSTransformControl {
           case '+': // size大小增大
             this._control.setSize(this._control.size * 1.1);
             break;
-          case 'Backspace': // 删除
-            if (this._control.object) {
-              this._controlChange?.({
-                name: this._control.object.name,
-                uuid: this._control.object.uuid,
-                delete: true
-              });
-              this._control.object.removeFromParent();
-              this._control.detach();
-              this._control.enabled = false;
-            }
-            break;
+          // case 'Backspace': // 删除
+          //   if (this._control.object) {
+          //     this.onControlChange?.({
+          //       name: this._control.object.name,
+          //       uuid: this._control.object.uuid,
+          //       target: this._control.object,
+          //       delete: true
+          //     });
+          //     this._control.object.removeFromParent();
+          //     this._control.detach();
+          //   }
+          //   break;
           case 'ArrowRight': // x 轴左移
             break;
           case 'ArrowLeft': // 右移
@@ -146,7 +149,6 @@ export default class SSTransformControl {
         }
       });
     }
-    this._control.enabled = true;
     this._control.attach(object3d);
   }
 

@@ -19,6 +19,7 @@ import VideoSceneViewerManager from '../../../core/VideoSceneViewer/VideoSceneVi
 import videoBlendImg from '../../../core/assets/default_ground1.png';
 import SSEvent from '../../../core/SSEvent';
 import SSPostProcessManagerModule from '../../../core/PostProcessManager';
+import SSPostProcessModule from '../../../core/SSModule/basepostprocess.module';
 import SSWatchLookModule from '../../../core/SSModule/watchlook.module';
 
 export default function ParentIndex(props) {
@@ -82,6 +83,48 @@ export default function ParentIndex(props) {
     mesh2.rotateX(Math.PI * -0.5);
   };
 
+  // 测试 360全景相机
+  const test360Video = ()=>{
+    const video = document.createElement('video');
+    video.preload = true;
+    video.autoplay = true;
+    video.loop = true;
+    video.src = '/360video.mp4';
+
+    setTimeout(() => {
+      video.play();
+      console.log(' 视频开始播放 ');
+    }, 5000);
+    const videotexture = new THREE.VideoTexture(video);
+    videotexture.minFilter = THREE.LinearFilter;
+    videotexture.colorSpace = THREE.SRGBColorSpace;
+    // videotexture.format = THREE.PixelFormat;
+    window.videotexture = videotexture;
+    
+    //
+    const materialArray = [];
+    // materialArray.push(new THREE.MeshBasicMaterial({ color: 0x0051ba }))
+    // materialArray.push(new THREE.MeshBasicMaterial({ color: 0x0051ba }))
+    // materialArray.push(new THREE.MeshBasicMaterial({ color: 0x0051ba }))
+    // materialArray.push(new THREE.MeshBasicMaterial({ color: 0x0051ba }))
+    const material = new THREE.MeshBasicMaterial({
+      map: videotexture,
+      side: THREE.DoubleSide
+      // color: 'red'
+    });
+    materialArray.push(material);
+    // materialArray.push(new THREE.MeshBasicMaterial({ color: 0xff51ba }))
+
+    const geo = new THREE.SphereGeometry(5);
+    const mesh = new THREE.Mesh(geo, material);
+    mesh.position.set(1,5,1);
+    mesh.name = '360全景视频';
+    jsRef.current.ssThreeObject.threeScene.add(mesh);
+    
+    // 调整相机
+    jsRef.current.setModelPosition(mesh.position, mesh.position)
+  }
+
   useEffect(() => {
     jsRef.current.setup('threecontainer');
     jsRef.current.ssThreeObject.threeScene.background = new THREE.Color(0, 0, 0);
@@ -104,7 +147,7 @@ export default function ParentIndex(props) {
     jsRef.current.ssThreeObject.threeScene.add(mesh);
 
     //
-    testcssrender();
+    // testcssrender();
 
     reflectorTest();
 
@@ -139,14 +182,16 @@ export default function ParentIndex(props) {
     jsRef.current.ssModuleCenter.registerModules([
       SSPickPointMode,
       SSLightModule,
-      SSPostProcessManagerModule,
+      // SSPostProcessManagerModule,
       // SSWater,
-      SSWatchLookModule,
-      VideoSceneViewerManager
+      SSWatchLookModule
+      // VideoSceneViewerManager
     ]);
     jsRef.current.ssModuleCenter.import(SceneSetting);
     // 开启调试
     jsRef.current.ssModuleCenter.openDebugModel();
+    //
+    // test360Video();
 
     /**
      * @type {SSDevelopMode}

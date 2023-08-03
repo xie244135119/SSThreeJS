@@ -94,7 +94,6 @@ export default class SSCssRenderer {
       labelrender = render;
       render.domElement.style.position = 'absolute';
       render.domElement.style.top = 0;
-      render.domElement.style.pointerEvents = 'none';
     }
     if (labelrender instanceof CSS3DRenderer) {
       labelrender.setSize(threeContainer.offsetWidth, threeContainer.offsetHeight, true);
@@ -122,7 +121,6 @@ export default class SSCssRenderer {
       labelrender = render;
       render.domElement.style.position = 'absolute';
       render.domElement.style.top = 0;
-      render.domElement.style.pointerEvents = 'none';
     }
     if (labelrender instanceof SVGRenderer) {
       labelrender.setSize(threeContainer.offsetWidth, threeContainer.offsetHeight, true);

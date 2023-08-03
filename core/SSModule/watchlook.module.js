@@ -35,7 +35,7 @@ export default class SSWatchLookModule extends SSModuleInterface {
   _defaultConfig = {
     指哪看哪: false,
     // 模型路径 和 模型格式
-    cameraModelPath: 'public/yuntai/sxt01.FBX',
+    cameraModelPath: '/yuntai/sxt01.FBX',
     // 相机镜头 <可移动的镜头>
     cameraAnchorMeshName: 'sxt001',
     // 相机桩位
