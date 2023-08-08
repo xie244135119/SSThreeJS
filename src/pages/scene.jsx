@@ -6,21 +6,21 @@
  * Description
  */
 import React, { useEffect, useRef } from 'react';
-// import SSThreejs, { THREE, ThreeEvent } from '../../../core/index';
-// import PostProcessUtil from '../../../core/PostProcessUtil';
+// import SSThreejs, { THREE, ThreeEvent } from '../../core/index';
+// import PostProcessUtil from '../../core/PostProcessUtil';
 
-import MeshReflectorMaterial from '../../../core/SSMaterial/MeshReflectorMaterial';
-import SSWater from '../../../core/Water/SSWater';
-import SSThreeJs, { THREE, SSCssRenderer, SSThreeLoop } from '../../../core/index';
+import MeshReflectorMaterial from '../../core/SSMaterial/MeshReflectorMaterial';
+import SSWater from '../../core/Water/SSWater';
+import SSThreeJs, { THREE, SSCssRenderer, SSThreeLoop } from '../../core/index';
 import SceneSetting from './ssthreejs.setting.json';
-import SSPickPointMode from '../../../core/SSModule/pickpoint.module';
-import SSLightModule from '../../../core/SSModule/light.module';
-import VideoSceneViewerManager from '../../../core/VideoSceneViewer/VideoSceneViewerManager';
-import videoBlendImg from '../../../core/assets/default_ground1.png';
-import SSEvent from '../../../core/SSEvent';
-import SSPostProcessManagerModule from '../../../core/PostProcessManager';
-import SSPostProcessModule from '../../../core/SSModule/basepostprocess.module';
-import SSWatchLookModule from '../../../core/SSModule/watchlook.module';
+import SSPickPointMode from '../../core/SSModule/pickpoint.module';
+import SSLightModule from '../../core/SSModule/light.module';
+import VideoSceneViewerManager from '../../core/VideoSceneViewer/VideoSceneViewerManager';
+import videoBlendImg from '../../core/assets/default_ground1.png';
+import SSEvent from '../../core/SSEvent';
+import SSPostProcessManagerModule from '../../core/PostProcessManager';
+import SSPostProcessModule from '../../core/SSModule/basepostprocess.module';
+import SSWatchLookModule from '../../core/SSModule/watchlook.module';
 
 export default function ParentIndex(props) {
   // eslint-disable-next-line react/prop-types
@@ -84,7 +84,7 @@ export default function ParentIndex(props) {
   };
 
   // 测试 360全景相机
-  const test360Video = ()=>{
+  const test360Video = () => {
     const video = document.createElement('video');
     video.preload = true;
     video.autoplay = true;
@@ -100,7 +100,7 @@ export default function ParentIndex(props) {
     videotexture.colorSpace = THREE.SRGBColorSpace;
     // videotexture.format = THREE.PixelFormat;
     window.videotexture = videotexture;
-    
+
     //
     const materialArray = [];
     // materialArray.push(new THREE.MeshBasicMaterial({ color: 0x0051ba }))
@@ -117,13 +117,13 @@ export default function ParentIndex(props) {
 
     const geo = new THREE.SphereGeometry(5);
     const mesh = new THREE.Mesh(geo, material);
-    mesh.position.set(1,5,1);
+    mesh.position.set(1, 5, 1);
     mesh.name = '360全景视频';
     jsRef.current.ssThreeObject.threeScene.add(mesh);
-    
+
     // 调整相机
-    jsRef.current.setModelPosition(mesh.position, mesh.position)
-  }
+    jsRef.current.setModelPosition(mesh.position, mesh.position);
+  };
 
   useEffect(() => {
     jsRef.current.setup('threecontainer');

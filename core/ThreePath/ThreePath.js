@@ -253,7 +253,7 @@ class ThreePath {
     this.#pathDataList.forEach((data) => {
       // console.log(' data ', data);
       SSDispose.dispose(data.mesh);
-      this.threeJs.threeScene.remove(data.mesh);
+      this.ssThreeObject.threeScene.remove(data.mesh);
     });
     this.#pathDataList = [];
     // cancelAnimationFrame(this.#frameHandle);

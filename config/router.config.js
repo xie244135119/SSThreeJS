@@ -8,9 +8,14 @@ export default [
     redirect: '/directory'
   },
   {
-    name: '一级主页',
-    path: '/test',
-    component: './pages/demo/test'
+    name: '场景调试',
+    path: '/scene',
+    component: './pages/scene'
+  },
+  {
+    name: '场景编排',
+    path: '/editor',
+    component: './pages/editor'
   },
   {
     component: './pages/404'

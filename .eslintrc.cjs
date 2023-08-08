@@ -12,8 +12,9 @@ module.exports = {
   },
   extends: ['airbnb', 'airbnb/hooks'],
   plugins: ['react'],
-  parser: '@babel/eslint-parser',
+  settings: { react: { version: '18.2' } },
   parserOptions: {
+    ecmaVersion: 'latest',
     sourceType: 'module',
     ecmaFeatures: {
       jsx: true

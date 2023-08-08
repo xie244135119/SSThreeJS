@@ -349,7 +349,7 @@ export default class SSThreeJs {
       }
       this.ssTransformControl.attach(models[0].object);
       this.ssPostProcessModule.addOutlineByObject3Ds([models[0].object]);
-      this.ssPostProcessModule.addMaskBoxByObject3Ds(models[0].object);
+      this.ssPostProcessModule.addMaskBoxByObject3Ds([models[0].object]);
     });
   };
 
