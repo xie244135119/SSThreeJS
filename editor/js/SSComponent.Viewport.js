@@ -271,69 +271,6 @@ export default class SSViewport extends SSComponent {
   // };
 
   /**
-   * 缓动设置模型中心位置信息
-   * @param {*} aCameraPosition 镜头位置
-   * @param {*} aCenterPosition 模型中心点坐标
-   * @param {*} animate 是否动画
-   * @param {*} speed 速度
-   * @param {*} cb 回调
-   */
-  // setModelPosition = (
-  //   aCameraPosition = { x: 0, y: 0, z: 0 },
-  //   aCenterPosition = { x: 0, y: 0, z: 0 },
-  //   animate = false,
-  //   speed = 0.5,
-  //   cb = null
-  // ) => {
-  //   if (!this.ssThreeObject.threeCamera) {
-  //     return;
-  //   }
-  //   if (!animate) {
-  //     this.ssThreeObject.threeCamera.position.set(
-  //       aCameraPosition.x,
-  //       aCameraPosition.y,
-  //       aCameraPosition.z
-  //     );
-  //     const center = new THREE.Vector3(aCenterPosition.x, aCenterPosition.y, aCenterPosition.z);
-  //     this.ssThreeObject.threeOrbitControl.target.set(center.x, center.y, center.z);
-  //     this.ssThreeObject.threeOrbitControl.update();
-  //   } else {
-  //     //
-  //     const startPoint = {
-  //       camera_x: this.ssThreeObject.threeCamera.position.x,
-  //       camera_y: this.ssThreeObject.threeCamera.position.y,
-  //       camera_z: this.ssThreeObject.threeCamera.position.z,
-  //       orbitControl_x: this.ssThreeObject.threeOrbitControl.target.x,
-  //       orbitControl_y: this.ssThreeObject.threeOrbitControl.target.y,
-  //       orbitControl_z: this.ssThreeObject.threeOrbitControl.target.z
-  //     };
-  //     const endPoint = {
-  //       camera_x: aCameraPosition.x,
-  //       camera_y: aCameraPosition.y,
-  //       camera_z: aCameraPosition.z,
-  //       orbitControl_x: aCenterPosition.x,
-  //       orbitControl_y: aCenterPosition.y,
-  //       orbitControl_z: aCenterPosition.z
-  //     };
-  //     SSThreeTool.useTweenAnimate(
-  //       startPoint,
-  //       endPoint,
-  //       (e) => {
-  //         this.ssThreeObject.threeCamera.position.set(e.camera_x, e.camera_y, e.camera_z);
-  //         this.ssThreeObject.threeOrbitControl.target.set(
-  //           e.orbitControl_x,
-  //           e.orbitControl_y,
-  //           e.orbitControl_z
-  //         );
-  //         this.ssThreeObject.threeOrbitControl.update();
-  //       },
-  //       speed,
-  //       cb?.()
-  //     );
-  //   }
-  // };
-
-  /**
    * dynamic debug
    */
   addDymaicDebug = () => {

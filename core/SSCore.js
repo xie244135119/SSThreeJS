@@ -118,6 +118,9 @@ export default class SSThreeJs {
     } else if (aCanvasElement instanceof HTMLElement) {
       container = aCanvasElement;
     }
+    if (!(container instanceof HTMLElement)) {
+      return null;
+    }
 
     if (!WEBGL.isWebGLAvailable()) {
       const warning = WEBGL.getWebGLErrorMessage();
@@ -259,8 +262,8 @@ export default class SSThreeJs {
     render.setClearColor('white', 0);
     render.autoClear = true;
     // 模拟、逼近高动态范围（HDR）效果 LinearToneMapping 为默认值，线性色调映射。
-    render.toneMapping = THREE.ACESFilmicToneMapping;
-    render.toneMappingExposure = 1;
+    // render.toneMapping = THREE.ACESFilmicToneMapping;
+    // render.toneMappingExposure = 1;
     return render;
   };
 
@@ -271,6 +274,7 @@ export default class SSThreeJs {
    * @param {*} animate 是否动画
    * @param {*} speed 速度
    * @param {*} cb 回调
+   * @deprecated 请使用 SSThreeObject中的 setEye 方法
    */
   setModelPosition = (
     aCameraPosition = { x: 0, y: 0, z: 0 },
@@ -336,6 +340,7 @@ export default class SSThreeJs {
     window.ssThreeJs = this;
     window.ssThreeObject = this.ssThreeObject;
     window.THREE = THREE;
+    window.SSThreeTool = SSThreeTool;
     //
     this.ssTransformControl = new SSTransformControl(this.ssThreeObject);
     // window.ssThreeObject.threeCamera.setFov = (aValue) => {
@@ -348,8 +353,8 @@ export default class SSThreeJs {
         return;
       }
       this.ssTransformControl.attach(models[0].object);
-      this.ssPostProcessModule.addOutlineByObject3Ds([models[0].object]);
-      this.ssPostProcessModule.addMaskBoxByObject3Ds([models[0].object]);
+      // this.ssPostProcessModule.addOutlineByObject3Ds([models[0].object]);
+      // this.ssPostProcessModule.addMaskBoxByObject3Ds([models[0].object]);
     });
   };
 
@@ -371,8 +376,8 @@ export default class SSThreeJs {
    * v3.0方案 根据配置文件加载模型
    * @param {Array<{type: string, obj: string, mtl: string, gltf: string, draco:string}>} list 模型配置
    * @param {function(THREE.Object3D[]): void} [onComplete] 页面熏染完成 参数：全部模型
-   * @param {function({type: string, obj: string, mtl: string, gltf: string, draco:string}, THREE.Group | GLTF):void} [onBeforeRender] 场景添加前 参数：(对象条目, 模型)
-   * @param {function({type: string, obj: string, mtl: string, gltf: string, draco:string}, THREE.Group | GLTF):void} [onAfterRender] 场景添加后 参数：(对象条目, 模型)
+   * @param {function({type: string, title: string, obj: string, mtl: string, gltf: string, draco:string}, THREE.Group | GLTF):void} [onBeforeRender] 场景添加前 参数：(对象条目, 模型)
+   * @param {function({type: string, title: string, obj: string, mtl: string, gltf: string, draco:string}, THREE.Group | GLTF):void} [onAfterRender] 场景添加后 参数：(对象条目, 模型)
    * @returns
    */
   loadModelQueue = (list, onComplete, onBeforeRender, onAfterRender) => {

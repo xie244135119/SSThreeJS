@@ -94,12 +94,12 @@ export default class SSThreeObject {
         orbitControl_z: this.threeOrbitControl.target.z
       };
       const endPoint = {
-        camera_x: aCameraPosition.x,
-        camera_y: aCameraPosition.y,
-        camera_z: aCameraPosition.z,
-        orbitControl_x: aCenterPosition.x,
-        orbitControl_y: aCenterPosition.y,
-        orbitControl_z: aCenterPosition.z
+        camera_x: cameraPosition.x,
+        camera_y: cameraPosition.y,
+        camera_z: cameraPosition.z,
+        orbitControl_x: controlPosition.x,
+        orbitControl_y: controlPosition.y,
+        orbitControl_z: controlPosition.z
       };
       SSThreeTool.useTweenAnimate(
         startPoint,

@@ -70,7 +70,7 @@ export default class SSThreeTool {
 
   /**
    * set model center
-   * @param {*} obj object3D
+   * @param {THREE.Object3D} obj object3D
    */
   static setObjectCenter = (obj) => {
     const setMesh = (mesh) => {
@@ -92,7 +92,7 @@ export default class SSThreeTool {
 
   /**
    * get object center
-   * @param {*} obj object3D
+   * @param {THREE.Object3D} obj object3D
    * @returns
    */
   static getObjectCenter = (obj) => {
@@ -104,8 +104,8 @@ export default class SSThreeTool {
 
   /**
    * get camera and scene  on object3D front (reslove 80% )
-   * @param {*} obj object3D
-   * @param {*} forwardFirection mesh direction
+   * @param {THREE.Object3D} obj object3D
+   * @param {string} forwardFirection mesh direction x,y,z
    * @returns
    */
   static getCameraScenePositionByObject = (obj, forwardFirection = 'z') => {
@@ -175,11 +175,12 @@ export default class SSThreeTool {
 
   /**
    * 将三维坐标转化为屏幕坐标
-   * @param {*} worldVector
+   * @param {THREE.Vector3} worldVector
+   * @param {THREE.Camera} camera
    * @returns
    */
-  static worldToScreen = (worldVector, threeCamera) => {
-    const standardVector = worldVector.project(threeCamera); // 世界坐标转标准设备坐标
+  static worldToScreen = (worldVector, camera) => {
+    const standardVector = worldVector.project(camera); // 世界坐标转标准设备坐标
     const a = window.innerWidth / 2;
     const b = window.innerHeight / 2;
     const x = Math.round(standardVector.x * a + a); // 标准设备坐标转屏幕坐标
@@ -213,7 +214,7 @@ export default class SSThreeTool {
 
   /**
    * 根据物体生成包围盒子
-   * @param {*} object
+   * @param {THREE.Object3D} object
    */
   static setBoundingBox = (object) => {
     const box = new THREE.Box3().setFromObject(object);
@@ -222,7 +223,7 @@ export default class SSThreeTool {
 
   /**
    * 根据物体生成包围盒子
-   * @param {*} object
+   * @param {THREE.Object3D} object
    */
   static getBoundingBox = (object) => {
     const box = new THREE.Box3().setFromObject(object);
@@ -231,8 +232,8 @@ export default class SSThreeTool {
 
   /**
    * 场景无用模型过滤
-   * @param {模型name列表} nameList 模型name列表
-   * @param {过滤name列表} castNameList 过滤name列表
+   * @param {string[]} nameList 模型name列表
+   * @param {string[]} castNameList 过滤name列表
    * @returns
    */
   static _modelsFilter = (nameList = [], castNameList = []) => {
@@ -245,8 +246,8 @@ export default class SSThreeTool {
       nameList?.length === 0
         ? []
         : nameList.filter(
-          (item) => item.object.name !== '可视域视锥体' && item.object.visible === true
-        );
+            (item) => item.object.name !== '可视域视锥体' && item.object.visible === true
+          );
     // 墙体过滤 , 不过滤地板
     const newarray = [];
     nameList.forEach((item) => {
@@ -261,7 +262,7 @@ export default class SSThreeTool {
 
   /**
    * 几何体合并
-   * @param {*} objects mesh列表
+   * @param {THREE.Object3D[]} objects mesh列表
    * @returns
    */
   static mergeBufferGeometry = (objects) => {
@@ -309,8 +310,8 @@ export default class SSThreeTool {
 
   /**
    * 创建连线
-   * @param {*} points
-   * @param {*} color
+   * @param {THREE.Vector3[]} points
+   * @param {string} color
    * @returns line
    */
   static createLine = (points, color = '#00CEFF', depthTest = true) => {
@@ -338,9 +339,9 @@ export default class SSThreeTool {
    * set mesh opacity
    * @param {number} [aOpacity=0.5] opacity  range:[0,1]
    * @param {Array<string>} meshNames material names defaut all
-   * @param {THREE.Object3D} targetObject3D target object
+   * @param {THREE.Object3D[]} targetObject3Ds target object
    */
-  static setOpacity = (aOpacity, targetObject3D, meshNames = []) => {
+  static setOpacity = (aOpacity, targetObject3Ds, meshNames = []) => {
     let opacity = aOpacity;
     if (opacity === undefined || opacity === null) {
       opacity = 0.5;
@@ -361,15 +362,19 @@ export default class SSThreeTool {
       }
     };
     if (meshNames.length === 0) {
-      targetObject3D.traverse((e) => {
-        setMeshTransparent(e);
+      targetObject3Ds.forEach((targetObject3D) => {
+        targetObject3D.traverse((e) => {
+          setMeshTransparent(e);
+        });
       });
     }
     //
-    meshNames.forEach((mesh) => {
-      const obj = targetObject3D.getObjectByName(mesh);
-      obj.traverse((e) => {
-        setMeshTransparent(e);
+    targetObject3Ds.forEach((targetObject3D) => {
+      meshNames.forEach((mesh) => {
+        const obj = targetObject3D.getObjectByName(mesh);
+        obj.traverse((e) => {
+          setMeshTransparent(e);
+        });
       });
     });
   };
@@ -378,9 +383,9 @@ export default class SSThreeTool {
    * set mesh visible
    * @param {number} aVisible 可见  range:[0,1]
    * @param {Array<string} meshNames material names defaut all
-   * @param {THREE.Object3D} targetObject3D 目标object3d
+   * @param {THREE.Object3D[]} targetObject3Ds 目标object3d
    */
-  static setVisible = (aVisible = true, targetObject3D = null, meshNames = []) => {
+  static setVisible = (aVisible = true, targetObject3Ds = null, meshNames = []) => {
     // set material transpant
     const setObjVisible = (aObj) => {
       if (aObj instanceof THREE.Object3D) {
@@ -402,8 +407,10 @@ export default class SSThreeTool {
     };
     // reset obj
     const resetAllObj = (resetVisible) => {
-      targetObject3D.traverse((e) => {
-        e.visible = resetVisible;
+      targetObject3Ds.forEach((element) => {
+        element.traverse((e) => {
+          e.visible = resetVisible;
+        });
       });
     };
     resetAllObj(meshNames.length > 0 ? !aVisible : aVisible);
@@ -411,9 +418,12 @@ export default class SSThreeTool {
       return;
     }
     //
-    meshNames.forEach((e) => {
-      const obj = targetObject3D.getObjectByName(e);
-      setObjVisible(obj);
+
+    targetObject3Ds.forEach((targetObject3D) => {
+      meshNames.forEach((e) => {
+        const obj = targetObject3D.getObjectByName(e);
+        setObjVisible(obj);
+      });
     });
   };
 
@@ -474,10 +484,10 @@ export default class SSThreeTool {
    * 设置物体其他颜色
    * @param {Array<string} meshNames 材质物体
    * @param { string | number} materialColor color 物体颜色
-   * @param {THREE.Object3D} targetObject3D object 目标物体
+   * @param {THREE.Object3D[]} targetObject3Ds object 目标物体
    * @returns
    */
-  static setMeshColorByNames = (meshNames, materialColor, targetObject3D) => {
+  static setMeshColorByNames = (meshNames, materialColor, targetObject3Ds) => {
     if (meshNames?.length === 0) {
       return;
     }
@@ -503,22 +513,24 @@ export default class SSThreeTool {
         mesh.material = mesh.userData.changeMaterials;
       }
     };
-    for (let index = 0; index < meshNames.length; index++) {
-      const meshName = meshNames[index];
-      const obj3d = targetObject3D.getObjectByName(meshName);
-      obj3d.traverse((e) => {
-        setMesh(e);
-      });
-    }
+    targetObject3Ds.forEach((targetObject3D) => {
+      for (let index = 0; index < meshNames.length; index++) {
+        const meshName = meshNames[index];
+        const obj3d = targetObject3D.getObjectByName(meshName);
+        obj3d.traverse((e) => {
+          setMesh(e);
+        });
+      }
+    });
   };
 
   /**
    * 重置物体颜色
    * @param {Array<string} meshNames 一组meshname
-   * @param {THREE.Object3D} targetObject3D 目标物体
+   * @param {THREE.Object3D[]} targetObject3Ds 目标物体
    * @returns
    */
-  static resetMeshNames = (meshNames, targetObject3D) => {
+  static resetMeshNames = (meshNames, targetObject3Ds) => {
     if (meshNames?.length === 0) {
       return;
     }
@@ -529,16 +541,15 @@ export default class SSThreeTool {
         }
       }
     };
-    if (!(targetObject3D instanceof THREE.Object3D)) {
-      return;
-    }
-    for (let index = 0; index < meshNames.length; index++) {
-      const meshName = meshNames[index];
-      const obj3d = targetObject3D.getObjectByName(meshName);
-      obj3d.traverse((e) => {
-        setMesh(e);
-      });
-    }
+    targetObject3Ds.forEach((targetObject3D) => {
+      for (let index = 0; index < meshNames.length; index++) {
+        const meshName = meshNames[index];
+        const obj3d = targetObject3D.getObjectByName(meshName);
+        obj3d.traverse((e) => {
+          setMesh(e);
+        });
+      }
+    });
   };
 
   /**

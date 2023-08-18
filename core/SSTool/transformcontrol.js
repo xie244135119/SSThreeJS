@@ -150,6 +150,12 @@ export default class SSTransformControl {
       });
     }
     this._control.attach(object3d);
+    // 选中
+    const oldboxHelper = this._ssThreeObject.threeScene.getObjectByName('boxhelper');
+    oldboxHelper?.removeFromParent();
+    const boxHelper = new THREE.BoxHelper(object3d);
+    boxHelper.name = 'boxhelper';
+    this._ssThreeObject.threeScene.add(boxHelper);
   }
 
   /**
@@ -157,5 +163,7 @@ export default class SSTransformControl {
    */
   detach() {
     this._control.detach();
+    const boxHelper = this._ssThreeObject.threeScene.getObjectByName('boxhelper');
+    boxHelper?.removeFromParent();
   }
 }

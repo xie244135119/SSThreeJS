@@ -6,6 +6,8 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader';
 import { KTX2Loader } from 'three/examples/jsm/loaders/KTX2Loader';
 import { SVGLoader } from 'three/examples/jsm/loaders/SVGLoader';
+import { FontLoader } from 'three/examples/jsm/loaders/FontLoader';
+import { TextGeometry } from 'three/examples/jsm/geometries/TextGeometry';
 import { MeshoptDecoder } from 'three/examples/jsm/libs/meshopt_decoder.module';
 
 export default class SSLoader {
@@ -263,4 +265,37 @@ export default class SSLoader {
       );
     });
   };
+
+  // /**
+  //  * 加载几何体文字
+  //  * @param {*} text
+  //  * @param {*} matrialOptions
+  //  * @returns
+  //  */
+  // static geomertryFromText = (text, matrialOptions) =>
+  //   new Promise((reslove, reject) => {
+  //     const loader = new FontLoader();
+  //     loader.load(
+  //       '/three/examples/fonts/optimer_regular.typeface.json',
+  //       (font) => {
+  //         const materials = new THREE.MeshPhongMaterial({ color: 'white', flatShading: true });
+  //         const textGeo = new TextGeometry(text, {
+  //           font,
+  //           size: 0.5,
+  //           height: 0.1
+  //           // curveSegments: 12,
+  //           // bevelEnabled: true,
+  //           // bevelThickness: 10,
+  //           // bevelSize: 8,
+  //           // bevelSegments: 5
+  //         });
+  //         const textMesh = new THREE.Mesh(textGeo, materials);
+  //         textMesh.rotation.x = 0;
+  //         textMesh.rotation.y = Math.PI;
+  //         reslove(textMesh);
+  //       },
+  //       null,
+  //       reject
+  //     );
+  //   });
 }
