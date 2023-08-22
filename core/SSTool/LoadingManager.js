@@ -40,6 +40,8 @@ export default class SSLoadingManager {
   _progressElement = null;
 
   destory() {
+    this.db?.destory();
+    this.db = null;
     this.threeLoadingManager = null;
     this.removeProgressView();
     this.messageQueue?.destory();
