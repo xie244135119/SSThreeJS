@@ -11,7 +11,7 @@ import React, { useEffect, useRef } from 'react';
 
 import MeshReflectorMaterial from '../../core/SSMaterial/MeshReflectorMaterial';
 import SSWater from '../../core/Water/SSWater';
-import SSThreeJs, { THREE, SSCssRenderer, SSThreeLoop } from '../../core/index';
+import SSThreeJs, { THREE, SSCssRenderer, SSThreeLoop, SSThreeTool } from '../../core/index';
 import SceneSetting from './ssthreejs.setting.json';
 import SSPickPointMode from '../../core/SSModule/pickpoint.module';
 import SSLightModule from '../../core/SSModule/light.module';
@@ -29,9 +29,7 @@ export default function ParentIndex(props) {
 
   // 测试 SS
   const testcssrender = () => {
-    // const cssrender = new SSCssRenderer(jsRef.current.ssThreeObject);
-    // cssrender.setup2D();
-    SSCssRenderer.addLine(
+    SSThreeTool.addLine(
       {
         x: 0,
         y: 0,

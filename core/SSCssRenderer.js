@@ -1,3 +1,10 @@
+/*
+ * Author  Murphy.xie
+ * Date  2023-08-10 15:23:52
+ * LastEditors  Murphy.xie
+ * LastEditTime  2023-08-21 10:29:19
+ * Description
+ */
 import * as THREE from 'three';
 import { CSS2DRenderer, CSS2DObject } from 'three/examples/jsm/renderers/CSS2DRenderer';
 import { CSS3DRenderer, CSS3DObject } from 'three/examples/jsm/renderers/CSS3DRenderer';
@@ -11,22 +18,6 @@ import SSThreeObject from './SSThreeObject';
 import SSLoader from './SSLoader';
 import LineStartPng from './assets/line_start.png';
 
-/**
- * @description css2d 渲染器
- * @type CSS2DRenderer
- */
-let _css2dRender = null;
-/**
- * @description css 3d渲染器
- * @type CSS3DRenderer
- */
-let _css3dRender = null;
-/**
- * @description svg渲染器
- * @type SVGRenderer
- */
-const _svgRender = null;
-
 export default class SSCssRenderer {
   #resizeObserver = null;
 
@@ -36,6 +27,24 @@ export default class SSCssRenderer {
    */
   _ssThreeObject = null;
 
+  /**
+   * css2d render
+   * @type {CSS2DRenderer}
+   */
+  css2dRender = null;
+
+  /**
+   * css3d render
+   * @type {CSS3DRenderer}
+   */
+  css3dRender = null;
+
+  /**
+   * svg render
+   * @type {SVGRenderer}
+   */
+  svgRender = null;
+
   constructor(ssThreeObject) {
     this._ssThreeObject = ssThreeObject;
   }
@@ -44,91 +53,96 @@ export default class SSCssRenderer {
    * 文件损毁
    */
   destory = () => {
-    this._ssThreeObject = null;
     this._removeResizeOBserver();
     SSThreeLoop.removeIds(['svgFrameHandle', 'css2dFrameHandle', 'css3dFrameHandle']);
+    this.cancelRender2D();
+    this.cancelRender3D();
+    this.cancelRenderSVG();
+    this._ssThreeObject = null;
   };
 
   /**
    * 初始化文字LableRender
-   * @param {*} aScene 场景
-   * @param {*} aCamera 相机
-   * @param {*} aDomElement 标签元素
    */
-  setup2D = () => {
+  render2D = () => {
     const { threeScene, threeCamera, threeContainer } = this._ssThreeObject;
     this._addResizeObserver(threeContainer);
     //
-    let labelrender = _css2dRender;
-    if (labelrender === null) {
-      const render = new CSS2DRenderer();
-      _css2dRender = render;
-      labelrender = render;
-      render.domElement.style.position = 'absolute';
-      render.domElement.style.top = 0;
-    }
-    if (labelrender instanceof CSS2DRenderer) {
-      labelrender.setSize(threeContainer.offsetWidth, threeContainer.offsetHeight, true);
-      threeContainer.appendChild(labelrender.domElement);
-    }
+    if (this.css2dRender) return;
+    this.css2dRender = new CSS2DRenderer();
+    this.css2dRender.domElement.style.position = 'absolute';
+    this.css2dRender.domElement.style.top = 0;
+    this.css2dRender.setSize(threeContainer.offsetWidth, threeContainer.offsetHeight, true);
+    threeContainer.appendChild(this.css2dRender.domElement);
 
     SSThreeLoop.add(() => {
-      labelrender.render(threeScene, threeCamera);
+      this.css2dRender.render(threeScene, threeCamera);
     }, 'css2dFrameHandle');
   };
 
   /**
-   * 初始化文字LableRender
-   * @param {*} aScene 场景
-   * @param {*} aCamera 相机
-   * @param {*} aDomElement 标签元素
+   * 取消渲染2d元素
    */
-  setup3D = () => {
-    const { threeScene, threeCamera, threeContainer } = this._ssThreeObject;
-    this._addResizeObserver(threeContainer);
-    //
-    let labelrender = _css3dRender;
-    if (labelrender === null) {
-      const render = new CSS3DRenderer();
-      _css3dRender = render;
-      labelrender = render;
-      render.domElement.style.position = 'absolute';
-      render.domElement.style.top = 0;
-    }
-    if (labelrender instanceof CSS3DRenderer) {
-      labelrender.setSize(threeContainer.offsetWidth, threeContainer.offsetHeight, true);
-      threeContainer.appendChild(labelrender.domElement);
-    }
-    SSThreeLoop.add(() => {
-      labelrender.render(threeScene, threeCamera);
-    }, 'css3dFrameHandle');
+  cancelRender2D = () => {
+    SSThreeLoop.removeId('css2dFrameHandle');
+    this.css2dRender?.domElement?.remove();
+    this.css2dRender = null;
   };
 
   /**
    * 初始化文字LableRender
-   * @param {*} aScene 场景
-   * @param {*} aCamera 相机
-   * @param {*} aDomElement 标签元素
    */
-  setupSVG = () => {
+  render3D = () => {
     const { threeScene, threeCamera, threeContainer } = this._ssThreeObject;
     this._addResizeObserver(threeContainer);
     //
-    let labelrender = _svgRender;
-    if (labelrender === null) {
-      const render = new SVGRenderer();
-      _css3dRender = render;
-      labelrender = render;
-      render.domElement.style.position = 'absolute';
-      render.domElement.style.top = 0;
-    }
-    if (labelrender instanceof SVGRenderer) {
-      labelrender.setSize(threeContainer.offsetWidth, threeContainer.offsetHeight, true);
-      threeContainer.appendChild(labelrender.domElement);
-    }
+    if (this.css3dRender) return;
+    this.css3dRender = new CSS3DRenderer();
+    this.css3dRender.domElement.style.position = 'absolute';
+    this.css3dRender.domElement.style.top = 0;
+    this.css3dRender.setSize(threeContainer.offsetWidth, threeContainer.offsetHeight, true);
+    threeContainer.appendChild(this.css3dRender.domElement);
+
     SSThreeLoop.add(() => {
-      labelrender.render(threeScene, threeCamera);
+      this.css3dRender.render(threeScene, threeCamera);
+    }, 'css3dFrameHandle');
+  };
+
+  /**
+   * 取消渲染2d元素
+   */
+  cancelRender3D = () => {
+    SSThreeLoop.removeId('css3dFrameHandle');
+    this.css3dRender?.domElement?.remove();
+    this.css3dRender = null;
+  };
+
+  /**
+   * 初始化文字LableRender
+   */
+  renderSVG = () => {
+    const { threeScene, threeCamera, threeContainer } = this._ssThreeObject;
+    this._addResizeObserver(threeContainer);
+    //
+    if (this.svgRender) return;
+    this.svgRender = new SVGRenderer();
+    this.svgRender.domElement.style.position = 'absolute';
+    this.svgRender.domElement.style.top = 0;
+    this.svgRender.setSize(threeContainer.offsetWidth, threeContainer.offsetHeight, true);
+    threeContainer.appendChild(this.svgRender.domElement);
+
+    SSThreeLoop.add(() => {
+      this.svgRender.render(threeScene, threeCamera);
     }, 'svgFrameHandle');
+  };
+
+  /**
+   * 取消渲染svg render
+   */
+  cancelRenderSVG = () => {
+    SSThreeLoop.removeId('svgFrameHandle');
+    this.svgRender?.domElement?.remove();
+    this.svgRender = null;
   };
 
   /**
@@ -249,12 +263,9 @@ export default class SSCssRenderer {
   _addResizeObserver = (aContainer = document.body) => {
     const observer = new window.ResizeObserver(() => {
       // 调整labelRender 文字
-      if (_css2dRender != null) {
-        _css2dRender.setSize(aContainer.offsetWidth, aContainer.offsetHeight);
-      }
-      if (_css3dRender != null) {
-        _css3dRender.setSize(aContainer.offsetWidth, aContainer.offsetHeight);
-      }
+      this.css2dRender?.setSize(aContainer.offsetWidth, aContainer.offsetHeight);
+      this.css3dRender?.setSize(aContainer.offsetWidth, aContainer.offsetHeight);
+      this.svgRender?.setSize(aContainer.offsetWidth, aContainer.offsetHeight);
     });
     observer.observe(aContainer);
     this.#resizeObserver = observer;
@@ -356,6 +367,33 @@ export default class SSCssRenderer {
       startVector,
       endVector
     };
+  };
+
+  /**
+   * 创建连线
+   * @param {THREE.Vector3[]} points
+   * @param {string} color
+   * @returns line
+   */
+  static createLine = (points, color = '#00CEFF', depthTest = true) => {
+    const pointArr = [];
+    let line = null;
+
+    if (points?.length > 1) {
+      points.forEach((item) => {
+        pointArr.push(item.x);
+        pointArr.push(item.y);
+        pointArr.push(item.z);
+      });
+      const lineMaterial = new LineMaterial({
+        color,
+        linewidth: 0.001,
+        depthTest
+      });
+      const lineGeometry = new LineGeometry().setPositions(pointArr);
+      line = new Line2(lineGeometry, lineMaterial);
+    }
+    return line;
   };
 }
 

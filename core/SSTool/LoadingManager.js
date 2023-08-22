@@ -1,34 +1,60 @@
 import * as THREE from 'three';
-import DB from './db';
+import SSDB from './db';
 import MessageQueue from './MessageQueue';
 
-export default class SSLoadManager {
-  // share instance
-  static shareInstance = new SSLoadManager();
+export default class SSLoadingManager {
+  /**
+   * loading manager
+   * @type {THREE.LoadingManager} 渲染器
+   */
+  threeLoadingManager = null;
 
-  // loading manager
-  threeLoadingManager = new THREE.LoadingManager();
+  /**
+   * 数据库操作
+   * @type {SSDB}
+   */
+  db = null;
 
-  // message queue
-  #messageQueue = new MessageQueue(5 * 1000);
+  /**
+   * 消息队列
+   * @type {MessageQueue}
+   */
+  messageQueue = null;
 
-  // progress html element
-  #progressBgElement = null;
+  /**
+   * 进度条后背景标签 (progress element)
+   * @type {HTMLElement}
+   */
+  _progressBgElement = null;
 
-  // progress text element
-  #progressTextElement = null;
+  /**
+   * 进度条文本标签 (progress text element)
+   * @type {HTMLElement}
+   */
+  _progressTextElement = null;
 
-  // progress element
-  #progressElement = null;
+  /**
+   * progress标签 (progress element)
+   * @type {HTMLElement}
+   */
+  _progressElement = null;
 
   destory() {
+    this.threeLoadingManager = null;
     this.removeProgressView();
-    this.#messageQueue.destory();
-    this.#messageQueue = null;
+    this.messageQueue?.destory();
+    this.messageQueue = null;
   }
 
-  constructor() {
+  /**
+   * @param {HTMLElement} container
+   */
+  constructor(container = document.body) {
+    this.threeLoadingManager = new THREE.LoadingManager();
+    this.db = new SSDB();
+    this.messageQueue = new MessageQueue();
     this.threeLoadingManager.setURLModifier((url) => url);
+    this.addProgressView(container);
   }
 
   /**
@@ -53,7 +79,7 @@ export default class SSLoadManager {
     bgDiv.style.transition = 'opacity 1s linear';
     bgDiv.style.opacity = 0;
     parentContainer.appendChild(bgDiv);
-    this.#progressBgElement = bgDiv;
+    this._progressBgElement = bgDiv;
 
     const progress = document.createElement('div');
     progress.style.backgroundColor = '#2fa1d6';
@@ -61,7 +87,7 @@ export default class SSLoadManager {
     progress.style.height = '100%';
     progress.style.borderRadius = '9px';
     bgDiv.appendChild(progress);
-    this.#progressElement = progress;
+    this._progressElement = progress;
 
     const textDiv = document.createElement('div');
     textDiv.innerText = '模型渲染中...';
@@ -74,7 +100,7 @@ export default class SSLoadManager {
     textDiv.style.textAlign = 'center';
     textDiv.style.fontSize = '16px';
     bgDiv.appendChild(textDiv);
-    this.#progressTextElement = textDiv;
+    this._progressTextElement = textDiv;
 
     this.threeLoadingManager.onStart = (url, loaded, total) => {
       bgDiv.style.opacity = 1;
@@ -97,8 +123,8 @@ export default class SSLoadManager {
    * remove progress
    */
   removeProgressView = () => {
-    if (this.#progressBgElement) {
-      this.#progressBgElement.remove();
+    if (this._progressBgElement) {
+      this._progressBgElement.remove();
     }
   };
 
@@ -170,10 +196,10 @@ export default class SSLoadManager {
   //     const removeQueue = (fileUrl = '') => {
   //         const findIndex = this.#pendingDownloadFilePaths.findIndex((item) => item === fileUrl);
   //         this.#pendingDownloadFilePaths.splice(findIndex, 1);
-  //         this.#messageQueue.remove();
+  //         this.messageQueue.remove();
   //     };
 
-  //     this.#messageQueue.add(() => {
+  //     this.messageQueue.add(() => {
   //         this.downloadUrl(aUrl)
   //             .then((res) => DB.shareInstance.insertModel(aUrl, res))
   //             .then((res) => {
@@ -198,7 +224,7 @@ export default class SSLoadManager {
     if (aUrl.startsWith('data:') || aUrl.startsWith('blob:')) {
       return Promise.resolve(aUrl);
     }
-    return DB.shareInstance.getModel(aUrl).then((res) => {
+    return this.db.getModel(aUrl).then((res) => {
       // console.log(' getModelFilePathByUrl 获取到的数据信息 ', res);
       if (res) {
         const blobUrl = URL.createObjectURL(new Blob([res?.data]));
@@ -214,22 +240,22 @@ export default class SSLoadManager {
    * @returns
    */
   getModelDataByUrl = (aUrl) =>
-    DB.shareInstance.getModel(aUrl).then((res) => {
+    this.db.getModel(aUrl).then((res) => {
       if (res) {
         return res.data;
       }
       return this.downloadUrl2(aUrl, (percent) => {
-        if (this.#progressBgElement) {
-          this.#progressBgElement.style.opacity = 1;
+        if (this._progressBgElement) {
+          this._progressBgElement.style.opacity = 1;
         }
-        if (this.#progressTextElement) {
-          this.#progressTextElement.innerText = '模型下载中...';
+        if (this._progressTextElement) {
+          this._progressTextElement.innerText = '模型下载中...';
         }
-        if (this.#progressElement) {
-          this.#progressElement.style.width = `${percent * 100}%`;
+        if (this._progressElement) {
+          this._progressElement.style.width = `${percent * 100}%`;
         }
       }).then((datares) => {
-        DB.shareInstance.insertModel(aUrl, datares);
+        this.db.insertModel(aUrl, datares);
         return datares;
       });
     });

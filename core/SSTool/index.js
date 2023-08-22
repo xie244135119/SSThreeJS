@@ -5,6 +5,8 @@ import { Line2 } from 'three/examples/jsm/lines/Line2';
 import { LineGeometry } from 'three/examples/jsm/lines/LineGeometry';
 import { LineMaterial } from 'three/examples/jsm/lines/LineMaterial';
 import SSThreeLoop from '../SSThreeLoop';
+import SSLoader from '../SSLoader';
+import LineStartPng from '../assets/line_start.png';
 
 export default class SSThreeTool {
   /**
@@ -574,5 +576,91 @@ export default class SSThreeTool {
     const cube = new THREE.Mesh(geometry, material);
     cube.position.copy(SSThreeTool.getObjectCenter(object));
     return cube;
+  };
+
+  /**
+   * 增加描线
+   * @param {THREE.Vector3} startPoint 起点
+   * @param {THREE.Vector3} endPoint 终点
+   * @param {LineMaterialParameters} [lineOptions] 线框效果
+   * @param {boolean} [centerIcon=false] 中心icon
+   * @returns {{ line: Line2, group: THREE.Group }}
+   */
+  static addLine = (startPoint, endPoint, lineOptions = {}, centerIcon = false) => {
+    const material = new LineMaterial({
+      color: new THREE.Color(111 / 255, 175 / 255, 173 / 255),
+      linewidth: 0.001,
+      depthTest: false,
+      ...lineOptions
+    });
+    const geo = new LineGeometry();
+    geo.setPositions([
+      startPoint.x,
+      startPoint.y,
+      startPoint.z,
+      endPoint.x,
+      endPoint.y,
+      endPoint.z
+    ]);
+    const group = new THREE.Group();
+    group.name = 'LineGroup';
+    const line = new Line2(geo, material);
+    group.add(line);
+    if (centerIcon) {
+      SSLoader.loadSprite(LineStartPng).then((obj) => {
+        obj.position.copy(startPoint);
+        obj.scale.set(0.2, 0.2, 0.2);
+        group.attach(obj);
+      });
+    }
+    return {
+      line,
+      group
+    };
+  };
+
+  /**
+   * auto compute position and create line
+   * @param {THREE.Object3D} aObj obj model
+   * @param {string} [meshTowards='z'] direction
+   * @param {LineMaterialParameters} [lineOptions] 线条效案
+   * @returns
+   */
+  static addLineFromObject = (aObj, meshTowards = 'z', lineOptions = {}) => {
+    if (!(aObj instanceof THREE.Object3D)) {
+      return {};
+    }
+
+    const startVector = SSThreeTool.getObjectCenter(aObj);
+    const endVector = startVector.clone();
+    const { max, min } = SSThreeTool.setBoundingBox(aObj);
+    const xWidth = max.x - min.x;
+    const zWidth = max.z - min.z;
+    const yHeight = max.y - min.y;
+
+    const directionScale = meshTowards.indexOf('-') === -1 ? 1 : -1;
+    const towardscale = 0.5;
+    const sidescale = 0.5 + (0.5 * 1) / 20;
+    const xdirection = meshTowards.indexOf('x') !== -1;
+    const zdirection = meshTowards.indexOf('z') !== -1;
+    // fix on right
+    if (xdirection) {
+      // x -z or  -x z
+      endVector.x += xWidth * towardscale * directionScale;
+      endVector.z += zWidth * sidescale * directionScale * -1;
+    } else if (zdirection) {
+      // -z -x  or  z x
+      endVector.z += zWidth * towardscale * directionScale;
+      endVector.x += xWidth * sidescale * directionScale;
+    }
+    endVector.y += (yHeight * 0.5 * 4) / 5;
+    //
+    const { group, line } = this.addLine(startVector, endVector, lineOptions, true);
+    return {
+      group,
+      line,
+      startVector,
+      endVector
+    };
   };
 }

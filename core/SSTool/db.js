@@ -65,23 +65,24 @@ const DATABASE_TABLES = [
 const STORAGE_KEY_USAGE = `${DATABASE_NAME}_size`;
 
 export default class SSDB {
-  // 单例
-  static shareInstance = new SSDB();
-
-  // 操作数据库
-  #targetDataBase = null;
+  /**
+   * 操作数据库
+   * @type {IDBDatabase}
+   */
+  targetDataBase = null;
 
   destory() {
-    //
+    this.targetDataBase.close();
+    this.targetDataBase = null;
   }
 
   /**
    * open database
-   * @returns
+   * @returns {Promise<IDBDatabase>}
    */
   open() {
-    if (this.#targetDataBase instanceof IDBDatabase) {
-      return Promise.resolve(this.#targetDataBase);
+    if (this.targetDataBase instanceof IDBDatabase) {
+      return Promise.resolve(this.targetDataBase);
     }
     return new Promise((reslove, reject) => {
       const dbRequest = window.indexedDB.open(DATABASE_NAME, DATABASE_VERSION);
@@ -109,51 +110,51 @@ export default class SSDB {
 
   /**
    * create data tables
-   * @param {*} db
+   * @param {IDBDatabase} aDatabase 数据库对象
+   * @param {*} 数据库表配置
    */
   createDataTables = (aDatabase, aTables = DATABASE_TABLES) => {
-    if (aDatabase instanceof IDBDatabase) {
-      for (let index = 0; index < aTables.length; index++) {
-        const element = aTables[index];
-        const { name, columns = [], dbVersion } = element;
-        if (dbVersion !== aDatabase.version) {
-          continue;
-        }
-        // 表 存在
-        if (aDatabase.objectStoreNames.contains(name)) {
-          const objectStore = aDatabase.transaction(name).objectStore(name);
-          columns.forEach((column) => {
-            if (column.type === 'add') {
-              objectStore.createIndex(column.name, column.name, {
-                unique: column.unique
-              });
-            } else if (column.type === 'del') {
-              objectStore.deleteIndex(column.name, column.name, {
-                unique: column.unique
-              });
-            }
-          });
-        } else {
-          // 表 不存在
-          const keyPaths =
-            columns.filter((item) => item.primarykey === true).map((item) => item.name) || [];
-          const objectStore = aDatabase.createObjectStore(name, {
-            keyPath: keyPaths[0]
-          });
-          columns.forEach((column) => {
-            if (column.type === 'add') {
-              objectStore.createIndex(column.name, column.name, {
-                unique: column.unique
-              });
-            }
-          });
-        }
+    for (let index = 0; index < aTables.length; index++) {
+      const element = aTables[index];
+      const { name, columns = [], dbVersion } = element;
+      if (dbVersion !== aDatabase.version) {
+        continue;
+      }
+      // 表 存在
+      if (aDatabase.objectStoreNames.contains(name)) {
+        const objectStore = aDatabase.transaction(name).objectStore(name);
+        columns.forEach((column) => {
+          if (column.type === 'add') {
+            objectStore.createIndex(column.name, column.name, {
+              unique: column.unique
+            });
+          } else if (column.type === 'del') {
+            objectStore.deleteIndex(column.name, column.name, {
+              unique: column.unique
+            });
+          }
+        });
+      } else {
+        // 表 不存在
+        const keyPaths =
+          columns.filter((item) => item.primarykey === true).map((item) => item.name) || [];
+        const objectStore = aDatabase.createObjectStore(name, {
+          keyPath: keyPaths[0]
+        });
+        columns.forEach((column) => {
+          if (column.type === 'add') {
+            objectStore.createIndex(column.name, column.name, {
+              unique: column.unique
+            });
+          }
+        });
       }
     }
   };
 
   /**
    * add db observer
+   * @param {IDBDatabase} db 数据库对象
    */
   addDbObserver = (db) => {
     if (db instanceof IDBDatabase) {
@@ -184,37 +185,35 @@ export default class SSDB {
       this.open().then(
         (db) =>
           new Promise((reslove, reject) => {
-            if (db instanceof IDBDatabase) {
-              const modelTableName = DATABASE_TABLES[0].name;
-              const modelFileTableName = DATABASE_TABLES[1].name;
-              const transaction = db.transaction([modelTableName, modelFileTableName], 'readwrite');
-              const modelStore = transaction.objectStore(modelTableName);
-              const modelFileStore = transaction.objectStore(modelFileTableName);
-              modelStore.add({
-                model_name: aName,
-                model_type: '',
-                model_path: aName,
-                size: aData.byteLength,
-                create_time: new Date().valueOf(),
-                update_time: new Date().valueOf()
-              });
-              modelFileStore.add({
-                model_name: aName,
-                data: aData
-              });
+            const modelTableName = DATABASE_TABLES[0].name;
+            const modelFileTableName = DATABASE_TABLES[1].name;
+            const transaction = db.transaction([modelTableName, modelFileTableName], 'readwrite');
+            const modelStore = transaction.objectStore(modelTableName);
+            const modelFileStore = transaction.objectStore(modelFileTableName);
+            modelStore.add({
+              model_name: aName,
+              model_type: '',
+              model_path: aName,
+              size: aData.byteLength,
+              create_time: new Date().valueOf(),
+              update_time: new Date().valueOf()
+            });
+            modelFileStore.add({
+              model_name: aName,
+              data: aData
+            });
 
-              transaction.oncomplete = () => {
-                this.updateTotalSize(aData.byteLength);
-                // console.log(' insertModel 插入事务完成 ', aName, aData.byteLength);
-                reslove();
-              };
-              transaction.onerror = (_, e) => {
-                reject(e);
-              };
-              transaction.onabort = (_, e) => {
-                reject(e);
-              };
-            }
+            transaction.oncomplete = () => {
+              this.updateTotalSize(aData.byteLength);
+              // console.log(' insertModel 插入事务完成 ', aName, aData.byteLength);
+              reslove();
+            };
+            transaction.onerror = (_, e) => {
+              reject(e);
+            };
+            transaction.onabort = (_, e) => {
+              reject(e);
+            };
           })
       )
     );
@@ -244,34 +243,35 @@ export default class SSDB {
 
   /**
    * delete model
+   * @param {[]} aNames
    * @returns
    */
   deleteModels = (aNames = []) =>
-    this.open().then(
-      (db) =>
-        new Promise((reslove, reject) => {
-          if (db instanceof IDBDatabase) {
-            const modelTableName = DATABASE_TABLES[0].name;
-            const modelFileTableName = DATABASE_TABLES[1].name;
-            const transaction = db.transaction([modelTableName, modelFileTableName], 'readwrite');
-            const modelStore = transaction.objectStore(modelTableName);
-            const modelFileStore = transaction.objectStore(modelFileTableName);
-            aNames.forEach((name) => {
-              modelStore.delete(name);
-              modelFileStore.delete(name);
-            });
-            transaction.oncomplete = () => {
-              reslove();
-            };
-            transaction.onerror = (_, e) => {
-              reject(e);
-            };
-            transaction.onabort = (_, e) => {
-              reject(e);
-            };
-          }
-        })
-    );
+    this.open().then((db) => {
+      if (aNames.length === 0) {
+        return Promise.resolve();
+      }
+      return new Promise((reslove, reject) => {
+        const modelTableName = DATABASE_TABLES[0].name;
+        const modelFileTableName = DATABASE_TABLES[1].name;
+        const transaction = db.transaction([modelTableName, modelFileTableName], 'readwrite');
+        const modelStore = transaction.objectStore(modelTableName);
+        const modelFileStore = transaction.objectStore(modelFileTableName);
+        aNames.forEach((name) => {
+          modelStore.delete(name);
+          modelFileStore.delete(name);
+        });
+        transaction.oncomplete = () => {
+          reslove();
+        };
+        transaction.onerror = (_, e) => {
+          reject(e);
+        };
+        transaction.onabort = (_, e) => {
+          reject(e);
+        };
+      });
+    });
 
   /**
    * get
@@ -352,42 +352,40 @@ export default class SSDB {
       .then(
         (db) =>
           new Promise((reslove, reject) => {
-            if (db instanceof IDBDatabase) {
-              const modelTableName = DATABASE_TABLES[0].name;
-              const transaction = db.transaction([modelTableName], 'readwrite');
-              const modelStore = transaction.objectStore(modelTableName);
-              // 删除一些未被经常使用的资源
-              const allRequest = modelStore.getAll();
-              allRequest.onsuccess = () => {
-                //
-                const list = allRequest.result || [];
-                // 按照 update_time 升序
-                const newlist = list.sort((a, b) => a.update_time - b.update_time);
-                const _delModelNames = [];
-                let _totalsize = 0;
-                let _senderIndex = 0;
-                while (validSpace > _totalsize) {
-                  const element = newlist[_senderIndex];
-                  _totalsize += element.size;
-                  _senderIndex += 1;
-                  _delModelNames.push(element.model_name);
-                }
-                reslove({
-                  model_names: _delModelNames,
-                  reduce_size: _totalsize
-                });
-              };
-              allRequest.onerror = (e) => {
-                reject(e);
-              };
-            }
+            const modelTableName = DATABASE_TABLES[0].name;
+            const transaction = db.transaction([modelTableName], 'readwrite');
+            const modelStore = transaction.objectStore(modelTableName);
+            // 删除一些未被经常使用的资源
+            const allRequest = modelStore.getAll();
+            allRequest.onsuccess = () => {
+              //
+              const list = allRequest.result || [];
+              // 按照 update_time 升序
+              const newlist = list.sort((a, b) => a.update_time - b.update_time);
+              const _delModelNames = [];
+              let _totalsize = 0;
+              let _senderIndex = 0;
+              while (validSpace > _totalsize) {
+                const element = newlist[_senderIndex];
+                _totalsize += element.size;
+                _senderIndex += 1;
+                _delModelNames.push(element.model_name);
+              }
+              reslove({
+                modelNames: _delModelNames,
+                reduceSize: _totalsize
+              });
+            };
+            allRequest.onerror = (e) => {
+              reject(e);
+            };
           })
       )
       .then((res) => {
-        const { model_names, reduce_size } = res;
-        return this.deleteModels(model_names).then(() => {
-          console.log(' 删除模型结束 ', model_names, reduce_size);
-          this.updateTotalSize(reduce_size * -1);
+        const { modelNames, reduceSize } = res;
+        return this.deleteModels(modelNames).then(() => {
+          console.log(' 删除模型结束 ', modelNames, reduceSize);
+          this.updateTotalSize(reduceSize * -1);
         });
       });
   };
@@ -416,7 +414,7 @@ export default class SSDB {
 }
 
 // eslint-disable-next-line no-extend-native
-String.prototype.hashCode = function () {
+String.prototype.hashCode = () => {
   let hash = 0;
   let i;
   let chr;

@@ -1,9 +1,9 @@
 import * as THREE from 'three';
-import SSCssRenderer from '../SSCssRenderer';
 import SSThreeObject from '../SSThreeObject';
 import SSDispose from '../SSDispose';
 import SSModuleInterface from './module.interface';
 import SSEvent from '../SSEvent';
+import SSThreeTool from '../SSTool';
 
 export default class SSPickPointMode extends SSModuleInterface {
   /**
@@ -130,7 +130,7 @@ export default class SSPickPointMode extends SSModuleInterface {
       this._pathGroup.getObjectByName('debug_line_moveline')?.removeFromParent();
       //
       this._pathGroup.add(
-        SSCssRenderer.addLine(
+        SSThreeTool.addLine(
           this._lineVectors[this._lineVectors.length - 2],
           this._lineVectors[this._lineVectors.length - 1],
           {
@@ -152,7 +152,7 @@ export default class SSPickPointMode extends SSModuleInterface {
       // 移除时刻渲染的一条
       this._pathGroup.getObjectByName('debug_line_moveline')?.removeFromParent();
       // 新增一条
-      const { group } = SSCssRenderer.addLine(
+      const { group } = SSThreeTool.addLine(
         this._lineVectors[this._lineVectors.length - 1],
         models[0].point,
         {

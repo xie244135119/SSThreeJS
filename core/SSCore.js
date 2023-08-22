@@ -9,13 +9,13 @@ import SSThreeLoop from './SSThreeLoop';
 import SSDispose from './SSDispose';
 import SSEvent from './SSEvent';
 import SSThreeTool from './SSTool';
-import LoadingManager from './SSTool/LoadingManager';
 import SSThreeObject from './SSThreeObject';
 import SSLoader from './SSLoader';
 import SSModuleCenter from './SSModule';
 import SSMessageQueue from './SSTool/MessageQueue';
 import SSTransformControl from './SSTool/TransformControl';
 import SSPostProcessModule from './SSModule/basepostprocess.module';
+import SSLoadingManager from './SSTool/LoadingManager';
 
 export default class SSThreeJs {
   /**
@@ -58,6 +58,12 @@ export default class SSThreeJs {
   threeEvent = null;
 
   /**
+   * ssthreejs 加载器
+   * @type {SSLoadingManager}
+   */
+  ssLoadingManager = null;
+
+  /**
    * @type {Stats}
    */
   _statsJs = null;
@@ -76,6 +82,8 @@ export default class SSThreeJs {
     this.ssThreeObject?.destory();
     this.ssMessageQueue?.destory();
     this.ssMessageQueue = null;
+    this.ssLoadingManager?.destory();
+    this.ssLoadingManager = null;
     if (loop) {
       SSThreeLoop.destory();
     }
@@ -147,7 +155,7 @@ export default class SSThreeJs {
     // add event
     this.threeEvent = new SSEvent(container);
     // loading manager
-    LoadingManager.shareInstance.addProgressView(container);
+    this.ssLoadingManager = new SSLoadingManager(container);
     //
     SSThreeLoop.setup();
     //
@@ -183,7 +191,7 @@ export default class SSThreeJs {
    */
   addSky = (skys = []) => {
     const pmremGenerator = new THREE.PMREMGenerator(this.ssThreeObject.threeRenderer);
-    const hdrLoader = new THREE.CubeTextureLoader(LoadingManager.shareInstance.threeLoadingManager);
+    const hdrLoader = new THREE.CubeTextureLoader(this.ssLoadingManager.threeLoadingManager);
     return new Promise((reslove, reject) => {
       hdrLoader.load(
         skys,
@@ -210,7 +218,7 @@ export default class SSThreeJs {
     const pmremGenerator = new THREE.PMREMGenerator(this.ssThreeObject.threeRenderer);
     if (hdrs.length === 1) {
       return new Promise((reslove, reject) => {
-        const rgbeLoader = new RGBELoader(LoadingManager.shareInstance.threeLoadingManager);
+        const rgbeLoader = new RGBELoader(this.ssLoadingManager.threeLoadingManager);
         rgbeLoader.load(
           hdrs,
           (texture) => {
@@ -229,7 +237,7 @@ export default class SSThreeJs {
       });
     }
     //
-    const hdrLoader = new HDRCubeTextureLoader(LoadingManager.shareInstance.threeLoadingManager);
+    const hdrLoader = new HDRCubeTextureLoader(this.ssLoadingManager.threeLoadingManager);
     return new Promise((reslove, reject) => {
       hdrLoader.load(
         hdrs,
@@ -337,36 +345,30 @@ export default class SSThreeJs {
   addDymaicDebug = () => {
     this._addAxisControl(this.ssThreeObject.threeScene);
     this._addStatAnalyse();
-    window.ssThreeJs = this;
-    window.ssThreeObject = this.ssThreeObject;
-    window.THREE = THREE;
-    window.SSThreeTool = SSThreeTool;
-    //
     this.ssTransformControl = new SSTransformControl(this.ssThreeObject);
-    // window.ssThreeObject.threeCamera.setFov = (aValue) => {
-    //   aCamera.fov = aValue;
-    //   aCamera.updateProjectionMatrix();
-    // };
     this._clickEvent = this.threeEvent.addEventListener(SSEvent.SSEventType.CLICK, (aPoint) => {
       const models = this.ssThreeObject.getModelsByPoint(aPoint);
       if (models.length === 0) {
         return;
       }
-      this.ssTransformControl.attach(models[0].object);
-      // this.ssPostProcessModule.addOutlineByObject3Ds([models[0].object]);
-      // this.ssPostProcessModule.addMaskBoxByObject3Ds([models[0].object]);
+      if (models[0].object instanceof THREE.Object3D) {
+        this.ssTransformControl.attach(models[0].object);
+      }
     });
+    window.ssThreeJs = this;
+    window.ssThreeObject = this.ssThreeObject;
+    window.THREE = THREE;
   };
 
   /**
    * remove debug
    */
   removeDymaicDebug = () => {
-    this.threeEvent.removeEventListener(SSEvent.SSEventType.CLICK, this._clickEvent);
-    this._removeStatAnalyse();
     this._removeAxisControl();
-    this._transformControl?.destory();
-    this._transformControl = null;
+    this._removeStatAnalyse();
+    this.ssTransformControl?.destory();
+    this.ssTransformControl = null;
+    this.threeEvent.removeEventListener(SSEvent.SSEventType.CLICK, this._clickEvent);
     window.ssthreeJs = null;
     window.THREE = null;
     window.ssThreeObject = null;
@@ -397,7 +399,7 @@ export default class SSThreeJs {
             config.obj,
             config.mtl,
             null,
-            LoadingManager.shareInstance.threeLoadingManager
+            this.ssLoadingManager.threeLoadingManager
           );
           break;
         case 'fbx':
@@ -463,12 +465,12 @@ export default class SSThreeJs {
   //     baseDirectoryArry.pop();
   //     return `${baseDirectoryArry.join('/')}/`;
   //   };
-  //   return LoadingManager.shareInstance.getModelDataByUrl(aMaterialPath).then((materialdata) => {
-  //     const mtlloader = new MTLLoader(LoadingManager.shareInstance.threeLoadingManager);
+  //   return this.ssLoadingManager.getModelDataByUrl(aMaterialPath).then((materialdata) => {
+  //     const mtlloader = new MTLLoader(this.ssLoadingManager.threeLoadingManager);
   //     const mtltext = String.fromCharCode.apply(null, new Uint8Array(materialdata));
   //     const materials = mtlloader.parse(mtltext, getDirectoryText(aMaterialPath));
-  //     return LoadingManager.shareInstance.getModelDataByUrl(aObjPath).then((objdata) => {
-  //       const objloader = new OBJLoader(LoadingManager.shareInstance.threeLoadingManager);
+  //     return this.ssLoadingManager.getModelDataByUrl(aObjPath).then((objdata) => {
+  //       const objloader = new OBJLoader(this.ssLoadingManager.threeLoadingManager);
   //       objloader.setMaterials(materials);
   //       const group = objloader.parse(objdata);
   //       if (addToScene) {
@@ -497,13 +499,13 @@ export default class SSThreeJs {
    * @returns {Promise<THREE.Group>}
    */
   loadFbx = (aFbxpath = '') =>
-    LoadingManager.shareInstance
+    this.ssLoadingManager
       .getModelDataByUrl(aFbxpath)
       .then((data) =>
         SSLoader.loadFbxBuffer(
           data,
           this.getModelDirectory(aFbxpath),
-          LoadingManager.shareInstance.threeLoadingManager
+          this.ssLoadingManager.threeLoadingManager
         )
       );
 
@@ -514,13 +516,13 @@ export default class SSThreeJs {
    * @returns {Promise<GLTF>}
    */
   loadGltf = (path) =>
-    LoadingManager.shareInstance
+    this.ssLoadingManager
       .getModelDataByUrl(path)
       .then((data) =>
         SSLoader.loadGltfBuffer(
           data,
           this.getModelDirectory(path),
-          LoadingManager.shareInstance.threeLoadingManager
+          this.ssLoadingManager.threeLoadingManager
         )
       );
 
@@ -530,13 +532,13 @@ export default class SSThreeJs {
    * @returns
    */
   loadGltfDraco = (path) =>
-    LoadingManager.shareInstance
+    this.ssLoadingManager
       .getModelDataByUrl(path)
       .then((data) =>
         SSLoader.loadGltfDracoBuffer(
           data,
           this.getModelDirectory(path),
-          LoadingManager.shareInstance.threeLoadingManager
+          this.ssLoadingManager.threeLoadingManager
         )
       );
 
@@ -546,13 +548,13 @@ export default class SSThreeJs {
    * @returns
    */
   loadGltfOptKTX = (path) =>
-    LoadingManager.shareInstance
+    this.ssLoadingManager
       .getModelDataByUrl(path)
       .then((data) =>
         SSLoader.loadGltfOptKTXBuffer(
           data,
           this.getModelDirectory(path),
-          LoadingManager.shareInstance.threeLoadingManager
+          this.ssLoadingManager.threeLoadingManager
         )
       );
 
