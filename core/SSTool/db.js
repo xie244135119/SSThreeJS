@@ -72,7 +72,7 @@ export default class SSDB {
   targetDataBase = null;
 
   destory() {
-    this.targetDataBase.close();
+    this.targetDataBase?.close();
     this.targetDataBase = null;
   }
 

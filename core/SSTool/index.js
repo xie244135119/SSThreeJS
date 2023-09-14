@@ -105,6 +105,17 @@ export default class SSThreeTool {
   };
 
   /**
+   * get obj box center
+   * @param {THREE.Object3D} obj object3D
+   */
+  static getBoxCenter = (obj) => {
+    const box = new THREE.Box3();
+    box.setFromObject(obj);
+    const { max, min } = box;
+    return new THREE.Vector3((max.x - min.x) / 2, (max.y - min.y) / 2, (max.z - min.z) / 2);
+  };
+
+  /**
    * get camera and scene  on object3D front (reslove 80% )
    * @param {THREE.Object3D} obj object3D
    * @param {string} forwardFirection mesh direction x,y,z
@@ -374,7 +385,7 @@ export default class SSThreeTool {
     targetObject3Ds.forEach((targetObject3D) => {
       meshNames.forEach((mesh) => {
         const obj = targetObject3D.getObjectByName(mesh);
-        obj.traverse((e) => {
+        obj?.traverse((e) => {
           setMeshTransparent(e);
         });
       });
@@ -519,7 +530,7 @@ export default class SSThreeTool {
       for (let index = 0; index < meshNames.length; index++) {
         const meshName = meshNames[index];
         const obj3d = targetObject3D.getObjectByName(meshName);
-        obj3d.traverse((e) => {
+        obj3d?.traverse((e) => {
           setMesh(e);
         });
       }
@@ -547,7 +558,7 @@ export default class SSThreeTool {
       for (let index = 0; index < meshNames.length; index++) {
         const meshName = meshNames[index];
         const obj3d = targetObject3D.getObjectByName(meshName);
-        obj3d.traverse((e) => {
+        obj3d?.traverse((e) => {
           setMesh(e);
         });
       }

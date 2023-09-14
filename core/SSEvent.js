@@ -17,8 +17,6 @@
  * @property {string} MOUSEOVER 鼠标划过事件
  * @property {string} MOUSECANCEL 鼠标取消事件
  */
-import SSThreeTool from './SSTool/index';
-
 const SSEventType = {
   // 单击事件
   CLICK: 'click',
@@ -30,6 +28,10 @@ const SSEventType = {
   LONGPRESS: 'longpress',
   // 右键事件
   CONTEXTMENU: 'contextmenu',
+  // 鼠标按下
+  MOUSEDOWN: 'mousedown',
+  // 鼠标抬起
+  MOUSEUP: 'mouseup',
   // 鼠标移动
   MOUSEMOVE: 'mousemove',
   // 鼠标进入元素
@@ -263,6 +265,9 @@ export default class SSEvent {
    * @param {*} aCamera
    */
   _onElementPointDown = (e) => {
+    this._getFuncsFromType(SSEventType.MOUSEDOWN).forEach((element) => {
+      element.fn?.(e);
+    });
     clearTimeout(this._timeroutId);
     this._isDrag = false;
     this._isLongPress = false;
@@ -278,6 +283,9 @@ export default class SSEvent {
    * @param {*} aCamera
    */
   _onElementPointUp = (e) => {
+    this._getFuncsFromType(SSEventType.MOUSEUP).forEach((element) => {
+      element.fn?.(e);
+    });
     // 是否为长按
     const now = new Date().valueOf();
     const { clientX, clientY } = e;

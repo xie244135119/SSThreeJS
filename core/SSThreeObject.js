@@ -78,7 +78,7 @@ export default class SSThreeObject {
    * @param {number} [animateSpeed] 动画速度
    * @param {function ():void} [complete] 结束事件
    */
-  setEye(cameraPosition, controlPosition, animate = true, animateSpeed = 0.5, complete) {
+  setEye(cameraPosition, controlPosition, animate = true, animateSpeed = 0.5, complete = null) {
     if (!animate) {
       this.threeCamera.position.copy(cameraPosition);
       this.threeOrbitControl.target.copy(controlPosition);
@@ -113,6 +113,17 @@ export default class SSThreeObject {
         complete
       );
     }
+  }
+
+  /**
+   * 选择视角位置
+   * @returns {{ camera:THREE.Vector3, target: THREE.Vector3 }}
+   */
+  getEye() {
+    return JSON.stringify({
+      camera: this.threeCamera.position,
+      target: this.threeOrbitControl.target
+    });
   }
 
   /**

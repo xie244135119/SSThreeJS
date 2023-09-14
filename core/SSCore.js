@@ -426,23 +426,23 @@ export default class SSThreeJs {
                 e.receiveShadow = true;
                 e.castShadow = true;
               });
-              this.ssThreeObject.threeScene.add(obj);
+              // this.ssThreeObject.threeScene.add(obj);
             } else if (obj.scene instanceof THREE.Object3D) {
               obj.scene.traverse((e) => {
                 e.receiveShadow = true;
                 e.castShadow = true;
               });
-              this.ssThreeObject.threeScene.add(obj.scene);
+              // this.ssThreeObject.threeScene.add(obj.scene);
             }
 
             onAfterRender?.(config, obj);
             objList.push(obj);
             //
-            this.ssMessageQueue.remove();
+            this.ssMessageQueue?.remove();
           })
           .catch((e) => {
             console.log(' 模型渲染失败 ', config, e);
-            this.ssMessageQueue.remove();
+            this.ssMessageQueue?.remove();
           });
       });
     });

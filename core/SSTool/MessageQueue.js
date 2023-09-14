@@ -33,11 +33,7 @@ class SSMessageQueue {
       this._queueList.splice(0, 1);
       this._excute();
     };
-    if (this._delayTime > 0) {
-      setTimeout(block, this._delayTime);
-      return;
-    }
-    block();
+    setTimeout(block, this._delayTime);
   }
 
   /**
