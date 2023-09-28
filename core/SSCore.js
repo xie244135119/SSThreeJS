@@ -64,21 +64,11 @@ export default class SSThreeJs {
   ssLoadingManager = null;
 
   /**
-   * @type {Stats}
-   */
-  _statsJs = null;
-
-  // axis helper
-  _axisControlHelper = null;
-
-  // has released
-  _threeJsDestoryed = false;
-
-  /**
    * 销毁机制
    */
   destroy(loop = true) {
-    this._threeJsDestoryed = true;
+    this.ssTransformControl?.destory();
+    this.ssTransformControl = null;
     this.ssThreeObject?.destory();
     this.ssMessageQueue?.destory();
     this.ssMessageQueue = null;
@@ -174,6 +164,8 @@ export default class SSThreeJs {
     this.ssModuleCenter = new SSModuleCenter(this.ssThreeObject);
     // postprocess module
     this.ssPostProcessModule = new SSPostProcessModule(this.ssThreeObject);
+    //
+    this.ssTransformControl = new SSTransformControl(this.ssThreeObject);
     //
     SSThreeLoop.add(() => {
       if (this.ssThreeObject.threeOrbitControl) {
@@ -345,16 +337,6 @@ export default class SSThreeJs {
   addDymaicDebug = () => {
     this._addAxisControl(this.ssThreeObject.threeScene);
     this._addStatAnalyse();
-    this.ssTransformControl = new SSTransformControl(this.ssThreeObject);
-    this._clickEvent = this.threeEvent.addEventListener(SSEvent.SSEventType.CLICK, (aPoint) => {
-      const models = this.ssThreeObject.getModelsByPoint(aPoint);
-      if (models.length === 0) {
-        return;
-      }
-      if (models[0].object instanceof THREE.Object3D) {
-        this.ssTransformControl.attach(models[0].object);
-      }
-    });
     window.ssThreeJs = this;
     window.ssThreeObject = this.ssThreeObject;
     window.THREE = THREE;
@@ -366,9 +348,6 @@ export default class SSThreeJs {
   removeDymaicDebug = () => {
     this._removeAxisControl();
     this._removeStatAnalyse();
-    this.ssTransformControl?.destory();
-    this.ssTransformControl = null;
-    this.threeEvent.removeEventListener(SSEvent.SSEventType.CLICK, this._clickEvent);
     window.ssthreeJs = null;
     window.THREE = null;
     window.ssThreeObject = null;
@@ -426,17 +405,14 @@ export default class SSThreeJs {
                 e.receiveShadow = true;
                 e.castShadow = true;
               });
-              // this.ssThreeObject.threeScene.add(obj);
             } else if (obj.scene instanceof THREE.Object3D) {
               obj.scene.traverse((e) => {
                 e.receiveShadow = true;
                 e.castShadow = true;
               });
-              // this.ssThreeObject.threeScene.add(obj.scene);
             }
-
-            onAfterRender?.(config, obj);
             objList.push(obj);
+            onAfterRender?.(config, obj);
             //
             this.ssMessageQueue?.remove();
           })

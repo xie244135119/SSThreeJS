@@ -275,49 +275,17 @@ export default class SSThreeTool {
 
   /**
    * 几何体合并
-   * @param {THREE.Object3D[]} objects mesh列表
+   * @param {THREE.Mesh[]} objects mesh列表
    * @returns
    */
   static mergeBufferGeometry = (objects) => {
-    const sumPosArr = [];
-    const sumNormArr = [];
-    const sumUvArr = [];
     const modelGeometry = new THREE.BufferGeometry();
-    let sumPosCursor = 0;
-    let sumNormCursor = 0;
-    let sumUvCursor = 0;
-    let startGroupCount = 0;
-    let lastGroupCount = 0;
-    for (let a = 0; a < objects.length; a++) {
-      const posAttArr = objects[a].geometry.getAttribute('position').array;
-      for (let b = 0; b < posAttArr.length; b++) {
-        sumPosArr[b + sumPosCursor] = posAttArr[b];
-      }
-      sumPosCursor += posAttArr.length;
-      const numAttArr = objects[a].geometry.getAttribute('normal').array;
-      for (let b = 0; b < numAttArr.length; b++) {
-        sumNormArr[b + sumNormCursor] = numAttArr[b];
-      }
-      sumNormCursor += numAttArr.length;
-      const uvAttArr = objects[a].geometry.getAttribute('uv').array;
-      for (let b = 0; b < uvAttArr.length; b++) {
-        sumUvArr[b + sumUvCursor] = uvAttArr[b];
-      }
-      sumUvCursor += uvAttArr.length;
-      const groupArr = objects[a].geometry.groups;
-      for (let b = 0; b < groupArr.length; b++) {
-        startGroupCount = lastGroupCount;
-        modelGeometry.addGroup(startGroupCount, groupArr[b].count, groupArr[b].materialIndex);
-        lastGroupCount = startGroupCount + groupArr[b].count;
-      }
-    }
-    modelGeometry.setAttribute('position', new THREE.Float32BufferAttribute(sumPosArr, 3));
-    // eslint-disable-next-line no-unused-expressions
-    sumNormArr.length &&
-      modelGeometry.setAttribute('normal', new THREE.Float32BufferAttribute(sumNormArr, 3));
-    // eslint-disable-next-line no-unused-expressions
-    sumUvArr.length &&
-      modelGeometry.setAttribute('uv', new THREE.Float32BufferAttribute(sumUvArr, 2));
+    const positions = [];
+    objects.forEach((e) => {
+      const geo = e.geometry;
+      positions.push(...geo.getAttribute('position').array);
+    });
+    modelGeometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
     return modelGeometry;
   };
 
@@ -446,6 +414,7 @@ export default class SSThreeTool {
    * @param {THREE.PerspectiveCamera} camera 目标相机
    */
   static zoom = (aValue, camera) => {
+    camera.translateZ();
     const endPosition = camera.position.clone().multiplyScalar(aValue);
     this.useTweenAnimate(
       {
