@@ -4,7 +4,6 @@ import WEBGL from 'three/examples/jsm/capabilities/WebGL';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 import { RGBELoader } from 'three/examples/jsm/loaders/RGBELoader';
 import { HDRCubeTextureLoader } from 'three/examples/jsm/loaders/HDRCubeTextureLoader';
-// import { GLTF } from 'three/examples/jsm/loaders/GLTFLoader';
 import SSThreeLoop from './SSThreeLoop';
 import SSDispose from './SSDispose';
 import SSEvent from './SSEvent';
@@ -356,9 +355,9 @@ export default class SSThreeJs {
   /**
    * v3.0方案 根据配置文件加载模型
    * @param {Array<{type: string, obj: string, mtl: string, gltf: string, draco:string}>} list 模型配置
-   * @param {function(THREE.Object3D[]): void} [onComplete] 页面熏染完成 参数：全部模型
-   * @param {function({type: string, title: string, obj: string, mtl: string, gltf: string, draco:string}, THREE.Group | GLTF):void} [onBeforeRender] 场景添加前 参数：(对象条目, 模型)
-   * @param {function({type: string, title: string, obj: string, mtl: string, gltf: string, draco:string}, THREE.Group | GLTF):void} [onAfterRender] 场景添加后 参数：(对象条目, 模型)
+   * @param {function((THREE.Object3D | import('three/examples/jsm/loaders/GLTFLoader').GLTF)[]): void} [onComplete] 页面熏染完成 参数：全部模型
+   * @param {function({type: string, title: string, obj: string, mtl: string, gltf: string, draco:string}, THREE.Group | import('three/examples/jsm/loaders/GLTFLoader').GLTF):void} [onBeforeRender] 场景添加前 参数：(对象条目, 模型)
+   * @param {function({type: string, title: string, obj: string, mtl: string, gltf: string, draco:string}, THREE.Group | import('three/examples/jsm/loaders/GLTFLoader').GLTF):void} [onAfterRender] 场景添加后 参数：(对象条目, 模型)
    * @returns
    */
   loadModelQueue = (list, onComplete, onBeforeRender, onAfterRender) => {
@@ -489,7 +488,7 @@ export default class SSThreeJs {
    * load gltf
    * @param {string} path model path
    * @param {THREE.LoadingManager} manager loading manager
-   * @returns {Promise<GLTF>}
+   * @returns {Promise<import('three/examples/jsm/loaders/GLTFLoader').GLTF>}
    */
   loadGltf = (path) =>
     this.ssLoadingManager

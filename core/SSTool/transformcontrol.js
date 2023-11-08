@@ -1,17 +1,16 @@
 import * as THREE from 'three';
 import { TransformControls } from 'three/examples/jsm/controls/TransformControls';
 import SSEvent from '../SSEvent';
-import SSThreeObject from '../SSThreeObject';
 
 export default class SSTransformControl {
   /**
-   * 函数构造 t：平移，r：旋转，s：放大缩小
-   * @type {function ({ target: THREE.Object3D,position: THREE.Vector3, rotation: THREE.Vector3, scale: THREE.Vector3, delete: boolean }):void}
+   * 函数构造 t：平移，r：旋转，s：放大缩小。type: change or delete
+   * @type {function ({ name: String, uuid: String, type: String, target: THREE.Object3D,position: THREE.Vector3, rotation: THREE.Vector3, scale: THREE.Vector3 }):void}
    */
   onControlChange = null;
 
   /**
-   * @type {SSThreeObject} 物体
+   * @type {import('../SSThreeObject').default} 物体
    */
   _ssThreeObject = null;
 
@@ -26,9 +25,14 @@ export default class SSTransformControl {
   _event = null;
 
   /**
+   * @type {THREE.BoxHelper}
+   */
+  _boxHeloper = null;
+
+  /**
    * 构造函数
    * @param {SSThreeObject} ssThreeObject 绑定的物体
-   * @param {function ({ position: THREE.Vector3, rotation: THREE.Vector3, scale: THREE.Vector3, name: string, uuid: string, delete: boolean }):void} callBack 回调事件
+   * @param {function ({ name: String, uuid: String, type: String, position: THREE.Vector3, rotation: THREE.Vector3, scale: THREE.Vector3, target: THREE.Object3D }):void} callBack 回调事件
    */
   constructor(ssThreeObject, callBack) {
     this._ssThreeObject = ssThreeObject;
@@ -63,10 +67,12 @@ export default class SSTransformControl {
         if (!this._control.object) {
           return;
         }
+        this._boxHeloper?.setFromObject(this._control.object);
         this.onControlChange?.({
           name: this._control.object.name,
           uuid: this._control.object.uuid,
           target: this._control.object,
+          type: 'change',
           position: {
             x: this._control.object.position.x,
             y: this._control.object.position.y,
@@ -114,28 +120,38 @@ export default class SSTransformControl {
             this._control.showZ = !this._control.showZ;
             break;
           case 'Escape': // 取消选中
-            this._control.detach();
+            this.detach();
             break;
           case '_':
           case '-': // size大小减小
             this._control.setSize(this._control.size * 0.9);
             break;
+          case 'f':
+            if (!this._control.object) return;
+            this.focus(this._control.object);
+            this.onControlChange?.({
+              name: this._control.object.name,
+              uuid: this._control.object.uuid,
+              target: this._control.object,
+              type: 'focus'
+            });
+            break;
           case '=': // size大小增大
           case '+': // size大小增大
             this._control.setSize(this._control.size * 1.1);
             break;
-          // case 'Backspace': // 删除
-          //   if (this._control.object) {
-          //     this.onControlChange?.({
-          //       name: this._control.object.name,
-          //       uuid: this._control.object.uuid,
-          //       target: this._control.object,
-          //       delete: true
-          //     });
-          //     this._control.object.removeFromParent();
-          //     this._control.detach();
-          //   }
-          //   break;
+          case 'Backspace': // 删除
+            if (!this._control.object) return;
+            this._boxHeloper.removeFromParent();
+            this._boxHeloper = null;
+            this.onControlChange?.({
+              name: this._control.object.name,
+              uuid: this._control.object.uuid,
+              target: this._control.object,
+              type: 'delete'
+            });
+            this._control.detach();
+            break;
           case 'ArrowRight': // x 轴左移
             break;
           case 'ArrowLeft': // 右移
@@ -151,11 +167,12 @@ export default class SSTransformControl {
     }
     this._control.attach(object3d);
     // 选中
-    const oldboxHelper = this._ssThreeObject.threeScene.getObjectByName('boxhelper');
-    oldboxHelper?.removeFromParent();
-    const boxHelper = new THREE.BoxHelper(object3d);
-    boxHelper.name = 'boxhelper';
-    this._ssThreeObject.threeScene.add(boxHelper);
+    if (!this._boxHeloper) {
+      this._boxHeloper = new THREE.BoxHelper(object3d);
+      this._boxHeloper.name = 'boxhelper';
+      this._ssThreeObject.threeScene.add(this._boxHeloper);
+    }
+    this._boxHeloper.setFromObject(object3d);
   }
 
   /**
@@ -163,7 +180,36 @@ export default class SSTransformControl {
    */
   detach() {
     this._control.detach();
-    const boxHelper = this._ssThreeObject.threeScene.getObjectByName('boxhelper');
-    boxHelper?.removeFromParent();
+    this._boxHeloper?.removeFromParent();
+    this._boxHeloper = null;
   }
+
+  /**
+   * 聚焦
+   * @param {THREE.Object3D} target
+   */
+  focus = (target) => {
+    const camera = this._ssThreeObject.threeCamera;
+    let distance;
+    const box = new THREE.Box3();
+    const center = new THREE.Vector3();
+    const sphere = new THREE.Sphere();
+    const delta = new THREE.Vector3();
+    box.setFromObject(target);
+
+    if (box.isEmpty() === false) {
+      box.getCenter(center);
+      distance = box.getBoundingSphere(sphere).radius;
+    } else {
+      // Focusing on an Group, AmbientLight, etc
+      center.setFromMatrixPosition(target.matrixWorld);
+      distance = 0.1;
+    }
+
+    delta.set(0, 0, 1);
+    delta.applyQuaternion(camera.quaternion);
+    delta.multiplyScalar(distance * 4);
+
+    camera.position.copy(center).add(delta);
+  };
 }

@@ -1,15 +1,15 @@
-// import * as THREE from 'three';
-// import './main.module.css'
-
-import SSViewport from './js/SSComponent.Viewport';
-import SSController from './js/SSController';
+import SSController from './js/SEController';
 // import { Toolbar } from './js/Toolbar';
 // import { Script } from './js/Script';
 // import { Player } from './js/Player';
-import SSSidebar from './js/SSComponent.Sidebar';
+import SSViewport from './js/Viewport';
 // import styles from './index.module.css';
 import './css/main.css';
-import SSMenubar from './js/SSComponent.Menubar';
+import SSMenubar from './js/Menubar';
+import SSLeftSidebar from './js/SidebarLeft';
+import SSSidebar from './js/SidebarRight';
+import SSCommand from './js/Command/commands';
+import SSLoader from '../core/SSLoader';
 // import { Resizer } from './js/Resizer';
 // import { VRButton } from 'three/addons/webxr/VRButton';
 
@@ -24,6 +24,11 @@ export default class SSEditor {
   destory() {
     this._resizeObserver?.disconnect();
     this._resizeObserver = null;
+    // 拖拽事件
+    this.leftsidebar.dom.removeEventListener('dragover', this.onDragOver);
+    this.leftsidebar.dom.removeEventListener('drop', this.onDrop);
+    this.viewport.dom.removeEventListener('dragover', this.onDragOver);
+    this.viewport.dom.removeEventListener('drop', this.onDrop);
   }
 
   /**
@@ -44,6 +49,7 @@ export default class SSEditor {
     }
     //
     const controler = new SSController();
+    this.controller = controler;
 
     // if (!WEBGL.isWebGLAvailable()) {
     //   const warning = WEBGL.getWebGLErrorMessage();
@@ -51,11 +57,18 @@ export default class SSEditor {
     //   return null;
     // }
 
-    //
+    // 场景窗口
     const viewport = new SSViewport(controler);
     // viewport.dom.className = styles.viewport;
     editorDom.appendChild(viewport.dom);
+    this.viewport = viewport;
 
+    // 左侧边栏
+    const leftsidebar = new SSLeftSidebar(controler);
+    editorDom.appendChild(leftsidebar.dom);
+    this.leftsidebar = leftsidebar;
+
+    // 右侧边栏
     const sidebar = new SSSidebar(controler);
     // sidebar.dom.className = styles.sidebar;
     editorDom.appendChild(sidebar.dom);
@@ -66,11 +79,67 @@ export default class SSEditor {
 
     // resize
     const observer = new window.ResizeObserver(() => {
-      controler.signalController.windowResize.dispatch();
+      controler.signals.windowResize.dispatch();
     });
     observer.observe(editorDom);
     this._resizeObserver = observer;
+
+    // 拖拽事件
+    leftsidebar.dom.addEventListener('dragover', this.onDragOver);
+    leftsidebar.dom.addEventListener('drop', this.onDrop);
+    viewport.dom.addEventListener('dragover', this.onDragOver);
+    viewport.dom.addEventListener('drop', this.onDrop);
   }
+
+  /**
+   * 拖拽处理
+   * @param {Event} e
+   */
+  onDragOver = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+  };
+
+  /**
+   * 拖拽结束 接收的处理
+   * @param {DragEvent} e
+   */
+  onDrop = (e) => {
+    // 本地的文件
+    e.stopPropagation();
+    e.preventDefault();
+    const libraryModelUrl = e.dataTransfer.getData('library_model_url');
+
+    // 内部：从模型库拖拽数据
+    if (libraryModelUrl) {
+      SSLoader.loadGltf(libraryModelUrl).then((gltf) => {
+        this.controller.execute(new SSCommand.AddObject(this.controller, gltf.scene));
+      });
+      return;
+    }
+
+    // 拖拽外部模型数据
+    if (e.dataTransfer.files.length > 0) {
+      const { files } = e.dataTransfer;
+      const tempfile = files[0];
+      const fileType = tempfile.name.split('.').pop();
+      const fileReader = new FileReader();
+      fileReader.onload = () => {
+        switch (fileType.toLocaleLowerCase()) {
+          case 'gltf':
+          case 'glb':
+            SSLoader.loadGltfBuffer(fileReader.result, '/').then((gltf) => {
+              this.controller.execute(new SSCommand.AddObject(this.controller, gltf.scene));
+            });
+            break;
+
+          default:
+            break;
+        }
+      };
+      fileReader.readAsArrayBuffer(tempfile);
+    }
+  };
 }
 
 //

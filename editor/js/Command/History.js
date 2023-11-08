@@ -1,15 +1,13 @@
-import Command from './Interface';
-
 export default class SSCommandHistory {
   /**
    * 全部执行的指令集
-   * @type {Command[]}
+   * @type {import('./commands/Base').default[]}
    */
   undos = null;
 
   /**
    * 撤销的指令集
-   * @type {Command[]}
+   * @type {import('./commands/Base').default[]}
    */
   redos = null;
 
@@ -43,7 +41,7 @@ export default class SSCommandHistory {
 
   /**
    * 执行指令
-   * @param {Command} commpand
+   * @param {import('./commands/Base').default} commpand
    * @param {string} optionalName
    */
   execute(commpand, optionalName) {

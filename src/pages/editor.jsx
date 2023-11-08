@@ -7,9 +7,18 @@ export default function DebugEditor(prpps) {
   });
 
   return (
-    <div style={{ height: '100vh' }}>
-      <span style={{ textAlign: 'center', height: 50 }}>编排场景调试</span>
-      <div id="editorcontainer" style={{ height: 'calc(100% - 50px)', border: '1px solid blue' }} />
+    <div style={{ height: '100vh', display: 'flex', flexDirection: 'column' }}>
+      <span
+        style={{
+          textAlign: 'center',
+          display: 'inline-block',
+          height: 35,
+          lineHeight: '35px'
+        }}
+      >
+        三维编排工具
+      </span>
+      <div id="editorcontainer" style={{ flex: 1 }} />
     </div>
   );
 }

@@ -128,7 +128,7 @@ export default class SSDispose {
             disposeMaterial(value);
             disposeObject3D(value);
             disposeArray(value);
-            if (value && value.dispose) {
+            if (value && typeof value.dispose === 'function') {
               value.dispose();
             }
           }

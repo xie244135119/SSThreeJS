@@ -57,7 +57,7 @@ export default class SSLoader {
    * load gltf
    * @param {string} path model path
    * @param {THREE.LoadingManager} [manager] loading manager
-   * @returns {Promise<GLTF>}
+   * @returns {Promise<import('three/examples/jsm/loaders/GLTFLoader').GLTF>}
    */
   static loadGltf = (path, manager) => {
     const gltfLoader = new GLTFLoader(manager);
@@ -69,7 +69,7 @@ export default class SSLoader {
    * @param {ArrayBuffer|string} buffer 数据
    * @param {string} directory directory目录
    * @param {THREE.LoadingManager} [manager] loading manager
-   * @returns {Promise<GLTF>}
+   * @returns {Promise<import('three/examples/jsm/loaders/GLTFLoader').GLTF>}
    */
   static loadGltfBuffer = (buffer, directory, manager) => {
     const gltfLoader = new GLTFLoader(manager);
@@ -81,7 +81,7 @@ export default class SSLoader {
    * @param {ArrayBuffer|string} aBuffer 数据
    * @param {string} directory directory目录
    * @param {THREE.LoadingManager} [manager] loading manager
-   * @returns {Promise<GLTF>}
+   * @returns {Promise<import('three/examples/jsm/loaders/GLTFLoader').GLTF>}
    */
   static loadGltfDracoBuffer = (aBuffer, directory, manager) => {
     const gltfLoader = new GLTFLoader(manager);
@@ -107,7 +107,7 @@ export default class SSLoader {
    * load gltf Draco
    * @param {string} path model path
    * @param {THREE.LoadingManager} [manager] loading manager
-   * @returns {Promise<GLTF>}
+   * @returns {Promise<import('three/examples/jsm/loaders/GLTFLoader').GLTF>}
    */
   static loadGltfDraco(path, manager) {
     const gltfLoader = new GLTFLoader(manager);
@@ -136,7 +136,7 @@ export default class SSLoader {
    * @param {ArrayBuffer | string} buffer model buffer
    * @param {string} directory directory path
    * @param {THREE.LoadingManager} [manager] loading manager
-   * @returns {Promise<GLTF>}
+   * @returns {Promise<import('three/examples/jsm/loaders/GLTFLoader').GLTF>}
    */
   static loadGltfOptKTXBuffer = (buffer, directory, manager) => {
     const ktx2Loader = new KTX2Loader(manager)
@@ -163,7 +163,7 @@ export default class SSLoader {
    * load gltf ktx
    * @param {string} path model path
    * @param {THREE.LoadingManager} [manager] loading manager
-   * @returns {Promise<GLTF>}
+   * @returns {Promise<import('three/examples/jsm/loaders/GLTFLoader').GLTF>}
    */
   static loadGltfOptKTX = (path, manager) => {
     const ktx2Loader = new KTX2Loader(manager)
@@ -190,7 +190,7 @@ export default class SSLoader {
    * load gltf ktx
    * @param {string} path model path
    * @param {boolean} addToScene add to
-   * @returns {Promise<GLTF>}
+   * @returns {Promise<import('three/examples/jsm/loaders/GLTFLoader').GLTF>}
    */
   // static loadGltfOptKTX = (path, addToScene = true) =>
   // LoadingManager.shareInstance.getModelDataByUrl(path).then((data) => {

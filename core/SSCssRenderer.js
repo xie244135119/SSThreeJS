@@ -261,14 +261,16 @@ export default class SSCssRenderer {
    * 添加动态监听
    */
   _addResizeObserver = (aContainer = document.body) => {
-    const observer = new window.ResizeObserver(() => {
-      // 调整labelRender 文字
-      this.css2dRender?.setSize(aContainer.offsetWidth, aContainer.offsetHeight);
-      this.css3dRender?.setSize(aContainer.offsetWidth, aContainer.offsetHeight);
-      this.svgRender?.setSize(aContainer.offsetWidth, aContainer.offsetHeight);
-    });
-    observer.observe(aContainer);
-    this.#resizeObserver = observer;
+    if (this.#resizeObserver !== null) {
+      const observer = new window.ResizeObserver(() => {
+        // 调整labelRender 文字
+        this.css2dRender?.setSize(aContainer.offsetWidth, aContainer.offsetHeight);
+        this.css3dRender?.setSize(aContainer.offsetWidth, aContainer.offsetHeight);
+        this.svgRender?.setSize(aContainer.offsetWidth, aContainer.offsetHeight);
+      });
+      observer.observe(aContainer);
+      this.#resizeObserver = observer;
+    }
   };
 
   /**

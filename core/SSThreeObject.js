@@ -142,23 +142,6 @@ export default class SSThreeObject {
       (pointEvent.offsetX / this.threeContainer.offsetWidth) * 2 - 1, // 规范设施横坐标
       -(pointEvent.offsetY / this.threeContainer.offsetHeight) * 2 + 1
     );
-    // if (needOffset) {
-    //   point.x =
-    //     ((aPoint.x - this.threeContainer.getBoundingClientRect().left) /
-    //       this.threeContainer.offsetWidth) *
-    //       2 -
-    //     1; // 规范设施横坐标
-    //   point.y =
-    //     -(
-    //       (aPoint.y - this.threeContainer.getBoundingClientRect().top) /
-    //       this.threeContainer.offsetHeight
-    //     ) *
-    //       2 +
-    //     1;
-    // } else {
-    //     point.x = (aPoint.x / this.threeContainer.offsetWidth) * 2 - 1; // 规范设施横坐标
-    //     point.y = -(aPoint.y / this.threeContainer.offsetHeight) * 2 + 1;
-    // }
     const invalidTypes = [
       'AmbientLight',
       'PointLight',
@@ -188,9 +171,6 @@ export default class SSThreeObject {
       if (ignoreMeshNames.indexOf(aMesh.name) !== -1) {
         return false;
       }
-      // if (ignoreMeshNames.indexOf(SSThreeTool.getOriginMesh(aMesh)?.name) !== -1) {
-      //   return false;
-      // }
       return true;
     };
     models = models.filter(
