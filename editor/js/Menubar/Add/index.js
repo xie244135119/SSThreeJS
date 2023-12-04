@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { UIPanel, UIRow, UIHorizontalRule } from '../../UIKit/UI';
-import SSCommand from '../../Command/commands';
+import SSCommands from '../../Command/commands';
 import SEComponent from '../../SEComponent';
 
 export default class SEMenubarAdd extends SEComponent {
@@ -29,7 +29,7 @@ export default class SEMenubarAdd extends SEComponent {
       const mesh = new THREE.Group();
       mesh.name = 'Group';
 
-      this.controller.execute(new SSCommand.AddObject(this.controller, mesh));
+      this.controller.execute(new SSCommands.AddObjectCommand(this.controller, mesh));
     });
     options.add(option);
 
@@ -46,7 +46,7 @@ export default class SEMenubarAdd extends SEComponent {
       const mesh = new THREE.Mesh(geometry, new THREE.MeshStandardMaterial());
       mesh.name = 'Box';
 
-      this.controller.execute(new SSCommand.AddObject(this.controller, mesh));
+      this.controller.execute(new SSCommands.AddObjectCommand(this.controller, mesh));
     });
     options.add(option);
 
@@ -61,7 +61,7 @@ export default class SEMenubarAdd extends SEComponent {
       const mesh = new THREE.Mesh(geometry, material);
       mesh.name = 'Capsule';
 
-      this.controller.execute(new SSCommand.AddObject(this.controller, mesh));
+      this.controller.execute(new SSCommands.AddObjectCommand(this.controller, mesh));
     });
     options.add(option);
 
@@ -75,7 +75,7 @@ export default class SEMenubarAdd extends SEComponent {
       const mesh = new THREE.Mesh(geometry, new THREE.MeshStandardMaterial());
       mesh.name = 'Circle';
 
-      this.controller.execute(new SSCommand.AddObject(this.controller, mesh));
+      this.controller.execute(new SSCommands.AddObjectCommand(this.controller, mesh));
     });
     options.add(option);
 
@@ -89,7 +89,7 @@ export default class SEMenubarAdd extends SEComponent {
       const mesh = new THREE.Mesh(geometry, new THREE.MeshStandardMaterial());
       mesh.name = 'Cylinder';
 
-      this.controller.execute(new SSCommand.AddObject(this.controller, mesh));
+      this.controller.execute(new SSCommands.AddObjectCommand(this.controller, mesh));
     });
     options.add(option);
 
@@ -103,7 +103,7 @@ export default class SEMenubarAdd extends SEComponent {
       const mesh = new THREE.Mesh(geometry, new THREE.MeshStandardMaterial());
       mesh.name = 'Dodecahedron';
 
-      this.controller.execute(new SSCommand.AddObject(this.controller, mesh));
+      this.controller.execute(new SSCommands.AddObjectCommand(this.controller, mesh));
     });
     options.add(option);
 
@@ -117,7 +117,7 @@ export default class SEMenubarAdd extends SEComponent {
       const mesh = new THREE.Mesh(geometry, new THREE.MeshStandardMaterial());
       mesh.name = 'Icosahedron';
 
-      this.controller.execute(new SSCommand.AddObject(this.controller, mesh));
+      this.controller.execute(new SSCommands.AddObjectCommand(this.controller, mesh));
     });
     options.add(option);
 
@@ -134,7 +134,7 @@ export default class SEMenubarAdd extends SEComponent {
       );
       mesh.name = 'Lathe';
 
-      this.controller.execute(new SSCommand.AddObject(this.controller, mesh));
+      this.controller.execute(new SSCommands.AddObjectCommand(this.controller, mesh));
     });
     options.add(option);
 
@@ -148,7 +148,7 @@ export default class SEMenubarAdd extends SEComponent {
       const mesh = new THREE.Mesh(geometry, new THREE.MeshStandardMaterial());
       mesh.name = 'Octahedron';
 
-      this.controller.execute(new SSCommand.AddObject(this.controller, mesh));
+      this.controller.execute(new SSCommands.AddObjectCommand(this.controller, mesh));
     });
     options.add(option);
 
@@ -163,7 +163,7 @@ export default class SEMenubarAdd extends SEComponent {
       const mesh = new THREE.Mesh(geometry, material);
       mesh.name = 'Plane';
 
-      this.controller.execute(new SSCommand.AddObject(this.controller, mesh));
+      this.controller.execute(new SSCommands.AddObjectCommand(this.controller, mesh));
     });
     options.add(option);
 
@@ -177,7 +177,7 @@ export default class SEMenubarAdd extends SEComponent {
       const mesh = new THREE.Mesh(geometry, new THREE.MeshStandardMaterial());
       mesh.name = 'Ring';
 
-      this.controller.execute(new SSCommand.AddObject(this.controller, mesh));
+      this.controller.execute(new SSCommands.AddObjectCommand(this.controller, mesh));
     });
     options.add(option);
 
@@ -191,7 +191,7 @@ export default class SEMenubarAdd extends SEComponent {
       const mesh = new THREE.Mesh(geometry, new THREE.MeshStandardMaterial());
       mesh.name = 'Sphere';
 
-      this.controller.execute(new SSCommand.AddObject(this.controller, mesh));
+      this.controller.execute(new SSCommands.AddObjectCommand(this.controller, mesh));
     });
     options.add(option);
 
@@ -204,7 +204,7 @@ export default class SEMenubarAdd extends SEComponent {
       const sprite = new THREE.Sprite(new THREE.SpriteMaterial());
       sprite.name = 'Sprite';
 
-      this.controller.execute(new SSCommand.AddObject(this.controller, sprite));
+      this.controller.execute(new SSCommands.AddObjectCommand(this.controller, sprite));
     });
     options.add(option);
 
@@ -218,7 +218,7 @@ export default class SEMenubarAdd extends SEComponent {
       const mesh = new THREE.Mesh(geometry, new THREE.MeshStandardMaterial());
       mesh.name = 'Tetrahedron';
 
-      this.controller.execute(new SSCommand.AddObject(this.controller, mesh));
+      this.controller.execute(new SSCommands.AddObjectCommand(this.controller, mesh));
     });
     options.add(option);
 
@@ -232,7 +232,7 @@ export default class SEMenubarAdd extends SEComponent {
       const mesh = new THREE.Mesh(geometry, new THREE.MeshStandardMaterial());
       mesh.name = 'Torus';
 
-      this.controller.execute(new SSCommand.AddObject(this.controller, mesh));
+      this.controller.execute(new SSCommands.AddObjectCommand(this.controller, mesh));
     });
     options.add(option);
 
@@ -246,7 +246,7 @@ export default class SEMenubarAdd extends SEComponent {
       const mesh = new THREE.Mesh(geometry, new THREE.MeshStandardMaterial());
       mesh.name = 'TorusKnot';
 
-      this.controller.execute(new SSCommand.AddObject(this.controller, mesh));
+      this.controller.execute(new SSCommands.AddObjectCommand(this.controller, mesh));
     });
     options.add(option);
 
@@ -267,7 +267,7 @@ export default class SEMenubarAdd extends SEComponent {
       const mesh = new THREE.Mesh(geometry, new THREE.MeshStandardMaterial());
       mesh.name = 'Tube';
 
-      this.controller.execute(new SSCommand.AddObject(this.controller, mesh));
+      this.controller.execute(new SSCommands.AddObjectCommand(this.controller, mesh));
     });
     options.add(option);
 
@@ -286,7 +286,7 @@ export default class SEMenubarAdd extends SEComponent {
       const light = new THREE.AmbientLight(color);
       light.name = 'AmbientLight';
 
-      this.controller.execute(new SSCommand.AddObject(this.controller, light));
+      this.controller.execute(new SSCommands.AddObjectCommand(this.controller, light));
     });
     options.add(option);
 
@@ -305,7 +305,7 @@ export default class SEMenubarAdd extends SEComponent {
 
       light.position.set(5, 10, 7.5);
 
-      this.controller.execute(new SSCommand.AddObject(this.controller, light));
+      this.controller.execute(new SSCommands.AddObjectCommand(this.controller, light));
     });
     options.add(option);
 
@@ -324,7 +324,7 @@ export default class SEMenubarAdd extends SEComponent {
 
       light.position.set(0, 10, 0);
 
-      this.controller.execute(new SSCommand.AddObject(this.controller, light));
+      this.controller.execute(new SSCommands.AddObjectCommand(this.controller, light));
     });
     options.add(option);
 
@@ -341,7 +341,7 @@ export default class SEMenubarAdd extends SEComponent {
       const light = new THREE.PointLight(color, intensity, distance);
       light.name = 'PointLight';
 
-      this.controller.execute(new SSCommand.AddObject(this.controller, light));
+      this.controller.execute(new SSCommands.AddObjectCommand(this.controller, light));
     });
     options.add(option);
 
@@ -363,7 +363,7 @@ export default class SEMenubarAdd extends SEComponent {
 
       light.position.set(5, 10, 7.5);
 
-      this.controller.execute(new SSCommand.AddObject(this.controller, light));
+      this.controller.execute(new SSCommands.AddObjectCommand(this.controller, light));
     });
     options.add(option);
 
@@ -381,7 +381,7 @@ export default class SEMenubarAdd extends SEComponent {
       const camera = new THREE.OrthographicCamera(-aspect, aspect);
       camera.name = 'OrthographicCamera';
 
-      this.controller.execute(new SSCommand.AddObject(this.controller, camera));
+      this.controller.execute(new SSCommands.AddObjectCommand(this.controller, camera));
     });
     options.add(option);
 
@@ -393,7 +393,7 @@ export default class SEMenubarAdd extends SEComponent {
       const camera = new THREE.PerspectiveCamera();
       camera.name = 'PerspectiveCamera';
 
-      this.controller.execute(new SSCommand.AddObject(this.controller, camera));
+      this.controller.execute(new SSCommands.AddObjectCommand(this.controller, camera));
     });
     options.add(option);
   }

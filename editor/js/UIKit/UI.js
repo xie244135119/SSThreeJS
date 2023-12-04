@@ -47,6 +47,7 @@ class UIElement {
       if (argument instanceof UIElement) {
         this.dom.removeChild(argument.dom);
       } else {
+        console.trace();
         console.error('UIElement:', argument, 'is not an instance of UIElement.');
       }
     }
@@ -112,6 +113,14 @@ class UIElement {
     return this;
   }
 
+  get style() {
+    return this.dom.style;
+  }
+
+  set className(string) {
+    this.dom.className = string;
+  }
+
   setDisabled(value) {
     this.dom.disabled = value;
 
@@ -138,7 +147,6 @@ class UIElement {
 }
 
 // properties
-
 const properties = [
   'position',
   'left',
@@ -190,7 +198,6 @@ properties.forEach((property) => {
 });
 
 // events
-
 const events = [
   'KeyUp',
   'KeyDown',
@@ -346,7 +353,7 @@ class UISelect extends UIElement {
 
   /**
    * 一组字符串
-   * @param {string[]} options
+   * @param {{}} options
    */
   setOptions(options) {
     const selected = this.dom.value;

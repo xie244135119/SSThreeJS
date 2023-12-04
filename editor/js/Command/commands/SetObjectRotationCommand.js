@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import SEBaseCommand from './Base';
 
-export default class SetRotationCommand extends SEBaseCommand {
+export default class SetObjectRotationCommand extends SEBaseCommand {
   constructor(controller, object, newRotation, optionalOldRotation) {
     super(controller);
 

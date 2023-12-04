@@ -1,22 +1,22 @@
 import SSBaseCommand from './Base';
 
 /**
- * @param editor Editor
+ * @param controller controller
  * @param object THREE.Object3D
  * @param attributeName string
  * @param newValue number, string, boolean or object
  * @constructor
  */
 export default class SetMaterialValueCommand extends SSBaseCommand {
-  constructor(editor, object, attributeName, newValue, materialSlot) {
-    super(editor);
+  constructor(controller, object, attributeName, newValue, materialSlot) {
+    super(controller);
 
     this.type = 'SetMaterialValueCommand';
     this.name = `Set Material.${attributeName}`;
     this.updatable = true;
 
     this.object = object;
-    this.material = this.editor.getObjectMaterial(object, materialSlot);
+    this.material = this.controller.getObjectMaterial(object, materialSlot);
 
     this.oldValue = this.material !== undefined ? this.material[attributeName] : undefined;
     this.newValue = newValue;
@@ -28,16 +28,16 @@ export default class SetMaterialValueCommand extends SSBaseCommand {
     this.material[this.attributeName] = this.newValue;
     this.material.needsUpdate = true;
 
-    this.editor.signals.objectChanged.dispatch(this.object);
-    this.editor.signals.materialChanged.dispatch(this.material);
+    this.controller.signals.objectChanged.dispatch(this.object);
+    this.controller.signals.materialChanged.dispatch(this.material);
   }
 
   undo() {
     this.material[this.attributeName] = this.oldValue;
     this.material.needsUpdate = true;
 
-    this.editor.signals.objectChanged.dispatch(this.object);
-    this.editor.signals.materialChanged.dispatch(this.material);
+    this.controller.signals.objectChanged.dispatch(this.object);
+    this.controller.signals.materialChanged.dispatch(this.material);
   }
 
   update(cmd) {
@@ -61,6 +61,6 @@ export default class SetMaterialValueCommand extends SSBaseCommand {
     this.attributeName = json.attributeName;
     this.oldValue = json.oldValue;
     this.newValue = json.newValue;
-    this.object = this.editor.objectByUuid(json.objectUuid);
+    this.object = this.controller.objectByUuid(json.objectUuid);
   }
 }

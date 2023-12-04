@@ -1,27 +1,27 @@
 //
-import AddObject from './AddObjectCommand';
-import SetMaterialColor from './SetMaterialColorCommand';
-import SetMaterialValue from './SetMaterialValueCommand';
-import SetMaterial from './SetMaterialCommand';
-import SetScaleCommand from './SetScaleCommand';
+import AddObjectCommand from './AddObjectCommand';
+import SetMaterialColorCommand from './SetMaterialColorCommand';
+import SetMaterialValueCommand from './SetMaterialValueCommand';
+import SetMaterialCommand from './SetMaterialCommand';
+import SetObjectScaleCommand from './SetObjectScaleCommand';
 import SetSceneCommand from './SetSceneCommand';
-import SetPositionCommand from './SetPositionCommand';
-import SetRotationCommand from './SetRotationCommand';
-import SetUuidCommand from './SetUuidCommand';
-import SetValueCommand from './SetValueCommand';
+import SetObjectPositionCommand from './SetObjectPositionCommand';
+import SetObjectRotationCommand from './SetObjectRotationCommand';
+import SetObjectUuidCommand from './SetObjectUuidCommand';
+import SetObjectValueCommand from './SetObjectValueCommand';
 import SetColorCommand from './SetColorCommand';
 
 const SECommands = {
-  AddObject,
-  SetMaterialColor,
-  SetMaterialValue,
-  SetMaterial,
-  SetScaleCommand,
+  AddObjectCommand,
+  SetMaterialColorCommand,
+  SetMaterialValueCommand,
+  SetMaterialCommand,
+  SetObjectScaleCommand,
   SetSceneCommand,
-  SetPositionCommand,
-  SetRotationCommand,
-  SetUuidCommand,
-  SetValueCommand,
+  SetObjectPositionCommand,
+  SetObjectRotationCommand,
+  SetObjectUuidCommand,
+  SetObjectValueCommand,
   SetColorCommand
 };
 

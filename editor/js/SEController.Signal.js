@@ -45,17 +45,40 @@ export default class SSControllerSign {
 
   /**
    * @description 场景数据结构变化
-   * @type {Signal }
+   * @type {Signal}
    */
   sceneGraphChanged = null;
 
   /**
    * @description 场景渲染时刻
-   * @type {Signal }
+   * @type {Signal}
    */
   sceneRendered = null;
 
-  //
+  /**
+   * @description 场景环境变化的时候
+   * @type {Signal}
+   */
+  sceneEnvironmentChanged = null;
+
+  /**
+   * @description 雾气变化的时候
+   * @type {Signal}
+   */
+  sceneFogChanged = null;
+
+  /**
+   * @description 雾设置变化的时候
+   * @type {Signal}
+   */
+  sceneFogSettingsChanged = null;
+
+  /**
+   * @description 背景设置变化的时候
+   * @type {Signal}
+   */
+  sceneBackgroundChanged = null;
+
   /**
    * @description 摄像头改变
    * @type {Signal }
@@ -74,7 +97,6 @@ export default class SSControllerSign {
    */
   cameraResetted = null;
 
-  //
   /**
    * @description 物体被选中
    * @type {Signal }

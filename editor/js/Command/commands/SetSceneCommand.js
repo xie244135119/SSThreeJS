@@ -1,5 +1,5 @@
-import SetUuidCommand from './SetUuidCommand';
-import SetValueCommand from './SetValueCommand';
+import SetObjectUuidCommand from './SetObjectUuidCommand';
+import SetObjectValueCommand from './SetObjectValueCommand';
 import AddObjectCommand from './AddObjectCommand';
 import SEBaseCommand from './Base';
 
@@ -18,12 +18,14 @@ export default class SetSceneCommand extends SEBaseCommand {
     this.cmdArray = [];
 
     if (scene !== undefined) {
-      this.cmdArray.push(new SetUuidCommand(this.controller, this.controller.scene, scene.uuid));
       this.cmdArray.push(
-        new SetValueCommand(this.controller, this.controller.scene, 'name', scene.name)
+        new SetObjectUuidCommand(this.controller, this.controller.scene, scene.uuid)
       );
       this.cmdArray.push(
-        new SetValueCommand(
+        new SetObjectValueCommand(this.controller, this.controller.scene, 'name', scene.name)
+      );
+      this.cmdArray.push(
+        new SetObjectValueCommand(
           this.controller,
           this.controller.scene,
           'userData',

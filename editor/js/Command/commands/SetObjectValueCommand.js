@@ -7,7 +7,7 @@ import SEBaseCommand from './Base';
  * @param newValue number, string, boolean or object
  * @constructor
  */
-export default class SetValueCommand extends SEBaseCommand {
+export default class SetObjectValueCommand extends SEBaseCommand {
   constructor(controller, object, attributeName, newValue) {
     super(controller);
 

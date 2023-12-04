@@ -41,7 +41,7 @@ export default class SSPropertyObject extends SEComponent {
     objectUUID.setMarginLeft('7px').onClick(() => {
       objectUUID.setValue(THREE.MathUtils.generateUUID());
       this.controller.execute(
-        new SECommands.SetUuidCommand(
+        new SECommands.SetObjectUuidCommand(
           this.controller,
           this.controller.selected,
           objectUUID.getValue()
@@ -407,7 +407,12 @@ export default class SSPropertyObject extends SEComponent {
           const userData = JSON.parse(objectUserData.getValue());
           if (JSON.stringify(selectedObject.userData) !== JSON.stringify(userData)) {
             this.controller.execute(
-              new SECommands.SetValueCommand(this.controller, selectedObject, 'userData', userData)
+              new SECommands.SetObjectValueCommand(
+                this.controller,
+                selectedObject,
+                'userData',
+                userData
+              )
             );
           }
         } catch (exception) {
@@ -640,7 +645,7 @@ export default class SSPropertyObject extends SEComponent {
     );
     if (object.position.distanceTo(newPosition) >= 0.01) {
       this.controller.execute(
-        new SECommands.SetPositionCommand(this.controller, object, newPosition)
+        new SECommands.SetObjectPositionCommand(this.controller, object, newPosition)
       );
     }
   };
@@ -664,7 +669,7 @@ export default class SSPropertyObject extends SEComponent {
         .distanceTo(new THREE.Vector3().setFromEuler(newRotation)) >= 0.01
     ) {
       this.controller.execute(
-        new SECommands.SetRotationCommand(this.controller, object, newRotation)
+        new SECommands.SetObjectRotationCommand(this.controller, object, newRotation)
       );
     }
   };
@@ -684,43 +689,11 @@ export default class SSPropertyObject extends SEComponent {
       this.objectScaleZ.getValue()
     );
     if (object.scale.distanceTo(newScale) >= 0.01) {
-      this.controller.execute(new SECommands.SetScaleCommand(this.controller, object, newScale));
+      this.controller.execute(
+        new SECommands.SetObjectScaleCommand(this.controller, object, newScale)
+      );
     }
   };
-
-  // /**
-  //  * 数据更新
-  //  */
-  // update = () => {
-  //   const object = this.controller.selected;
-
-  //   if (object !== null) {
-  //     if (object.shadow !== undefined) {
-  //       if (object.shadow.bias !== objectShadowBias.getValue()) {
-  //         // editor.execute(
-  //         //   new SetValueCommand(editor, object.shadow, 'bias', objectShadowBias.getValue())
-  //         // );
-  //       }
-
-  //       if (object.shadow.normalBias !== objectShadowNormalBias.getValue()) {
-  //         // editor.execute(
-  //         //   new SetValueCommand(
-  //         //     editor,
-  //         //     object.shadow,
-  //         //     'normalBias',
-  //         //     objectShadowNormalBias.getValue()
-  //         //   )
-  //         // );
-  //       }
-
-  //       if (object.shadow.radius !== objectShadowRadius.getValue()) {
-  //         // editor.execute(
-  //         //   new SetValueCommand(editor, object.shadow, 'radius', objectShadowRadius.getValue())
-  //         // );
-  //       }
-  //     }
-  //   }
-  // };
 
   /**
    * 数据更新 数字类型判断更新幅度是否大于0.01, 其他是否相等
@@ -734,7 +707,7 @@ export default class SSPropertyObject extends SEComponent {
     const newValue = propValue;
     if (originValue !== undefined && Math.abs(originValue - newValue) >= 0.01) {
       this.controller.execute(
-        new SECommands.SetValueCommand(this.controller, selectedObject, propName, newValue)
+        new SECommands.SetObjectValueCommand(this.controller, selectedObject, propName, newValue)
       );
       selectedObject.updateProjectionMatrix();
     }
@@ -752,7 +725,7 @@ export default class SSPropertyObject extends SEComponent {
     const newValue = propValue;
     if (originValue !== newValue) {
       this.controller.execute(
-        new SECommands.SetValueCommand(this.controller, selectedObject, propName, newValue)
+        new SECommands.SetObjectValueCommand(this.controller, selectedObject, propName, newValue)
       );
     }
   };

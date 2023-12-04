@@ -4,6 +4,7 @@ import WEBGL from 'three/examples/jsm/capabilities/WebGL';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 import { RGBELoader } from 'three/examples/jsm/loaders/RGBELoader';
 import { HDRCubeTextureLoader } from 'three/examples/jsm/loaders/HDRCubeTextureLoader';
+import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment';
 // import { GLTF } from 'three/examples/jsm/loaders/GLTFLoader';
 import { UIPanel } from '../UIKit/UI';
 // import SSThreeLoop from './SSThreeLoop';
@@ -22,7 +23,7 @@ import SSTransformControl from '../../../core/SSTool/TransformControl';
 import SEComponent from '../SEComponent';
 import SSViewportInfo from './FPS';
 
-export default class SSViewport extends SEComponent {
+export default class SEViewport extends SEComponent {
   /**
    * 位置调试工具
    * @type {SSTransformControl}
@@ -99,9 +100,117 @@ export default class SSViewport extends SEComponent {
       this.controller.signals.intersectionsDetected.dispatch(models);
     });
     //
-    this.controller.signals.sceneGraphChanged.add(() => {
-      console.log(' 图表数据变化 ', this.controller.scene.children);
-    });
+    // this.controller.signals.sceneGraphChanged.add(() => {
+    //   console.log(' 图表数据变化 ', this.controller.scene.children);
+    // });
+    //
+    // environment
+    this.controller.signals.sceneEnvironmentChanged.add(
+      (environmentType, environmentEquirectangularTexture) => {
+        switch (environmentType) {
+          case 'None':
+            this.controller.scene.environment = null;
+            break;
+          case 'Equirectangular':
+            this.controller.scene.environment = null;
+            if (environmentEquirectangularTexture) {
+              environmentEquirectangularTexture.mapping = THREE.EquirectangularReflectionMapping;
+              this.controller.scene.environment = environmentEquirectangularTexture;
+            }
+            break;
+          case 'ModelViewer':
+            if (!this.pmremGenerator) {
+              this.pmremGenerator = new THREE.PMREMGenerator(this.controller.renderer);
+              this.pmremGenerator.compileEquirectangularShader();
+            }
+            this.controller.scene.environment = this.pmremGenerator.fromScene(
+              new RoomEnvironment(),
+              0.04
+            ).texture;
+            break;
+          default:
+            break;
+        }
+
+        this.render();
+      }
+    );
+
+    // fog
+    this.controller.signals.sceneFogChanged.add(
+      (fogType, fogColor, fogNear, fogFar, fogDensity) => {
+        switch (fogType) {
+          case 'None':
+            this.controller.scene.fog = null;
+            break;
+          case 'Fog':
+            this.controller.scene.fog = new THREE.Fog(fogColor, fogNear, fogFar);
+            break;
+          case 'FogExp2':
+            this.controller.scene.fog = new THREE.FogExp2(fogColor, fogDensity);
+            break;
+          default:
+            break;
+        }
+        this.render();
+      }
+    );
+    // fog setting
+    this.controller.signals.sceneFogSettingsChanged.add(
+      (fogType, fogColor, fogNear, fogFar, fogDensity) => {
+        switch (fogType) {
+          case 'Fog':
+            this.controller.scene.fog.color.setHex(fogColor);
+            this.controller.scene.fog.near = fogNear;
+            this.controller.scene.fog.far = fogFar;
+            break;
+          case 'FogExp2':
+            this.controller.scene.fog.color.setHex(fogColor);
+            this.controller.scene.fog.density = fogDensity;
+            break;
+          default:
+            break;
+        }
+        this.render();
+      }
+    );
+    // background
+    this.controller.signals.sceneBackgroundChanged.add(
+      (
+        backgroundType,
+        backgroundColor,
+        backgroundTexture,
+        backgroundEquirectangularTexture,
+        backgroundBlurriness,
+        backgroundIntensity
+      ) => {
+        console.log(' backgroundType backgroundColor', backgroundType, backgroundColor);
+        switch (backgroundType) {
+          case 'None':
+            this.controller.scene.background = null;
+            break;
+          case 'Color':
+            this.controller.scene.background = new THREE.Color(backgroundColor);
+            break;
+          case 'Texture':
+            if (backgroundTexture) {
+              this.controller.scene.background = backgroundTexture;
+            }
+            break;
+          case 'Equirectangular':
+            if (backgroundEquirectangularTexture) {
+              backgroundEquirectangularTexture.mapping = THREE.EquirectangularReflectionMapping;
+              this.controller.scene.background = backgroundEquirectangularTexture;
+              this.controller.scene.backgroundBlurriness = backgroundBlurriness;
+              this.controller.scene.backgroundIntensity = backgroundIntensity;
+            }
+            break;
+          default:
+            break;
+        }
+        this.render();
+      }
+    );
   }
 
   /**

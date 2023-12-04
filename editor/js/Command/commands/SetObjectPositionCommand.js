@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import SEBaseCommand from './Base';
 
-export default class SetPositionCommand extends SEBaseCommand {
+export default class SetObjectPositionCommand extends SEBaseCommand {
   constructor(controller, object, newPosition, optionalOldPosition) {
     super(controller);
 

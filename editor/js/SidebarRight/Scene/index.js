@@ -1,5 +1,4 @@
 import * as THREE from 'three';
-
 import { UIPanel, UIBreak, UIRow, UIColor, UISelect, UIText, UINumber } from '../../UIKit/UI';
 import { UIOutliner, UITexture } from '../../UIKit/UI.Three';
 import SEComponent from '../../SEComponent';
@@ -104,24 +103,7 @@ export default class SEScene extends SEComponent {
       return html;
     }
 
-    let ignoreObjectSelectedSignal = false;
-
-    // // 场景目录树形结构
-    // const outliner = new UIOutliner(this.controller);
-    // outliner.setId('outliner');
-    // outliner.setHeight('300px');
-    // outliner.onChange(() => {
-    //   ignoreObjectSelectedSignal = true;
-
-    //   this.controller.selectById(parseInt(outliner.getValue(), 10));
-
-    //   ignoreObjectSelectedSignal = false;
-    // });
-    // outliner.onDblClick(() => {
-    //   this.controller.focusById(parseInt(outliner.getValue(), 10));
-    // });
-    // container.add(outliner);
-    // container.add(new UIBreak());
+    // let ignoreObjectSelectedSignal = false;
 
     // background
     const backgroundRow = new UIRow();
@@ -133,64 +115,50 @@ export default class SEScene extends SEComponent {
         Equirectangular: 'Equirect'
       })
       .setWidth('150px');
-    backgroundType.onChange(() => {
-      onBackgroundChanged();
-      refreshBackgroundUI();
-    });
-
     backgroundRow.add(
       new UIText(this.controller.strings.getKey('sidebar/scene/background')).setWidth('90px')
     );
     backgroundRow.add(backgroundType);
 
-    const backgroundColor = new UIColor()
-      .setValue('#000000')
-      .setMarginLeft('8px')
-      .onInput(onBackgroundChanged);
+    const backgroundColor = new UIColor();
+    backgroundColor.setValue('#000000').setMarginLeft('8px');
     backgroundRow.add(backgroundColor);
-
-    const backgroundTexture = new UITexture().setMarginLeft('8px').onChange(onBackgroundChanged);
+    // 环境贴图
+    const backgroundTexture = new UITexture().setMarginLeft('8px');
     backgroundTexture.setDisplay('none');
     backgroundRow.add(backgroundTexture);
 
-    const backgroundEquirectangularTexture = new UITexture()
-      .setMarginLeft('8px')
-      .onChange(onBackgroundChanged);
+    const backgroundEquirectangularTexture = new UITexture();
+    backgroundEquirectangularTexture.setMarginLeft('8px');
     backgroundEquirectangularTexture.setDisplay('none');
     backgroundRow.add(backgroundEquirectangularTexture);
-
     container.add(backgroundRow);
 
     const backgroundEquirectRow = new UIRow();
     backgroundEquirectRow.setDisplay('none');
     backgroundEquirectRow.setMarginLeft('90px');
 
-    const backgroundBlurriness = new UINumber(0)
-      .setWidth('40px')
-      .setRange(0, 1)
-      .onChange(onBackgroundChanged);
+    const backgroundBlurriness = new UINumber(0);
+    backgroundBlurriness.setWidth('40px').setRange(0, 1);
     backgroundEquirectRow.add(backgroundBlurriness);
 
-    const backgroundIntensity = new UINumber(1)
-      .setWidth('40px')
-      .setRange(0, Infinity)
-      .onChange(onBackgroundChanged);
+    const backgroundIntensity = new UINumber(1);
+    backgroundIntensity.setWidth('40px').setRange(0, Infinity);
     backgroundEquirectRow.add(backgroundIntensity);
 
     container.add(backgroundEquirectRow);
 
-    function onBackgroundChanged() {
-      // signals.sceneBackgroundChanged.dispatch(
-      //   backgroundType.getValue(),
-      //   backgroundColor.getHexValue(),
-      //   backgroundTexture.getValue(),
-      //   backgroundEquirectangularTexture.getValue(),
-      //   backgroundBlurriness.getValue(),
-      //   backgroundIntensity.getValue()
-      // );
-    }
-
-    function refreshBackgroundUI() {
+    const onBackgroundChanged = () => {
+      this.controller.signals.sceneBackgroundChanged.dispatch(
+        backgroundType.getValue(),
+        backgroundColor.getHexValue(),
+        backgroundTexture.getValue(),
+        backgroundEquirectangularTexture.getValue(),
+        backgroundBlurriness.getValue(),
+        backgroundIntensity.getValue()
+      );
+    };
+    const refreshBackgroundUI = () => {
       const type = backgroundType.getValue();
 
       backgroundType.setWidth(type === 'None' ? '150px' : '110px');
@@ -198,13 +166,21 @@ export default class SEScene extends SEComponent {
       backgroundTexture.setDisplay(type === 'Texture' ? '' : 'none');
       backgroundEquirectangularTexture.setDisplay(type === 'Equirectangular' ? '' : 'none');
       backgroundEquirectRow.setDisplay(type === 'Equirectangular' ? '' : 'none');
-    }
+    };
+    backgroundIntensity.onChange(onBackgroundChanged);
+    backgroundBlurriness.onChange(onBackgroundChanged);
+    backgroundEquirectangularTexture.onChange(onBackgroundChanged);
+    backgroundTexture.onChange(onBackgroundChanged);
+    backgroundColor.onInput(onBackgroundChanged);
+    backgroundType.onChange(() => {
+      onBackgroundChanged();
+      refreshBackgroundUI();
+    });
 
     // environment
-
     const environmentRow = new UIRow();
-
-    const environmentType = new UISelect()
+    const environmentType = new UISelect();
+    environmentType
       .setOptions({
         None: '',
         Equirectangular: 'Equirect',
@@ -212,78 +188,48 @@ export default class SEScene extends SEComponent {
       })
       .setWidth('150px');
     environmentType.setValue('None');
-    environmentType.onChange(() => {
-      onEnvironmentChanged();
-      refreshEnvironmentUI();
-    });
-
     environmentRow.add(
       new UIText(this.controller.strings.getKey('sidebar/scene/environment')).setWidth('90px')
     );
     environmentRow.add(environmentType);
+    container.add(environmentRow);
+    const environmentEquirectangularTexture = new UITexture();
+    environmentEquirectangularTexture.setMarginLeft('8px');
 
-    const environmentEquirectangularTexture = new UITexture()
-      .setMarginLeft('8px')
-      .onChange(onEnvironmentChanged);
     environmentEquirectangularTexture.setDisplay('none');
     environmentRow.add(environmentEquirectangularTexture);
-
-    container.add(environmentRow);
-
-    function onEnvironmentChanged() {
-      // signals.sceneEnvironmentChanged.dispatch(
-      //   environmentType.getValue(),
-      //   environmentEquirectangularTexture.getValue()
-      // );
-    }
-
-    function refreshEnvironmentUI() {
+    // 环境改变的时候
+    const onEnvironmentChanged = () => {
+      this.controller.signals.sceneEnvironmentChanged.dispatch(
+        environmentType.getValue(),
+        environmentEquirectangularTexture.getValue()
+      );
+    };
+    // 刷新环境ui 处理
+    const refreshEnvironmentUI = () => {
       const type = environmentType.getValue();
-
       environmentType.setWidth(type !== 'Equirectangular' ? '150px' : '110px');
       environmentEquirectangularTexture.setDisplay(type === 'Equirectangular' ? '' : 'none');
-    }
+    };
+    //
+    environmentType.onChange((e) => {
+      onEnvironmentChanged();
+      refreshEnvironmentUI();
+    });
+    environmentEquirectangularTexture.onChange(onEnvironmentChanged);
 
     // fog
-
-    function onFogChanged() {
-      // signals.sceneFogChanged.dispatch(
-      //   fogType.getValue(),
-      //   fogColor.getHexValue(),
-      //   fogNear.getValue(),
-      //   fogFar.getValue(),
-      //   fogDensity.getValue()
-      // );
-    }
-
-    function onFogSettingsChanged() {
-      // signals.sceneFogSettingsChanged.dispatch(
-      //   fogType.getValue(),
-      //   fogColor.getHexValue(),
-      //   fogNear.getValue(),
-      //   fogFar.getValue(),
-      //   fogDensity.getValue()
-      // );
-    }
-
     const fogTypeRow = new UIRow();
-    const fogType = new UISelect()
-      .setOptions({
-        None: '',
-        Fog: 'Linear',
-        FogExp2: 'Exponential'
-      })
-      .setWidth('150px');
-    fogType.onChange(() => {
-      onFogChanged();
-      refreshFogUI();
+    const fogType = new UISelect().setOptions({
+      None: '',
+      Fog: 'Linear',
+      FogExp2: 'Exponential'
     });
-
+    fogType.setWidth('150px');
     fogTypeRow.add(
       new UIText(this.controller.strings.getKey('sidebar/scene/fog')).setWidth('90px')
     );
     fogTypeRow.add(fogType);
-
     container.add(fogTypeRow);
 
     // fog color
@@ -292,31 +238,23 @@ export default class SEScene extends SEComponent {
     fogPropertiesRow.setMarginLeft('90px');
     container.add(fogPropertiesRow);
 
-    const fogColor = new UIColor().setValue('#aaaaaa');
-    fogColor.onInput(onFogSettingsChanged);
+    const fogColor = new UIColor();
+    fogColor.setValue('#aaaaaa');
     fogPropertiesRow.add(fogColor);
 
     // fog near
-    const fogNear = new UINumber(0.1)
-      .setWidth('40px')
-      .setRange(0, Infinity)
-      .onChange(onFogSettingsChanged);
+    const fogNear = new UINumber(0.1);
+    fogNear.setWidth('40px').setRange(0, Infinity);
     fogPropertiesRow.add(fogNear);
 
     // fog far
-    const fogFar = new UINumber(50)
-      .setWidth('40px')
-      .setRange(0, Infinity)
-      .onChange(onFogSettingsChanged);
+    const fogFar = new UINumber(50);
+    fogFar.setWidth('40px').setRange(0, Infinity);
     fogPropertiesRow.add(fogFar);
 
     // fog density
-    const fogDensity = new UINumber(0.05)
-      .setWidth('40px')
-      .setRange(0, 0.1)
-      .setStep(0.001)
-      .setPrecision(3)
-      .onChange(onFogSettingsChanged);
+    const fogDensity = new UINumber(0.05);
+    fogDensity.setWidth('40px').setRange(0, 0.1).setStep(0.001).setPrecision(3);
     fogPropertiesRow.add(fogDensity);
 
     const refreshFogUI = () => {
@@ -328,39 +266,39 @@ export default class SEScene extends SEComponent {
       fogDensity.setDisplay(type === 'FogExp2' ? '' : 'none');
     };
 
+    const onFogChanged = () => {
+      this.controller.signals.sceneFogChanged.dispatch(
+        fogType.getValue(),
+        fogColor.getHexValue(),
+        fogNear.getValue(),
+        fogFar.getValue(),
+        fogDensity.getValue()
+      );
+    };
+
+    const onFogSettingsChanged = () => {
+      this.controller.signals.sceneFogSettingsChanged.dispatch(
+        fogType.getValue(),
+        fogColor.getHexValue(),
+        fogNear.getValue(),
+        fogFar.getValue(),
+        fogDensity.getValue()
+      );
+    };
+
+    fogType.onChange(() => {
+      onFogChanged();
+      refreshFogUI();
+    });
+    fogColor.onInput(onFogSettingsChanged);
+    fogNear.onChange(onFogSettingsChanged);
+    fogFar.onChange(onFogSettingsChanged);
+    fogDensity.onChange(onFogSettingsChanged);
+
     //
     const refreshUI = () => {
       const { camera } = this.controller;
       const { scene } = this.controller;
-
-      // const options = [];
-
-      // options.push(buildOption(camera, false));
-      // options.push(buildOption(scene, false));
-
-      // function addObjects(objects, pad) {
-      //   for (let i = 0, l = objects.length; i < l; i++) {
-      //     const object = objects[i];
-
-      //     if (nodeStates.has(object) === false) {
-      //       nodeStates.set(object, false);
-      //     }
-
-      //     const option = buildOption(object, true);
-      //     option.style.paddingLeft = `${pad * 18}px`;
-      //     options.push(option);
-
-      //     if (nodeStates.get(object) === true) {
-      //       addObjects(object.children, pad + 1);
-      //     }
-      //   }
-      // }
-      // addObjects(scene.children, 0);
-      // outliner.setOptions(options);
-
-      // if (this.controller.selected !== null) {
-      //   outliner.setValue(this.controller.selected.id);
-      // }
 
       if (scene.background) {
         if (scene.background.isColor) {
@@ -411,32 +349,13 @@ export default class SEScene extends SEComponent {
     };
 
     refreshUI();
-    /*
-	signals.objectChanged.add( function ( object ) {
 
-		let options = outliner.options;
-
-		for ( let i = 0; i < options.length; i ++ ) {
-
-			let option = options[ i ];
-
-			if ( option.value === object.id ) {
-
-				option.innerHTML = buildHTML( object );
-				return;
-
-			}
-
-		}
-
-	} );
-	*/
     // 数据清空的时候
     this.controller.signals.editorCleared.add(refreshUI);
     // 场景数据变化
     this.controller.signals.sceneGraphChanged.add(refreshUI);
     this.controller.signals.objectSelected.add((object) => {
-      if (ignoreObjectSelectedSignal === true) return;
+      // if (ignoreObjectSelectedSignal === true) return;
       if (object !== null && object.parent !== null) {
         let needsRefresh = false;
         let { parent } = object;

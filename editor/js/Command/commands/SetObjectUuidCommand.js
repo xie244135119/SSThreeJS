@@ -6,7 +6,7 @@ import SEBaseCommand from './Base';
  * @param newUuid string
  * @constructor
  */
-export default class SetUuidCommand extends SEBaseCommand {
+export default class SetObjectUuidCommand extends SEBaseCommand {
   constructor(controller, object, newUuid) {
     super(controller);
 

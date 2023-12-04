@@ -2,13 +2,13 @@ import SSController from './js/SEController';
 // import { Toolbar } from './js/Toolbar';
 // import { Script } from './js/Script';
 // import { Player } from './js/Player';
-import SSViewport from './js/Viewport';
+import SEViewport from './js/Viewport';
 // import styles from './index.module.css';
 import './css/main.css';
-import SSMenubar from './js/Menubar';
-import SSLeftSidebar from './js/SidebarLeft';
-import SSSidebar from './js/SidebarRight';
-import SSCommand from './js/Command/commands';
+import SEMenubar from './js/Menubar';
+import SESidebarLeft from './js/SidebarLeft';
+import SESidebarRight from './js/SidebarRight';
+import SECommands from './js/Command/commands';
 import SSLoader from '../core/SSLoader';
 // import { Resizer } from './js/Resizer';
 // import { VRButton } from 'three/addons/webxr/VRButton';
@@ -58,22 +58,22 @@ export default class SSEditor {
     // }
 
     // 场景窗口
-    const viewport = new SSViewport(controler);
+    const viewport = new SEViewport(controler);
     // viewport.dom.className = styles.viewport;
     editorDom.appendChild(viewport.dom);
     this.viewport = viewport;
 
     // 左侧边栏
-    const leftsidebar = new SSLeftSidebar(controler);
+    const leftsidebar = new SESidebarLeft(controler);
     editorDom.appendChild(leftsidebar.dom);
     this.leftsidebar = leftsidebar;
 
     // 右侧边栏
-    const sidebar = new SSSidebar(controler);
+    const sidebar = new SESidebarRight(controler);
     // sidebar.dom.className = styles.sidebar;
     editorDom.appendChild(sidebar.dom);
 
-    const menubar = new SSMenubar(controler);
+    const menubar = new SEMenubar(controler);
     // menubar.dom.className = styles.menubar;
     editorDom.appendChild(menubar.dom);
 
@@ -113,7 +113,7 @@ export default class SSEditor {
     // 内部：从模型库拖拽数据
     if (libraryModelUrl) {
       SSLoader.loadGltf(libraryModelUrl).then((gltf) => {
-        this.controller.execute(new SSCommand.AddObject(this.controller, gltf.scene));
+        this.controller.execute(new SECommands.AddObjectCommand(this.controller, gltf.scene));
       });
       return;
     }
@@ -129,7 +129,7 @@ export default class SSEditor {
           case 'gltf':
           case 'glb':
             SSLoader.loadGltfBuffer(fileReader.result, '/').then((gltf) => {
-              this.controller.execute(new SSCommand.AddObject(this.controller, gltf.scene));
+              this.controller.execute(new SECommands.AddObjectCommand(this.controller, gltf.scene));
             });
             break;
 

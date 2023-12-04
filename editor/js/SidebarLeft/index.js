@@ -3,7 +3,7 @@ import SEComponent from '../SEComponent';
 import SSSliderTree from './ProjectTree';
 import SESidebarLibrary from './Library';
 
-export default class SSLeftSidebar extends SEComponent {
+export default class SELeftSidebar extends SEComponent {
   constructor(controller) {
     super(controller);
     const container = new UIDiv();

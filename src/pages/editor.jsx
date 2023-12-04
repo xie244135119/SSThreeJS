@@ -8,7 +8,7 @@ export default function DebugEditor(prpps) {
 
   return (
     <div style={{ height: '100vh', display: 'flex', flexDirection: 'column' }}>
-      <span
+      {/* <span
         style={{
           textAlign: 'center',
           display: 'inline-block',
@@ -17,7 +17,7 @@ export default function DebugEditor(prpps) {
         }}
       >
         三维编排工具
-      </span>
+      </span> */}
       <div id="editorcontainer" style={{ flex: 1 }} />
     </div>
   );

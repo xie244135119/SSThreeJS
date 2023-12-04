@@ -34,9 +34,9 @@ class Signal {
    * 消息触发 不同的消息触发不同的机制
    * @param {object} object 消息传值对象
    */
-  dispatch = (object) => {
+  dispatch = (...items) => {
     this._fnlist.forEach((fn) => {
-      fn?.(object);
+      fn?.(...items);
     });
   };
 }

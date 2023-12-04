@@ -8,7 +8,7 @@ import SEBaseCommand from './Base';
  * @param optionalOldScale THREE.Vector3
  * @constructor
  */
-export default class SetScaleCommand extends SEBaseCommand {
+export default class SetObjectScaleCommand extends SEBaseCommand {
   constructor(controller, object, newScale, optionalOldScale) {
     super(controller);
 

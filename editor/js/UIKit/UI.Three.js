@@ -1,8 +1,7 @@
 /* eslint-disable max-classes-per-file */
 import * as THREE from 'three';
-
-// import { RGBELoader } from 'three/addons/loaders/RGBELoader';
-// import { TGALoader } from 'three/addons/loaders/TGALoader';
+import { RGBELoader } from 'three/examples/jsm/loaders/RGBELoader';
+import { TGALoader } from 'three/examples/jsm/loaders/TGALoader';
 
 import { UIElement, UISpan, UIDiv, UIRow, UIButton, UICheckbox, UIText, UINumber } from './UI';
 // import { MoveObjectCommand } from '../commands/MoveObjectCommand';
@@ -16,66 +15,46 @@ class UITexture extends UISpan {
     const loadFile = (file) => {
       const extension = file.name.split('.').pop().toLowerCase();
       const reader = new FileReader();
-
       if (extension === 'hdr' || extension === 'pic') {
-        reader.addEventListener('load', (event) => {
+        reader.onload = (event) => {
           // assuming RGBE/Radiance HDR iamge format
-          console.log(' loadFile event ', event);
+          const loader = new RGBELoader();
+          loader.load(event.target.result, (hdrTexture) => {
+            hdrTexture.sourceFile = file.name;
+            hdrTexture.isHDRTexture = true;
 
-          // const loader = new RGBELoader();
-          // loader.load(event.target.result, (hdrTexture) => {
-          //   hdrTexture.sourceFile = file.name;
-          //   hdrTexture.isHDRTexture = true;
+            this.setValue(hdrTexture);
 
-          //   scope.setValue(hdrTexture);
-
-          //   if (scope.onChangeCallback) scope.onChangeCallback(hdrTexture);
-          // });
-        });
-
-        reader.readAsDataURL(file);
+            if (this.onChangeCallback) this.onChangeCallback(hdrTexture);
+          });
+        };
       } else if (extension === 'tga') {
-        // reader.addEventListener(
-        //   'load',
-        //   (event) => {
-        //     const loader = new TGALoader();
-        //     loader.load(event.target.result, (texture) => {
-        //       texture.colorSpace = THREE.SRGBColorSpace;
-        //       texture.sourceFile = file.name;
-        //       scope.setValue(texture);
-        //       if (scope.onChangeCallback) scope.onChangeCallback(texture);
-        //     });
-        //   },
-        //   false
-        // );
-        // reader.readAsDataURL(file);
+        reader.onload = (event) => {
+          const loader = new TGALoader();
+          loader.load(event.target.result, (texture) => {
+            texture.colorSpace = THREE.SRGBColorSpace;
+            texture.sourceFile = file.name;
+            this.setValue(texture);
+            if (this.onChangeCallback) this.onChangeCallback(texture);
+          });
+        };
       } else if (file.type.match('image.*')) {
-        reader.addEventListener(
-          'load',
-          (event) => {
-            const image = document.createElement('img');
-            image.addEventListener(
-              'load',
-              () => {
-                const texture = new THREE.Texture(this, mapping);
-                texture.sourceFile = file.name;
-                texture.needsUpdate = true;
+        reader.onload = (event) => {
+          const image = document.createElement('img');
+          image.onload = () => {
+            const texture = new THREE.Texture(image, mapping);
+            texture.sourceFile = file.name;
+            texture.needsUpdate = true;
 
-                this.setValue(texture);
+            this.setValue(texture);
 
-                if (this.onChangeCallback) this.onChangeCallback(texture);
-              },
-              false
-            );
+            if (this.onChangeCallback) this.onChangeCallback(texture);
+          };
 
-            image.src = event.target.result;
-          },
-          false
-        );
-
-        reader.readAsDataURL(file);
+          image.src = event.target.result;
+        };
       }
-
+      reader.readAsDataURL(file);
       form.reset();
     };
 
