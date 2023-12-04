@@ -307,6 +307,13 @@ export default class SEController {
     this.selector.deselect();
   }
 
+  /**
+   * 刷新场景
+   */
+  update() {
+    this.renderer.render(this.scene, this.camera);
+  }
+
   get selected() {
     return this.selector.selected;
   }

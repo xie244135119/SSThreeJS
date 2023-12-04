@@ -1,4 +1,4 @@
-import { UITabbedPanel, UIDiv, UIPanel } from '../UIKit/UI';
+import { UITabbedPanel, UIDiv } from '../UIKit/UI';
 
 import SSSidebarScene from './Scene/index';
 import SEComponent from '../SEComponent';
@@ -9,7 +9,7 @@ import SSPropertyObject from './Scene/Object';
 import SSPropertyMaterial from './Scene/Material';
 // import SSSidebarObject
 
-export default class SESidebarRight extends SEComponent {
+export default class SESidebar extends SEComponent {
   constructor(controller) {
     const container = new UITabbedPanel();
     container.setId('sidebar');
@@ -22,25 +22,13 @@ export default class SESidebarRight extends SEComponent {
     // object属性
     const objectComponent = new SSPropertyObject(controller);
     // const materialComponent = new ;
-    const materialdom = new SSPropertyMaterial(controller);
-    const geomertrydom = new UIPanel();
     sceneTab.addTab(
       'Object',
       this.controller.strings.getKey('sidebar/properties/object'),
       objectComponent.uiDom
     );
-    sceneTab.addTab(
-      'Material',
-      this.controller.strings.getKey('sidebar/properties/material'),
-      materialdom.uiDom
-    );
-    sceneTab.addTab(
-      'Geometry',
-      this.controller.strings.getKey('sidebar/properties/geometry'),
-      geomertrydom.uiDom
-    );
+    // sceneTab.addTab('Geometry', "sidebar/properties/geometry", );
     sceneComponent.uiDom.add(sceneTab);
-    sceneTab.select('Material');
 
     // 项目
     const projectCom = new SSSidebarProject(controller);

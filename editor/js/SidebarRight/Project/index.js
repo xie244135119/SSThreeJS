@@ -1,5 +1,16 @@
 import SEComponent from '../../SEComponent';
-import { UIPanel, UIRow, UIInput, UICheckbox, UIText, UIDiv } from '../../UIKit/UI';
+import {
+  UIPanel,
+  UIRow,
+  UIInput,
+  UICheckbox,
+  UIText,
+  UIDiv,
+  UISelect,
+  UIBreak
+} from '../../UIKit/UI';
+import Tool from './Tool/index';
+import SERenderer from './Renderer/index';
 
 /* import { SidebarProjectMaterials } from './Sidebar.Project.Materials.js'; */
 // import { SidebarProjectRenderer } from './Renderer/index';
@@ -11,6 +22,7 @@ export default class SEProject extends SEComponent {
 
     const container = new UIDiv();
     this.dom = container.dom;
+    this.uiDom = container;
 
     const settings = new UIPanel();
     settings.setBorderTop('0');
@@ -19,19 +31,29 @@ export default class SEProject extends SEComponent {
 
     // Title
     const titleRow = new UIRow();
+    titleRow.add(
+      new UIText(this.controller.strings.getKey('sidebar/project/title')).setWidth('90px')
+    );
     const title = new UIInput(this.controller.config.getKey('project/title'))
       .setLeft('100px')
       .setWidth('150px')
       .onChange(() => {
         this.controller.config.setKey('project/title', this.getValue());
       });
-
-    titleRow.add(
-      new UIText(this.controller.strings.getKey('sidebar/project/title')).setWidth('90px')
-    );
     titleRow.add(title);
-
     settings.add(titleRow);
+
+    container.add(new UIBreak());
+
+    const renderCom = new SERenderer(controller);
+    container.add(renderCom.uiDom);
+
+    container.add(new UIBreak());
+
+    // Title
+    const tool = new Tool(this.controller);
+    container.add(tool.uiDom);
+    // container.dom.append(tool.dom);
 
     // Editable
     // const editableRow = new UIRow();
