@@ -2,6 +2,7 @@ import * as THREE from 'three';
 
 import { UIButton, UINumber, UIPanel, UIRow, UISelect, UIText } from '../../../UIKit/UI';
 import { UIBoolean } from '../../../UIKit/UI.Three';
+import SSCommands from '../../../Command/commands/index';
 import SEComponent from '../../../SEComponent';
 import SSThreeTool from '../../../../../core/SSTool/index';
 
@@ -72,21 +73,26 @@ export default class Tool extends SEComponent {
       const number = cloneNumber.getValue();
       for (let i = 0; i < number; i++) {
         const clone = this.selected.clone();
-        clone.name = `${this.selected.name}_Clone${i}`;
-        controller.scene.add(clone);
+        // clone.name = `${this.selected.name}_Clone${i}`;
+        clone.name = `${this.selected.name}`;
+        this.controller.execute(new SSCommands.AddObjectCommand(this.controller, clone));
+        // controller.scene.add(clone);
         switch (offsetTypeSelect.getValue()) {
-          case 'x':
+          case 'x': {
             const radiusX = max.x - min.x;
-            clone.position.x += (radiusX + radiusX * offsetNumber.getValue()) * (i + 1);
+            clone.position.x += radiusX + radiusX * offsetNumber.getValue(); // ()* (i + 1)
             break;
-          case 'y':
+          }
+          case 'y': {
             const radiusY = max.y - min.y;
-            clone.position.y += (radiusY + radiusY * offsetNumber.getValue()) * (i + 1);
+            clone.position.y += radiusY + radiusY * offsetNumber.getValue();
             break;
-          case 'z':
+          }
+          case 'z': {
             const radiusZ = max.z - min.z;
-            clone.position.z += (radiusZ + radiusZ * offsetNumber.getValue()) * (i + 1);
+            clone.position.z += radiusZ + radiusZ * offsetNumber.getValue();
             break;
+          }
           default:
             break;
         }
