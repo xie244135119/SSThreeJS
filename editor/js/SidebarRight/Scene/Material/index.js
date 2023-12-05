@@ -14,7 +14,7 @@ import UIMaterialBox from '../../../UIKit/UI.MaterialBox';
 // import { SidebarMaterialRangeValueProperty } from './Sidebar.Material.RangeValueProperty.js';
 // import { SidebarMaterialProgram } from './Sidebar.Material.Program.js';
 
-export default class SSPropertyMaterial extends SEComponent {
+export default class SEPropertyMaterial extends SEComponent {
   /**
    * 全部属性列表
    */

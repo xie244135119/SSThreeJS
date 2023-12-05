@@ -1,0 +1,285 @@
+{
+  "v": "7.2.2-dev3",
+  "p": {
+    "autoAdjustIndex": true,
+    "hierarchicalRendering": true
+  },
+  "a": {
+    "sceneBloomStrength": 1.5,
+    "sceneBloomThreshold": 0.55,
+    "sceneBloomRadius": 0.4,
+    "sceneBloomOverrideAlpha": true,
+    "sceneBloomSelective": false,
+    "sceneDofAperture": 0.025,
+    "sceneDofMaxblur": 1,
+    "sceneDofImage": null,
+    "sceneHueSaturationHue": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    "sceneHueSaturationSaturation": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    "sceneHueSaturationLightness": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    "sceneBlurValue": 0,
+    "sceneHighlightMode": "style",
+    "sceneHighlightColor": "rgba(190, 210, 250, 1)",
+    "sceneHighlightWidth": 0.8,
+    "sceneDashEnable": false,
+    "sceneHeadlightEnable": true,
+    "sceneHeadlightRange": 0,
+    "sceneHeadlightColor": "rgb(255,255,255)",
+    "sceneHeadlightIntensity": 1,
+    "sceneHeadlightAmbientIntensity": 0.7,
+    "sceneFogEnable": false,
+    "sceneFogColor": "white",
+    "sceneFogNear": 1,
+    "sceneFogFar": 2000,
+    "sceneHueSaturation": false
+  },
+  "d": [
+    {
+      "c": "ht.Node",
+      "i": 4967,
+      "p": {
+        "anchorElevation": 0
+      },
+      "s": {
+        "shape3d": "public/ht/baima_split/models/110kV副母线.json",
+        "2d.movable": false,
+        "3d.movable": false,
+        "2d.editable": false,
+        "3d.editable": false,
+        "interactive": true
+      }
+    },
+    {
+      "c": "ht.Node",
+      "i": 4968,
+      "p": {
+        "displayName": "110kV旁路720开关",
+        "anchorElevation": 0
+      },
+      "s": {
+        "shape3d": "public/ht/baima_split/models/110kV旁路720开关.json",
+        "2d.movable": false,
+        "3d.movable": false,
+        "2d.editable": false,
+        "3d.editable": false,
+        "interactive": true
+      }
+    },
+    {
+      "c": "ht.Node",
+      "i": 4969,
+      "p": {
+        "anchorElevation": 0
+      },
+      "s": {
+        "shape3d": "public/ht/baima_split/models/110kV母联710开关.json",
+        "2d.movable": false,
+        "3d.movable": false,
+        "2d.editable": false,
+        "3d.editable": false,
+        "interactive": true
+      }
+    },
+    {
+      "c": "ht.Node",
+      "i": 4970,
+      "p": {
+        "displayName": "110kV白周71A开关",
+        "anchorElevation": 0
+      },
+      "s": {
+        "shape3d": "public/ht/baima_split/models/110kV白周71A开关.json",
+        "2d.movable": false,
+        "3d.movable": false,
+        "2d.editable": false,
+        "3d.editable": false,
+        "interactive": true
+      }
+    },
+    {
+      "c": "ht.Node",
+      "i": 4971,
+      "p": {
+        "displayName": "110kV白塘712开关",
+        "anchorElevation": 0
+      },
+      "s": {
+        "shape3d": "public/ht/baima_split/models/110kV白塘712开关.json",
+        "2d.movable": false,
+        "3d.movable": false,
+        "2d.editable": false,
+        "3d.editable": false,
+        "interactive": true
+      }
+    },
+    {
+      "c": "ht.Node",
+      "i": 4972,
+      "p": {
+        "anchorElevation": 0
+      },
+      "s": {
+        "shape3d": "public/ht/baima_split/models/110kV白大713开关.json",
+        "2d.movable": false,
+        "3d.movable": false,
+        "2d.editable": false,
+        "3d.editable": false,
+        "interactive": true
+      }
+    },
+    {
+      "c": "ht.Node",
+      "i": 4973,
+      "p": {
+        "anchorElevation": 0
+      },
+      "s": {
+        "shape3d": "public/ht/baima_split/models/110kV白张711开关.json",
+        "2d.movable": false,
+        "3d.movable": false,
+        "2d.editable": false,
+        "3d.editable": false,
+        "interactive": true
+      }
+    },
+    {
+      "c": "ht.Node",
+      "i": 4974,
+      "p": {
+        "anchorElevation": 0
+      },
+      "s": {
+        "shape3d": "public/ht/baima_split/models/110kV白杨71C开关.json",
+        "2d.movable": false,
+        "3d.movable": false,
+        "2d.editable": false,
+        "3d.editable": false,
+        "interactive": true
+      }
+    },
+    {
+      "c": "ht.Node",
+      "i": 4975,
+      "p": {
+        "anchorElevation": 0
+      },
+      "s": {
+        "shape3d": "public/ht/baima_split/models/110kV白桥718开关.json",
+        "2d.movable": false,
+        "3d.movable": false,
+        "2d.editable": false,
+        "3d.editable": false,
+        "interactive": true
+      }
+    },
+    {
+      "c": "ht.Node",
+      "i": 4976,
+      "p": {
+        "anchorElevation": 0
+      },
+      "s": {
+        "shape3d": "public/ht/baima_split/models/110kV白梓719开关.json",
+        "2d.movable": false,
+        "3d.movable": false,
+        "2d.editable": false,
+        "3d.editable": false,
+        "interactive": true
+      }
+    },
+    {
+      "c": "ht.Node",
+      "i": 4977,
+      "p": {
+        "anchorElevation": 0,
+        "elevation": -18.35476
+      },
+      "s": {
+        "shape3d": "public/ht/baima_split/models/110kV设备-01.json",
+        "2d.movable": false,
+        "3d.movable": false,
+        "2d.editable": false,
+        "3d.editable": false,
+        "interactive": true
+      }
+    },
+    {
+      "c": "ht.Node",
+      "i": 4978,
+      "p": {
+        "anchorElevation": 0,
+        "elevation": -18.35476
+      },
+      "s": {
+        "shape3d": "public/ht/baima_split/models/110kV设备-02.json",
+        "2d.movable": false,
+        "3d.movable": false,
+        "2d.editable": false,
+        "3d.editable": false,
+        "interactive": true
+      }
+    },
+    {
+      "c": "ht.Node",
+      "i": 4979,
+      "p": {
+        "anchorElevation": 0,
+        "elevation": -18.35476
+      },
+      "s": {
+        "shape3d": "public/ht/baima_split/models/110kV设备-03.json",
+        "2d.movable": false,
+        "3d.movable": false,
+        "2d.editable": false,
+        "3d.editable": false,
+        "interactive": true
+      }
+    }
+  ],
+  "scene": {
+    "eye": [
+      -60.9575428824656,
+      15.105834896327694,
+      -91.08063298670156
+    ],
+    "center": [
+      -16.919018226769225,
+      -0.6724202047463851,
+      -2.047463850241698
+    ],
+    "editHelperDisabled": false,
+    "shadow": false,
+    "shadowParams": {
+      "degreeX": 30,
+      "degreeZ": -10,
+      "intensity": 0.3,
+      "quality": "high",
+      "type": "hard",
+      "radius": 0.1,
+      "bias": -0.005
+    }
+  }
+}

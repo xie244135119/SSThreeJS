@@ -57,4 +57,18 @@ export default class SEComponent {
 
     return this;
   }
+
+  /**
+   * 组件导出为Json
+   */
+  toJson() {
+    //
+  }
+
+  /**
+   * 从组件中导入
+   * @param {*} json json对象
+   */
+  fromJson(json) {}
+  //
 }

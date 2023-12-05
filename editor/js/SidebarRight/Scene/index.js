@@ -1,9 +1,26 @@
 import * as THREE from 'three';
-import { UIPanel, UIBreak, UIRow, UIColor, UISelect, UIText, UINumber } from '../../UIKit/UI';
+import {
+  UIPanel,
+  UIBreak,
+  UIRow,
+  UIColor,
+  UISelect,
+  UIText,
+  UINumber,
+  UITabbedPanel
+} from '../../UIKit/UI';
 import { UIOutliner, UITexture } from '../../UIKit/UI.Three';
 import SEComponent from '../../SEComponent';
+import SEPropertyObject from './Object/index';
+import SEPropertyMaterial from './Material/index';
+import SEPropertyGeometry from './Geometry/index';
 
 export default class SEScene extends SEComponent {
+  destory() {
+    //
+    super.destory();
+  }
+
   constructor(controller) {
     super(controller);
     const container = new UIPanel();
@@ -349,6 +366,30 @@ export default class SEScene extends SEComponent {
     };
 
     refreshUI();
+
+    // 添加子元素配置
+    // 场景素材配置 >>> 对象 几何体 材质
+    const sceneTab = new UITabbedPanel();
+    // object属性
+    const objectComponent = new SEPropertyObject(controller);
+    const materialComponent = new SEPropertyMaterial(controller);
+    const geoComponent = new SEPropertyGeometry(controller);
+    sceneTab.addTab(
+      'Object',
+      this.controller.strings.getKey('sidebar/properties/object'),
+      materialComponent.uiDom
+    );
+    sceneTab.addTab(
+      'Material',
+      this.controller.strings.getKey('sidebar/properties/material'),
+      objectComponent.uiDom
+    );
+    sceneTab.addTab(
+      'Geometry',
+      this.controller.strings.getKey('sidebar/properties/geometry'),
+      geoComponent.uiDom
+    );
+    container.add(sceneTab);
 
     // 数据清空的时候
     this.controller.signals.editorCleared.add(refreshUI);

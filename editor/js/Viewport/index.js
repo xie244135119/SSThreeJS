@@ -279,6 +279,7 @@ export default class SEViewport extends SEComponent {
     control.addEventListener('change', () => {
       this.controller.signals.cameraMoved.dispatch();
     });
+    console.log(' 轨道控制器的默认按键事件 ', control.keys, control);
   };
 
   /**

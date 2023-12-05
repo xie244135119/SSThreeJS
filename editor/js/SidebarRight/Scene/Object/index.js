@@ -15,7 +15,7 @@ import { UIBoolean } from '../../../UIKit/UI.Three';
 import SEComponent from '../../../SEComponent';
 import SECommands from '../../../Command/commands';
 
-export default class SSPropertyObject extends SEComponent {
+export default class SEPropertyObject extends SEComponent {
   constructor(controller) {
     super(controller);
     const container = new UIPanel();

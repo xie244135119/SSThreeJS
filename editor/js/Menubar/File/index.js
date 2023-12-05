@@ -2,7 +2,7 @@ import * as THREE from 'three';
 
 // import { zipSync, strToU8 } from 'three/addons/libs/fflate.module.js';
 
-import { UIPanel, UIRow, UIHorizontalRule } from '../../UIKit/UI';
+import { UIPanel, UIRow, UIHorizontalRule, UIBreak } from '../../UIKit/UI';
 import SEComponent from '../../SEComponent';
 
 export default class SEMenubarFile extends SEComponent {
@@ -26,7 +26,6 @@ export default class SEMenubarFile extends SEComponent {
     container.add(options);
 
     // New
-
     let option = new UIRow();
     option.setClass('option');
     option.setTextContent(strings.getKey('menubar/file/new'));
@@ -38,11 +37,9 @@ export default class SEMenubarFile extends SEComponent {
     options.add(option);
 
     //
-
     options.add(new UIHorizontalRule());
 
     // Import
-
     const form = document.createElement('form');
     form.style.display = 'none';
     document.body.appendChild(form);
@@ -63,13 +60,10 @@ export default class SEMenubarFile extends SEComponent {
       fileInput.click();
     });
     options.add(option);
-
     //
-
     options.add(new UIHorizontalRule());
 
     // Export Geometry
-
     option = new UIRow();
     option.setClass('option');
     option.setTextContent(strings.getKey('menubar/file/export/geometry'));
@@ -102,7 +96,6 @@ export default class SEMenubarFile extends SEComponent {
     options.add(option);
 
     // Export Object
-
     option = new UIRow();
     option.setClass('option');
     option.setTextContent(strings.getKey('menubar/file/export/object'));
@@ -128,7 +121,6 @@ export default class SEMenubarFile extends SEComponent {
     options.add(option);
 
     // Export Scene
-
     option = new UIRow();
     option.setClass('option');
     option.setTextContent(strings.getKey('menubar/file/export/scene'));
