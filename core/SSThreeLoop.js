@@ -108,7 +108,6 @@ export default class SSThreeLoop {
         animateRenderRef = window.requestAnimationFrame(animateFrame);
       } else {
         isRenderLoop = false;
-        console.log(' 取消渲染 ');
         window.cancelAnimationFrame(animateRenderRef);
       }
     };
