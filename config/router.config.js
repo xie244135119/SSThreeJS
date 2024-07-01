@@ -12,11 +12,11 @@ export default [
     path: '/scene',
     component: './pages/scene'
   },
-  {
-    name: '场景编排',
-    path: '/editor',
-    component: './pages/editor'
-  },
+  // {
+  //   name: '场景编排',
+  //   path: '/editor',
+  //   component: './pages/editor'
+  // },
   {
     component: './pages/404'
   }

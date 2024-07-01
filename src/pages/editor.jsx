@@ -1,9 +1,9 @@
 import React, { useEffect } from 'react';
-import SSEditor from '../../editor/index';
+// import SSEditor from '../../editor/index';
 
 export default function DebugEditor(prpps) {
   useEffect(() => {
-    const editor = new SSEditor('editorcontainer');
+    // const editor = new SSEditor('editorcontainer');
   });
 
   return (
