@@ -1,9 +1,9 @@
 {
   "name": "ss-threejs",
-  "version": "1.3.9",
+  "version": "1.4.0",
   "description": "a 3d tool base threejs",
   "main": "./core/index.js",
-  "types": "./core/types/main.d.ts",
+  "types": "./core/types/index.d.ts",
   "module": "./core/index.js",
   "author": "xie244135119",
   "license": "ISC",
