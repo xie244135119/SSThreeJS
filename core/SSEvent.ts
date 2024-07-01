@@ -1,8 +1,8 @@
 /*
  * Author  xie244135119
  * Date  2021-12-01 18:29:01
- * LastEditors  xie244135119
- * LastEditTime  2023-04-11 10:33:11
+ * LastEditors  Murphy.xie
+ * LastEditTime  2024-06-28 17:13:00
  * Description three.js event
  */
 
@@ -17,121 +17,128 @@
  * @property {string} MOUSEOVER 鼠标划过事件
  * @property {string} MOUSECANCEL 鼠标取消事件
  */
-const SSEventType = {
+
+export enum SSEventType {
   // 单击事件
-  CLICK: 'click',
+  CLICK = 'click',
   // 双击事件
-  DBLCLICK: 'dblclick',
+  DBLCLICK = 'dblclick',
   // 拖拽
-  DRAG: 'drag',
+  DRAG = 'drag',
   // 长按事件
-  LONGPRESS: 'longpress',
+  LONGPRESS = 'longpress',
   // 右键事件
-  CONTEXTMENU: 'contextmenu',
+  CONTEXTMENU = 'contextmenu',
   // 鼠标按下
-  MOUSEDOWN: 'mousedown',
+  MOUSEDOWN = 'mousedown',
   // 鼠标抬起
-  MOUSEUP: 'mouseup',
+  MOUSEUP = 'mouseup',
   // 鼠标移动
-  MOUSEMOVE: 'mousemove',
+  MOUSEMOVE = 'mousemove',
   // 鼠标进入元素
-  MOUSEOVER: 'mouseover',
+  MOUSEOVER = 'mouseover',
   // 鼠标取消元素
-  MOUSECANCEL: 'mousecancel',
+  MOUSECANCEL = 'mousecancel',
   // 键盘输入 任意按键
-  KEYDOWN: 'keydown',
+  KEYDOWN = 'keydown',
   // 键盘按下 字符按键
-  KEYPRESS: 'keypress',
+  KEYPRESS = 'keypress',
   // 键盘弹起
-  KEYUP: 'keyup',
+  KEYUP = 'keyup',
   // 撤销
-  REVOKE: 'revoke',
+  REVOKE = 'revoke',
   // 确定
-  CONFIRM: 'Confirm'
-};
+  CONFIRM = 'Confirm'
+}
+
 export default class SSEvent {
   /**
-   * @type HTMLElement
+   * 事件类型
    */
-  _targetElement = null;
+  static SSEventType = SSEventType;
 
   /**
-   * @type Array<function>
+   * @description 目标元素
    */
-  list = null;
+  _targetElement: HTMLElement = null;
 
   /**
-   * @type {{ string: Array }}
+   * 事件
    */
-  _modelEventFunc = {};
+  _modelEventFunc: {
+    [key: string]: {
+      handler: Symbol;
+      listener: (e: any) => void;
+      skip?: boolean;
+    }[];
+  } = {};
 
   // timeout
-  _timeroutId = 0;
+  timeOut: NodeJS.Timeout = null;
 
   // drag
-  _isDrag = false;
+  _isDraging: boolean = false;
 
   // long press
-  _isLongPress = false;
+  _isLongPress: boolean = false;
 
   // mouse move
   _modelMouseEvent = null;
 
-  constructor(aContainer = this._targetElement) {
-    if (aContainer) {
-      this._targetElement = aContainer;
-      this._addListeners();
-    }
+  constructor(aContainer: HTMLElement) {
+    this._targetElement = aContainer;
+    this.addListeners();
   }
 
   destory() {
-    this._removeListeners();
-    clearTimeout(this._timeroutId);
-    this._timeroutId = 0;
+    this.removeListeners();
+    clearTimeout(this.timeOut);
+    this.timeOut = null;
     this._isLongPress = false;
-    this._isDrag = false;
+    this._isDraging = false;
     this._modelEventFunc = null;
     this._modelMouseEvent = null;
   }
 
   /**
-   * 注册事件
-   * @param {SSEventType} aType 详见 ThreeEvent.SSEventType
-   * @param {function (KeyboardEvent | PointerEvent):void} aListener 监听事件
-   * @returns {string | Symbol}
+   * add event
+   * @param aType 详见 SSEventType
+   * @param aListener 函数
    */
-  addEventListener = (aType = SSEventType.CLICK, aListener = () => {}) => {
-    const list = this._modelEventFunc[aType] || [];
-    const symb = Symbol(`event ${aType}`);
+  addEventListener = (type: SSEventType, listener: (e: any) => void) => {
+    const list = this._modelEventFunc[type] || [];
+    const symb = Symbol(`event ${type}`);
     list.push({
-      handle: symb,
-      fn: (e) => {
-        aListener?.(e);
+      handler: symb,
+      listener: (e) => {
+        listener?.(e);
       }
     });
-    this._modelEventFunc[aType] = list;
+    this._modelEventFunc[type] = list;
     return symb;
   };
 
   /**
    * remove event
-   * @param {SSEventType} aType 详见 SSEventType
-   * @param {string | Symbol} aHandle 句柄
+   * @param aType 详见 SSEventType
+   * @param aHandle 句柄
    */
-  removeEventListener = (aType, aHandle) => {
-    const list = this._modelEventFunc[aType] || [];
-    const index = list.findIndex((item) => item.handle === aHandle);
-    list.splice(index, 1);
+  removeEventListener = (type: SSEventType, handler?: Symbol, listener?: (e: any) => void) => {
+    const list = this._modelEventFunc[type] || [];
+    const index = list.findIndex((item) => item.handler === handler || item.listener === listener);
+    if (index !== -1) {
+      list.splice(index, 1);
+    }
   };
 
   /**
    * skip event
-   * @param {SSEventType} aType 详见 SSEventType
-   * @param {string | Symbol} aHandle 句柄
+   * @param aType 详见 SSEventType
+   * @param aHandle 句柄
    */
-  skipEvent = (aType, aHandle) => {
+  skipEvent = (aType: SSEventType, aHandle: Symbol) => {
     const list = this._modelEventFunc[aType] || [];
-    const item = list.find((item) => item.handle === aHandle);
+    const item = list.find((item) => item.handler === aHandle);
     if (item) {
       item.skip = true;
     }
@@ -139,12 +146,12 @@ export default class SSEvent {
 
   /**
    * cancel skip event
-   * @param {SSEventType} aType 详见 SSEventType
-   * @param {string | Symbol} aHandle 句柄
+   * @param aType 详见 SSEventType
+   * @param aHandle 句柄
    */
-  cancelSkipEvent = (aType, aHandle) => {
+  cancelSkipEvent = (aType: SSEventType, aHandle: Symbol) => {
     const list = this._modelEventFunc[aType] || [];
-    const item = list.find((item) => item.handle === aHandle);
+    const item = list.find((item) => item.handler === aHandle);
     if (item) {
       item.skip = false;
     }
@@ -153,7 +160,7 @@ export default class SSEvent {
   /**
    * 内部增加全系列注册事件
    */
-  _addListeners = () => {
+  addListeners = () => {
     this._targetElement.addEventListener('pointerdown', this._onElementPointDown);
     this._targetElement.addEventListener('pointerup', this._onElementPointUp);
     this._targetElement.addEventListener('click', this._onElementClick);
@@ -170,7 +177,7 @@ export default class SSEvent {
   /**
    * 移除注册事件
    */
-  _removeListeners = () => {
+  removeListeners = () => {
     this._targetElement.removeEventListener('pointerdown', this._onElementPointDown);
     this._targetElement.removeEventListener('pointerup', this._onElementPointUp);
     this._targetElement.removeEventListener('click', this._onElementClick);
@@ -186,36 +193,33 @@ export default class SSEvent {
 
   /**
    * 查询相关的点击事件
-   * @param {string} type 事件类型
-   * @returns {{ handle: string | symbol, fn: function (KeyboardEvent|PointerEvent):void , skip: boolean}[]}
    */
-  _getFuncsFromType = (type) =>
+  _getFuncsFromType = (type: SSEventType) =>
     this._modelEventFunc[type]?.filter((item) => item.skip !== true) || [];
 
   /**
    * register event
-   * @param {KeyboardEvent | PointerEvent} e
    */
-  _onElementClick = (e) => {
-    if (this._isDrag) {
+  _onElementClick = (e: KeyboardEvent | PointerEvent) => {
+    if (this._isDraging) {
       this._getFuncsFromType(SSEventType.DRAG).forEach((element) => {
-        element.fn?.(e);
+        element.listener?.(e);
       });
       return;
     }
     if (this._isLongPress) {
       this._getFuncsFromType(SSEventType.LONGPRESS)?.forEach((element) => {
-        element.fn?.(e);
+        element.listener?.(e);
       });
       return;
     }
-    if (this._timeroutId != null) {
-      clearTimeout(this._timeroutId);
-      this._timeroutId = null;
+    if (this.timeOut != null) {
+      clearTimeout(this.timeOut);
+      this.timeOut = null;
     }
-    this._timeroutId = setTimeout(() => {
+    this.timeOut = setTimeout(() => {
       this._getFuncsFromType(SSEventType.CLICK)?.forEach((element) => {
-        element.fn?.(e);
+        element.listener?.(e);
       });
     }, 50);
   };
@@ -224,19 +228,19 @@ export default class SSEvent {
    * 注册双击事件
    * @param {*} aCamera
    */
-  _onElementDbClick = (e) => {
-    clearTimeout(this._timeroutId);
+  _onElementDbClick = (e: KeyboardEvent | PointerEvent) => {
+    clearTimeout(this.timeOut);
     this._getFuncsFromType(SSEventType.DBLCLICK)?.forEach((element) => {
-      element.fn?.(e);
+      element.listener?.(e);
     });
   };
 
   /**
    * 注册鼠标移动事件
    */
-  _onElementMouseMove = (e) => {
+  _onElementMouseMove = (e: KeyboardEvent | PointerEvent) => {
     this._getFuncsFromType(SSEventType.MOUSEMOVE)?.forEach((element) => {
-      element.fn?.(e);
+      element.listener?.(e);
     }, 0);
   };
 
@@ -244,9 +248,9 @@ export default class SSEvent {
    * 注册鼠标覆盖事件
    * @param {*} aCamera
    */
-  _onElementMouseOver = (e) => {
+  _onElementMouseOver = (e: KeyboardEvent | PointerEvent) => {
     this._getFuncsFromType(SSEventType.MOUSEOVER).forEach((element) => {
-      element.fn?.(e);
+      element.listener?.(e);
     });
   };
 
@@ -256,7 +260,7 @@ export default class SSEvent {
    */
   _onElementMouseCancel = (e) => {
     this._getFuncsFromType(SSEventType.MOUSECANCEL).forEach((element) => {
-      element.fn?.(e);
+      element.listener?.(e);
     });
   };
 
@@ -266,10 +270,10 @@ export default class SSEvent {
    */
   _onElementPointDown = (e) => {
     this._getFuncsFromType(SSEventType.MOUSEDOWN).forEach((element) => {
-      element.fn?.(e);
+      element.listener?.(e);
     });
-    clearTimeout(this._timeroutId);
-    this._isDrag = false;
+    clearTimeout(this.timeOut);
+    this._isDraging = false;
     this._isLongPress = false;
     this._modelMouseEvent = {
       pointDownTime: new Date().valueOf(),
@@ -284,7 +288,7 @@ export default class SSEvent {
    */
   _onElementPointUp = (e) => {
     this._getFuncsFromType(SSEventType.MOUSEUP).forEach((element) => {
-      element.fn?.(e);
+      element.listener?.(e);
     });
     // 是否为长按
     const now = new Date().valueOf();
@@ -296,7 +300,7 @@ export default class SSEvent {
       Math.abs(clientX - this._modelMouseEvent.clientX) > 5 ||
       Math.abs(clientY - this._modelMouseEvent.clientY) > 5
     ) {
-      this._isDrag = true;
+      this._isDraging = true;
     } else if (now - this._modelMouseEvent.pointDownTime > 500) {
       // 判断是否为长按
       this._isLongPress = true;
@@ -308,8 +312,8 @@ export default class SSEvent {
    * @param {Event} e
    */
   _onElementContextMenu = (e) => {
-    clearTimeout(this._timeroutId);
-    this._isDrag = false;
+    clearTimeout(this.timeOut);
+    this._isDraging = false;
     this._isLongPress = false;
     this._modelMouseEvent = {
       pointDownTime: new Date().valueOf(),
@@ -317,7 +321,7 @@ export default class SSEvent {
       clientY: e.clientY
     };
     this._getFuncsFromType(SSEventType.CONTEXTMENU).forEach((element) => {
-      element.fn?.(e);
+      element.listener?.(e);
     });
   };
 
@@ -326,16 +330,16 @@ export default class SSEvent {
    */
   _onKeyboardDown = (e) => {
     this._getFuncsFromType(SSEventType.KEYDOWN).forEach((element) => {
-      element.fn?.(e);
+      element.listener?.(e);
     });
 
     if (['Backspace', 'Escape'].indexOf(e.key) !== -1) {
       this._getFuncsFromType(SSEventType.REVOKE).forEach((fnobj) => {
-        fnobj.fn?.(e);
+        fnobj.listener?.(e);
       });
     } else if (['Enter'].indexOf(e.key) !== -1) {
       this._getFuncsFromType(SSEventType.CONFIRM).forEach((fnobj) => {
-        fnobj.fn?.(e);
+        fnobj.listener?.(e);
       });
     }
   };
@@ -345,7 +349,7 @@ export default class SSEvent {
    */
   _onKeyboardPress = (e) => {
     this._getFuncsFromType(SSEventType.KEYPRESS).forEach((element) => {
-      element.fn?.(e);
+      element.listener?.(e);
     });
   };
 
@@ -354,9 +358,7 @@ export default class SSEvent {
    */
   _onKeyboardUp = (e) => {
     this._getFuncsFromType(SSEventType.KEYUP).forEach((element) => {
-      element.fn?.(e);
+      element.listener?.(e);
     });
   };
 }
-
-SSEvent.SSEventType = SSEventType;

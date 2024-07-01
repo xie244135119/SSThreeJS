@@ -17,13 +17,13 @@ export default class SSThreeTool {
    * @param {number} [speed=1] 运行速度
    * @param {function ():void} onComplete
    */
-  static useTweenAnimate = (
-    aStartPoint = {},
-    aEndPoint = {},
-    onUpdate = () => {},
-    speed = 1,
-    onComplete = () => {}
-  ) => {
+  static useTweenAnimate<T>(
+    aStartPoint:T,
+    aEndPoint:T,
+    onUpdate: (T)=>void,
+    speed: number = 1,
+    onComplete?: () =>void
+  ) {
     let _animateFrameRef;
     const tweenAnimate = new TWEEN.Tween(aStartPoint);
     tweenAnimate.to(aEndPoint, speed * 1000);

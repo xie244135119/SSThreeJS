@@ -1,20 +1,18 @@
 import * as THREE from 'three';
 import { PathGeometry, PathTubeGeometry, PathPointList } from './three.path.module';
-import SSThreeLoop from '../SSThreeLoop';
-import SSDispose from '../SSDispose';
-import SSThreeObject from '../SSThreeObject';
+import SSThreeLoop from '../../SSThreeLoop';
+import SSDispose from '../../SSDispose';
+import SSThreeObject from '../../SSThreeObject';
 
-class ThreePath {
+export default class ThreePath {
   // 创建 更新的标记
-  #isLoopRender = false;
+  _isLoopRender = false;
 
-  /**
-   * @type {SSThreeObject}
-   */
-  ssThreeObject = null;
+  // 
+  ssThreeObject: SSThreeObject= null;
 
   // 所有测点数据
-  #pathDataList = [];
+  _pathDataList = [];
 
   constructor(object) {
     this.ssThreeObject = object;
@@ -39,8 +37,8 @@ class ThreePath {
   }) => {
     const type = 'path';
     const { threeScene, threeRenderer } = this.ssThreeObject;
-    if (!this.#isLoopRender) {
-      this.#isLoopRender = true;
+    if (!this._isLoopRender) {
+      this._isLoopRender = true;
       SSThreeLoop.add(this.update, 'roadpath render');
     }
 
@@ -111,7 +109,7 @@ class ThreePath {
       playing,
       type
     };
-    this.#pathDataList.push(data);
+    this._pathDataList.push(data);
     // ------
     // // // gui
     // const gui = new GUI();
@@ -148,8 +146,8 @@ class ThreePath {
   }) => {
     const type = 'tube';
     const { threeScene, threeRenderer } = this.ssThreeObject;
-    if (!this.#isLoopRender) {
-      this.#isLoopRender = true;
+    if (!this._isLoopRender) {
+      this._isLoopRender = true;
       // SSThreeLoop.add({ id: 'path', update: this.update });
       SSThreeLoop.add(this.update, 'roadpath render');
     }
@@ -226,7 +224,7 @@ class ThreePath {
       playing,
       type
     };
-    this.#pathDataList.push(data);
+    this._pathDataList.push(data);
     return data;
   };
 
@@ -239,10 +237,10 @@ class ThreePath {
         SSDispose.dispose(data.mesh);
         this.ssThreeObject.threeScene.remove(data.mesh);
       }
-      const findIndex = this.#pathDataList.findIndex((item) => item === data);
-      this.#pathDataList.splice(findIndex, 1);
-      if (this.#pathDataList.length === 0) {
-        this.#isLoopRender = false;
+      const findIndex = this._pathDataList.findIndex((item) => item === data);
+      this._pathDataList.splice(findIndex, 1);
+      if (this._pathDataList.length === 0) {
+        this._isLoopRender = false;
         SSThreeLoop.removeId('roadpath render');
       }
     }
@@ -250,22 +248,22 @@ class ThreePath {
 
   destroy = () => {
     SSThreeLoop.removeId('roadpath render');
-    this.#pathDataList.forEach((data) => {
+    this._pathDataList.forEach((data) => {
       // console.log(' data ', data);
       SSDispose.dispose(data.mesh);
       this.ssThreeObject.threeScene.remove(data.mesh);
     });
-    this.#pathDataList = [];
+    this._pathDataList = [];
     // cancelAnimationFrame(this.#frameHandle);
   };
 
   update = () => {
-    if (this.#pathDataList.length === 0) {
+    if (this._pathDataList.length === 0) {
       return;
     }
-    for (let i = 0; i < this.#pathDataList.length; i++) {
-      const { pathPointList, geometry, texture, params, type } = this.#pathDataList[i];
-      let { playing } = this.#pathDataList[i];
+    for (let i = 0; i < this._pathDataList.length; i++) {
+      const { pathPointList, geometry, texture, params, type } = this._pathDataList[i];
+      let { playing } = this._pathDataList[i];
       if (type === 'path') {
         // progress
         if (playing) {
@@ -323,4 +321,3 @@ class ThreePath {
     }
   };
 }
-export default ThreePath;

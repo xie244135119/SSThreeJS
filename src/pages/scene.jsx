@@ -10,16 +10,16 @@ import React, { useEffect, useRef } from 'react';
 // import PostProcessUtil from '../../core/PostProcessUtil';
 
 import MeshReflectorMaterial from '../../core/SSMaterial/MeshReflectorMaterial';
-import SSWater from '../../core/Water/SSWater';
+// import SSWater from '../../core/Water/SSWater';
 import SSThreeJs, { THREE, SSCssRenderer, SSThreeLoop, SSThreeTool } from '../../core/index';
 import SceneSetting from './ssthreejs.setting.json';
 import SSPickPointMode from '../../core/SSModule/pickpoint.module';
 import SSLightModule from '../../core/SSModule/light.module';
-import VideoSceneViewerManager from '../../core/VideoSceneViewer/VideoSceneViewerManager';
-import videoBlendImg from '../../core/assets/default_ground1.png';
-import SSEvent from '../../core/SSEvent';
-import SSPostProcessManagerModule from '../../core/PostProcessManager';
-import SSPostProcessModule from '../../core/SSModule/basepostprocess.module';
+// import VideoSceneViewerManager from '../../core/VideoSceneViewer/VideoSceneViewerManager';
+// import videoBlendImg from '../../core/assets/default_ground1.png';
+// import SSEvent from '../../core/SSEvent';
+import SSPostProcessManagerModule from '../../core/SSPostProcess/PostProcessManager';
+// import SSPostProcessModule from '../../core/SSModule/basepostprocess.module';
 import SSWatchLookModule from '../../core/SSModule/watchlook.module';
 
 export default function ParentIndex(props) {

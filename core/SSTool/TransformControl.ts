@@ -1,42 +1,55 @@
 import * as THREE from 'three';
 import { TransformControls } from 'three/examples/jsm/controls/TransformControls';
 import SSEvent from '../SSEvent';
+import SSThreeObject from '../SSThreeObject';
+
+/**
+ * 回调参数
+ */
+export interface SSTransformControlParams {
+  name: string;
+  uuid: string;
+  type: 'focus' | 'change' | 'delete';
+  target: THREE.Object3D;
+  position?: THREE.Vector3;
+  rotation?: THREE.Vector3;
+  scale?: THREE.Vector3;
+}
 
 export default class SSTransformControl {
   /**
    * 函数构造 t：平移，r：旋转，s：放大缩小。type: change or delete
-   * @type {function ({ name: String, uuid: String, type: String, target: THREE.Object3D,position: THREE.Vector3, rotation: THREE.Vector3, scale: THREE.Vector3 }):void}
    */
-  onControlChange = null;
+  onControlChange: (e: SSTransformControlParams) => void = null;
 
   /**
-   * @type {import('../SSThreeObject').default} 物体
+   * @description 物体
    */
-  _ssThreeObject = null;
+  _ssThreeObject: SSThreeObject = null;
 
   /**
-   * @type {TransformControls} 控制器
+   * @description 控制器
    */
-  _control = null;
+  _control: TransformControls = null;
 
   /**
-   * @type {SSEvent} 交互事件
+   * @description 交互事件
    */
-  _event = null;
+  _event: SSEvent = null;
 
   /**
-   * @type {THREE.BoxHelper}
+   * @description 盒子
    */
-  _boxHeloper = null;
+  _boxHeloper: THREE.BoxHelper = null;
 
   /**
    * 构造函数
-   * @param {SSThreeObject} ssThreeObject 绑定的物体
-   * @param {function ({ name: String, uuid: String, type: String, position: THREE.Vector3, rotation: THREE.Vector3, scale: THREE.Vector3, target: THREE.Object3D }):void} callBack 回调事件
+   * @param ssThreeObject 绑定的物体
+   * @param callBack 回调事件
    */
-  constructor(ssThreeObject, callBack) {
+  constructor(ssThreeObject: SSThreeObject, onChange?: (e: SSTransformControlParams) => void) {
     this._ssThreeObject = ssThreeObject;
-    this.onControlChange = callBack;
+    this.onControlChange = onChange;
   }
 
   destory() {
@@ -51,9 +64,9 @@ export default class SSTransformControl {
 
   /**
    * 追踪某个物体
-   * @param {THREE.Object3D} object3d 目标物体
+   * @param object3d 目标物体
    */
-  attach(object3d) {
+  attach(object3d: THREE.Object3D) {
     if (!this._control) {
       this._control = new TransformControls(
         this._ssThreeObject.threeCamera,
@@ -73,16 +86,16 @@ export default class SSTransformControl {
           uuid: this._control.object.uuid,
           target: this._control.object,
           type: 'change',
-          position: {
-            x: this._control.object.position.x,
-            y: this._control.object.position.y,
-            z: this._control.object.position.z
-          },
-          rotation: {
-            x: THREE.MathUtils.radToDeg(this._control.object.rotation.x),
-            y: THREE.MathUtils.radToDeg(this._control.object.rotation.y),
-            z: THREE.MathUtils.radToDeg(this._control.object.rotation.z)
-          },
+          position: new THREE.Vector3(
+            this._control.object.position.x,
+            this._control.object.position.y,
+            this._control.object.position.z
+          ),
+          rotation: new THREE.Vector3(
+            THREE.MathUtils.radToDeg(this._control.object.rotation.x),
+            THREE.MathUtils.radToDeg(this._control.object.rotation.y),
+            THREE.MathUtils.radToDeg(this._control.object.rotation.z)
+          ),
           scale: this._control.object.scale
         });
       });
@@ -126,7 +139,7 @@ export default class SSTransformControl {
           case '-': // size大小减小
             this._control.setSize(this._control.size * 0.9);
             break;
-          case 'f':
+          case 'f':// 聚焦
             if (!this._control.object) return;
             this.focus(this._control.object);
             this.onControlChange?.({
@@ -186,9 +199,9 @@ export default class SSTransformControl {
 
   /**
    * 聚焦
-   * @param {THREE.Object3D} target
+   * @param target
    */
-  focus = (target) => {
+  focus = (target: THREE.Object3D) => {
     const camera = this._ssThreeObject.threeCamera;
     let distance;
     const box = new THREE.Box3();

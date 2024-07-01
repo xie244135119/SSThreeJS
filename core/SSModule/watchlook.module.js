@@ -4,7 +4,7 @@ import SSModuleInterface from './module.interface';
 import SSLoader from '../SSLoader';
 import SSThreeTool from '../SSTool';
 import SSTransformControl from '../SSTool/TransformControl';
-import EyePng from '../assets/textures/eye.png';
+import EyePng from '../assets/material_eye.png';
 
 export default class SSWatchLookModule extends SSModuleInterface {
   title = '模块-指哪看哪';

@@ -2,15 +2,24 @@ import * as THREE from 'three';
 import jianbian from '../assets/textures/jianbian2.png';
 import flow from '../assets/textures/flow.png';
 
+export interface SSWallMeshParameters {
+  wallHeight?: number;
+  bgTextureUrl: string;
+  flowTextureUrl: string; 
+  flowTextureUrl2: string; 
+  bgColor: THREE.Color
+}
+
+
 export default class SSWallMesh {
   /**
    * 创建墙体材质
-   * @param {Array<{x: number, y: number, z: number}>} paths 所有路径点
-   * @param {{ wallHeight: number, bgTextureUrl: string, flowTextureUrl: string, flowTextureUrl2: string, bgColor: THREE.Color  }} options 墙体高度
-   * @param {THREE.ShaderMaterialParameters} materialOptions 材质参数信息
+   * @param paths 所有路径点
+   * @param options 墙体高度
+   * @param materialOptions 材质参数信息
    * @returns
    */
-  static fromPaths = (paths, options, materialOptions) => {
+  static fromPaths = (paths: THREE.Vector3[], options: SSWallMeshParameters, materialOptions: THREE.ShaderMaterialParameters) => {
     const newOptions = {
       bgTextureUrl: jianbian,
       flowTextureUrl: flow,
@@ -27,17 +36,17 @@ export default class SSWallMesh {
   /**
    * 创建流体墙体材质
    * @param {{ bgTextureUrl: string, flowTextureUrl: string, flowTextureUrl2: string, bgColor: THREE.Color  }} param0 参数信息
-   * @param {THREE.ShaderMaterialParameters} materialOptions 材质参数信息
+   * @param materialOptions 材质参数信息
    * @returns { THREE.ShaderMaterial } shadermaterial
    */
   static _getMaterial = (
-    {
-      bgTextureUrl = jianbian,
-      flowTextureUrl = flow,
-      flowTextureUrl2 = flow,
-      bgColor = new THREE.Color(0 / 255, 68 / 255, 176 / 255)
+    option: SSWallMeshParameters = {
+      bgTextureUrl: jianbian,
+      flowTextureUrl: flow,
+      flowTextureUrl2: flow,
+      bgColor: new THREE.Color(0 / 255, 68 / 255, 176 / 255)
     },
-    materialOptions
+    materialOptions: THREE.ShaderMaterialParameters
   ) => {
     // 顶点
     const vertexShader = `
@@ -70,14 +79,14 @@ export default class SSWallMesh {
               gl_FragColor = vec4(colorBlend.rgb * bgColor.rgb, colorBlend.a) ;
           }
       `;
-    const bgTexture = new THREE.TextureLoader().load(bgTextureUrl);
-    const flowTexture = new THREE.TextureLoader().load(flowTextureUrl);
+    const bgTexture = new THREE.TextureLoader().load(option.bgTextureUrl);
+    const flowTexture = new THREE.TextureLoader().load(option.flowTextureUrl);
     flowTexture.wrapS = THREE.RepeatWrapping;
 
-    const flowTexture2 = new THREE.TextureLoader().load(flowTextureUrl2);
+    const flowTexture2 = new THREE.TextureLoader().load(option.flowTextureUrl2);
     flowTexture2.wrapS = THREE.RepeatWrapping;
 
-    const bgcolor = bgColor || new THREE.Color(1, 1, 1, 1);
+    const bgcolor = option.bgColor || new THREE.Color(1, 1, 1);
     return new THREE.ShaderMaterial({
       uniforms: {
         time: {
@@ -111,11 +120,11 @@ export default class SSWallMesh {
 
   /**
    * 构建几何体数据
-   * @param {Array<{x: number, y: number, z: number}>} paths 路径数据
-   * @param {number} wallHeight 墙体高度
+   * @param paths 路径数据
+   * @param wallHeight 墙体高度
    * @returns
    */
-  static _getGeomertry(paths, wallHeight = 10) {
+  static _getGeomertry(paths: THREE.Vector3[], wallHeight: number = 10) {
     const pathArray = [];
     for (let i = 0; i < paths.length; i++) {
       const data = paths[i];

@@ -8,7 +8,7 @@ export default class SSFile {
     try {
       const jsonData = JSON.stringify(aJsonObject);
       const blob = new Blob([jsonData], { type: 'text/json' });
-      this._openDownXlsxDialog(blob, aFileName);
+      this.download(blob, aFileName);
     } catch (error) {
       //   console.log(' 文件导出数据 ', error);
     }
@@ -19,7 +19,7 @@ export default class SSFile {
    * @param {*} url 下载的地址
    * @param {*} savename 保存的文件名
    */
-  static _openDownXlsxDialog = (url, savename) => {
+  static download = (url, savename) => {
     let newUrl = url;
     if (typeof url === 'object' && url instanceof Blob) {
       newUrl = URL.createObjectURL(url);
@@ -29,8 +29,8 @@ export default class SSFile {
     alink.href = newUrl;
     alink.download = savename;
     let event;
-    if (window.MouseEvent) {
-      event = new MouseEvent('click');
+    if (window.PointerEvent) {
+      event = new PointerEvent('click');
     }
     alink.dispatchEvent(event);
   };

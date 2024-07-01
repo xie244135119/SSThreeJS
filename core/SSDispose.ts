@@ -8,6 +8,10 @@
 import * as THREE from 'three';
 
 export default class SSDispose {
+
+  operationQueue: Set<(e?:any)=>void> = null;
+
+
   constructor() {
     this.operationQueue = new Set();
   }
@@ -40,31 +44,30 @@ export default class SSDispose {
     });
   };
 
-  static dispose2 = (obj) => {
-    console.log(' 销毁的元素 ', obj);
-  };
-
   /**
    * 2.0 dispose 元素
-   * @param {THREE.Object3D} aObj
    */
-  static dispose = (aObj) => {
-    const disposeTexture = (obj) => {
-      if (obj instanceof THREE.Texture) {
-        obj.dispose();
+  static dispose = (aObj: any) => {
+    const disposeTexture = (texture: THREE.Texture) => {
+      if (!(texture instanceof THREE.Texture)) {
+        return;
       }
+        texture.dispose();
     };
-    const disposeGeometry = (geo) => {
-      if (geo instanceof THREE.BufferGeometry) {
+    const disposeGeometry = (geo: THREE.BufferGeometry) => {
+      if (!(geo instanceof THREE.BufferGeometry)) {
+        return;
+      }
         geo.dispose();
-      }
     };
-    const disposeMaterial = (material) => {
+    const disposeMaterial = (material: THREE.Material) => {
+      if (!(material instanceof THREE.Material)) {
+        return
+      }
       if (material instanceof THREE.ShaderMaterial) {
         const { uniforms = {} } = material;
         this.disposeUniforms(uniforms);
       }
-      if (material instanceof THREE.Material) {
         const materialKeys = Object.keys(material);
         materialKeys.forEach((e) => {
           if (material[e] instanceof THREE.Texture) {
@@ -73,10 +76,12 @@ export default class SSDispose {
           }
         });
         material.dispose();
-      }
     };
-    const disposeObject3D = (aObj3D) => {
-      if (aObj3D instanceof THREE.Object3D) {
+    const disposeObject3D = (aObj3D: THREE.Object3D) => {
+        if (!(aObj3D instanceof THREE.Object3D)) {
+          return;
+        }
+        // user data
         if (aObj3D.userData) {
           const allKeys = Object.getOwnPropertyNames(aObj3D.userData);
           allKeys.forEach((key) => {
@@ -85,6 +90,8 @@ export default class SSDispose {
             disposeMaterial(value);
           });
         }
+        // mesh 
+        if (aObj3D instanceof THREE.Mesh) {
         disposeGeometry(aObj3D.geometry);
         if (aObj3D.material instanceof Array) {
           aObj3D.material.forEach((e) => {
@@ -93,22 +100,21 @@ export default class SSDispose {
         } else {
           disposeMaterial(aObj3D.material);
         }
+      }
+      // 
         aObj3D.children.forEach((e) => {
           disposeObject3D(e);
         });
         // remove children
         aObj3D.clear();
         // extends object3D 的 dispose
-        if (aObj3D.dispose) {
-          if (!(aObj3D instanceof THREE.Scene)) {
+        if (aObj3D.dispose && !(aObj3D instanceof THREE.Scene)) {
             aObj3D.dispose();
-          }
         }
         // remove from parent 不能加
         // aObj3D.removeFromParent();
         // 不能加
         // aObj3D = null;
-      }
     };
     const disposeArray = (aList) => {
       if (Array.isArray(aList)) {
@@ -141,7 +147,7 @@ export default class SSDispose {
     disposeObject3D(aObj);
     disposeObject(aObj);
     disposeArray(aObj);
-    if (aObj && aObj.dispose) {
+    if (aObj && typeof aObj.dispose === 'function') {
       aObj.dispose();
     }
   };

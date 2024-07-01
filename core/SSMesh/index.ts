@@ -3,6 +3,4 @@
  */
 import SSWallMesh from './SSWallMesh';
 
-const test = {};
-
-export { SSWallMesh, test };
+export { SSWallMesh };

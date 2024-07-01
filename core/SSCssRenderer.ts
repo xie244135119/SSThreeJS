@@ -1,17 +1,10 @@
-/*
- * Author  Murphy.xie
- * Date  2023-08-10 15:23:52
- * LastEditors  Murphy.xie
- * LastEditTime  2023-08-21 10:29:19
- * Description
- */
 import * as THREE from 'three';
 import { CSS2DRenderer, CSS2DObject } from 'three/examples/jsm/renderers/CSS2DRenderer';
 import { CSS3DRenderer, CSS3DObject } from 'three/examples/jsm/renderers/CSS3DRenderer';
 import { SVGRenderer } from 'three/examples/jsm/renderers/SVGRenderer';
 import { Line2 } from 'three/examples/jsm/lines/Line2';
 import { LineGeometry } from 'three/examples/jsm/lines/LineGeometry';
-import { LineMaterial } from 'three/examples/jsm/lines/LineMaterial';
+import { LineMaterial, LineMaterialParameters } from 'three/examples/jsm/lines/LineMaterial';
 import SSThreeTool from './SSTool/index';
 import SSThreeLoop from './SSThreeLoop';
 import SSThreeObject from './SSThreeObject';
@@ -19,38 +12,33 @@ import SSLoader from './SSLoader';
 import LineStartPng from './assets/line_start.png';
 
 export default class SSCssRenderer {
-  #resizeObserver = null;
+  /**
+   * @description css2d render
+   */
+  css2dRender: CSS2DRenderer = null;
 
   /**
-   * @description three object<scene，camera>
-   * @type SSThreeObject
+   * @description css3d render
    */
-  _ssThreeObject = null;
+  css3dRender: CSS3DRenderer = null;
 
   /**
-   * css2d render
-   * @type {CSS2DRenderer}
+   * @description svg render
    */
-  css2dRender = null;
+  svgRender: SVGRenderer = null;
 
-  /**
-   * css3d render
-   * @type {CSS3DRenderer}
-   */
-  css3dRender = null;
+  //
+  _resizeObserver: ResizeObserver = null;
 
-  /**
-   * svg render
-   * @type {SVGRenderer}
-   */
-  svgRender = null;
+  //
+  _ssThreeObject: SSThreeObject = null;
 
   constructor(ssThreeObject) {
     this._ssThreeObject = ssThreeObject;
   }
 
   /**
-   * 文件损毁
+   * 销毁
    */
   destory = () => {
     this._removeResizeOBserver();
@@ -71,8 +59,8 @@ export default class SSCssRenderer {
     if (this.css2dRender) return;
     this.css2dRender = new CSS2DRenderer();
     this.css2dRender.domElement.style.position = 'absolute';
-    this.css2dRender.domElement.style.top = 0;
-    this.css2dRender.setSize(threeContainer.offsetWidth, threeContainer.offsetHeight, true);
+    this.css2dRender.domElement.style.top = '0px';
+    this.css2dRender.setSize(threeContainer.offsetWidth, threeContainer.offsetHeight);
     threeContainer.appendChild(this.css2dRender.domElement);
 
     SSThreeLoop.add(() => {
@@ -99,8 +87,8 @@ export default class SSCssRenderer {
     if (this.css3dRender) return;
     this.css3dRender = new CSS3DRenderer();
     this.css3dRender.domElement.style.position = 'absolute';
-    this.css3dRender.domElement.style.top = 0;
-    this.css3dRender.setSize(threeContainer.offsetWidth, threeContainer.offsetHeight, true);
+    this.css3dRender.domElement.style.top = '0px';
+    this.css3dRender.setSize(threeContainer.offsetWidth, threeContainer.offsetHeight);
     threeContainer.appendChild(this.css3dRender.domElement);
 
     SSThreeLoop.add(() => {
@@ -127,8 +115,8 @@ export default class SSCssRenderer {
     if (this.svgRender) return;
     this.svgRender = new SVGRenderer();
     this.svgRender.domElement.style.position = 'absolute';
-    this.svgRender.domElement.style.top = 0;
-    this.svgRender.setSize(threeContainer.offsetWidth, threeContainer.offsetHeight, true);
+    this.svgRender.domElement.style.top = '0px';
+    this.svgRender.setSize(threeContainer.offsetWidth, threeContainer.offsetHeight);
     threeContainer.appendChild(this.svgRender.domElement);
 
     SSThreeLoop.add(() => {
@@ -147,18 +135,17 @@ export default class SSCssRenderer {
 
   /**
    * 文本标签创建
-   * @param {起始点} startPoint
-   * @param {中点} middlePoint
-   * @param {终点} endPoint
-   * @param {文本内容} labelTitle
+   * @param startPoint
+   * @param middlePoint
+   * @param endPoint
+   * @param labelTitle
    */
-  drawingLabel = (startPoint, middlePoint, endPoint, labelTitle = 'test') => {
+  drawingLabel = (startPoint: THREE.Vector3, middlePoint: THREE.Vector3, endPoint: THREE.Vector3, labelTitle?: string) => {
     const points = [startPoint, middlePoint, endPoint];
 
     const material = new THREE.LineBasicMaterial({ color: 0x00c8be, linewidth: 10 });
     const geometry = new THREE.BufferGeometry().setFromPoints(points);
     const line = new THREE.Line(geometry, material);
-    this.threeScene.add(line);
 
     const div = document.createElement('div');
     div.className = 'label';
@@ -172,27 +159,25 @@ export default class SSCssRenderer {
     div.style.backgroundColor = '#fff';
     div.style.color = '#000000';
     div.style.border = '1px solid #16BFB0';
-    div.textContent = labelTitle;
-
-    // if (checkedUnitCh && checkedUnitCh.includes && checkedUnitCh.includes(labelTitle)) {
-    //     div.style.backgroundColor = '#16BFB0';
-    //     div.style.color = '#fff';
-    // }
+    div.textContent = labelTitle || '示例';
 
     const tagLabel = new CSS2DObject(div);
     tagLabel.position.set(endPoint.x, endPoint.y, endPoint.z);
-    this.threeScene.add(tagLabel);
+    return {
+      line,
+      tagLabel
+    }
   };
 
   /**
    * 两点画线
-   * @param {起点} v0
-   * @param {终点} v3
-   * @param {线宽} linewidth
+   * @param v0
+   * @param v3
+   * @param linewidth 线宽
    * @returns
    */
-  drawLines = (v0, v3, linewidth = 0.001) => {
-    if (((v0.x === v0.y) === v0.z) === 0) {
+  drawLines = (v0: THREE.Vector3, v3: THREE.Vector3, linewidth: number = 0.001) => {
+    if (v0.length() === 0) {
       v0.x = 0.001;
     }
     // 夹角
@@ -206,7 +191,7 @@ export default class SSCssRenderer {
     // 法线向量
     const rayLine = new THREE.Ray(p0, this._getVCenter(v0.clone(), v3.clone()));
     // 顶点坐标
-    const vtop = rayLine.at(hLen / rayLine.at(1).distanceTo(p0));
+    const vtop = rayLine.at(hLen / rayLine.at(1, new THREE.Vector3()).distanceTo(p0), new THREE.Vector3());
     // 控制点坐标
     const v1 = this._getLenVcetor(v0.clone(), vtop, aLen);
     const v2 = this._getLenVcetor(v3.clone(), vtop, aLen);
@@ -261,7 +246,7 @@ export default class SSCssRenderer {
    * 添加动态监听
    */
   _addResizeObserver = (aContainer = document.body) => {
-    if (this.#resizeObserver !== null) {
+    if (this._resizeObserver !== null) {
       const observer = new window.ResizeObserver(() => {
         // 调整labelRender 文字
         this.css2dRender?.setSize(aContainer.offsetWidth, aContainer.offsetHeight);
@@ -269,7 +254,7 @@ export default class SSCssRenderer {
         this.svgRender?.setSize(aContainer.offsetWidth, aContainer.offsetHeight);
       });
       observer.observe(aContainer);
-      this.#resizeObserver = observer;
+      this._resizeObserver = observer;
     }
   };
 
@@ -279,9 +264,9 @@ export default class SSCssRenderer {
    * @returns
    */
   _removeResizeOBserver = () => {
-    if (this.#resizeObserver !== null) {
-      this.#resizeObserver.disconnect();
-      this.#resizeObserver = null;
+    if (this._resizeObserver !== null) {
+      this._resizeObserver.disconnect();
+      this._resizeObserver = null;
     }
   };
 
@@ -293,9 +278,9 @@ export default class SSCssRenderer {
    * @param {boolean} [centerIcon=false] 中心icon
    * @returns {{ line: Line2, group: THREE.Group }}
    */
-  static addLine = (startPoint, endPoint, lineOptions = {}, centerIcon = false) => {
+  static addLine = (startPoint: THREE.Vector3, endPoint: THREE.Vector3, lineOptions = {}, centerIcon = false) => {
     const material = new LineMaterial({
-      color: new THREE.Color(111 / 255, 175 / 255, 173 / 255),
+      color: new THREE.Color(111 / 255, 175 / 255, 173 / 255).getHex(),
       linewidth: 0.001,
       depthTest: false,
       ...lineOptions
@@ -373,11 +358,11 @@ export default class SSCssRenderer {
 
   /**
    * 创建连线
-   * @param {THREE.Vector3[]} points
-   * @param {string} color
+   * @param points 一组点位
+   * @param lineMaterialOptions 线条材质属性
    * @returns line
    */
-  static createLine = (points, color = '#00CEFF', depthTest = true) => {
+  static createLine = (points: THREE.Vector3[], lineMaterialOptions: LineMaterialParameters) => {
     const pointArr = [];
     let line = null;
 
@@ -388,9 +373,8 @@ export default class SSCssRenderer {
         pointArr.push(item.z);
       });
       const lineMaterial = new LineMaterial({
-        color,
         linewidth: 0.001,
-        depthTest
+        ...lineMaterialOptions
       });
       const lineGeometry = new LineGeometry().setPositions(pointArr);
       line = new Line2(lineGeometry, lineMaterial);

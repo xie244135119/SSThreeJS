@@ -15,57 +15,64 @@ import SSMessageQueue from './SSTool/MessageQueue';
 import SSTransformControl from './SSTool/TransformControl';
 import SSPostProcessModule from './SSModule/basepostprocess.module';
 import SSLoadingManager from './SSTool/LoadingManager';
+import { GLTF } from 'three/examples/jsm/loaders/GLTFLoader';
+import { SSModelQueueItem } from './types';
 
 export default class SSThreeJs {
   /**
    * @description 场景存储类
-   * @type {SSThreeObject}
    */
-  ssThreeObject = null;
+  ssThreeObject: SSThreeObject = null;
 
   /**
-   * 模块中心
-   * @type {SSModuleCenter}
+   * @description 模块中心
    */
-  ssModuleCenter = null;
+  ssModuleCenter: SSModuleCenter = null;
 
   /**
-   * 消息队列
-   * @type { SSMessageQueue }
+   *@description  消息队列
    */
-  ssMessageQueue = null;
+  ssMessageQueue: SSMessageQueue = null;
 
   /**
-   * 位置调试工具
-   * @type {SSTransformControl}
+   * @description 位置调试工具
    */
-  ssTransformControl = null;
+  ssTransformControl: SSTransformControl = null;
 
   /**
-   * @type { SSPostProcessModule } 基础后处理
+   * @description 基础后处理
    */
-  ssPostProcessModule = null;
+  ssPostProcessModule: SSPostProcessModule = null;
 
   /**
-   * @type {THREE.AmbientLight}  ambient light
+   * @description 环境光
    */
-  threeAmbientLight = null;
+  threeAmbientLight: THREE.AmbientLight = null;
 
   /**
-   * @type {SSEvent}
+   * @description 事件系统
    */
-  threeEvent = null;
+  threeEvent: SSEvent = null;
 
   /**
-   * ssthreejs 加载器
-   * @type {SSLoadingManager}
+   * @description ssthreejs 加载器
    */
-  ssLoadingManager = null;
+  ssLoadingManager: SSLoadingManager = null;
+
+  /**
+   * @description 坐标系辅助线
+   */
+  _axisControlHelper = null;
+
+  /**
+   * @description 统计器
+   */
+  _statsJs: Stats = null;
 
   /**
    * 销毁机制
    */
-  destroy(loop = true) {
+  destroy(loop: boolean = true) {
     this.ssTransformControl?.destory();
     this.ssTransformControl = null;
     this.ssThreeObject?.destory();
@@ -104,11 +111,10 @@ export default class SSThreeJs {
 
   /**
    * 场景初始化
-   * @param {string | HTMLElement} aCanvasElement canvasid 或 element
-   * @returns {void}
+   * @param aCanvasElement canvasid 或 element
    */
-  setup = (aCanvasElement) => {
-    let container = document.body;
+  setup = (aCanvasElement: string | HTMLElement) => {
+    let container = null;
     if (typeof aCanvasElement === 'string') {
       const element = document.getElementById(aCanvasElement);
       container = element;
@@ -204,16 +210,17 @@ export default class SSThreeJs {
 
   /**
    * addHdr
+   * @param hdrs hdr材质
    */
-  addHDR = (hdrs = []) => {
+  addHDR = (hdrs: string | string[]) => {
     const pmremGenerator = new THREE.PMREMGenerator(this.ssThreeObject.threeRenderer);
     if (hdrs.length === 1) {
       return new Promise((reslove, reject) => {
         const rgbeLoader = new RGBELoader(this.ssLoadingManager.threeLoadingManager);
         rgbeLoader.load(
-          hdrs,
+          hdrs as any,
           (texture) => {
-            const cubetexure = pmremGenerator.fromCubemap(texture).texture;
+            const cubetexure = pmremGenerator.fromEquirectangular(texture).texture;
             this.ssThreeObject.threeScene.background = cubetexure;
             this.ssThreeObject.threeScene.environment = cubetexure;
             pmremGenerator.dispose();
@@ -231,7 +238,7 @@ export default class SSThreeJs {
     const hdrLoader = new HDRCubeTextureLoader(this.ssLoadingManager.threeLoadingManager);
     return new Promise((reslove, reject) => {
       hdrLoader.load(
-        hdrs,
+        hdrs as any,
         (texture) => {
           const cubetexure = pmremGenerator.fromCubemap(texture).texture;
           this.ssThreeObject.threeScene.environment = cubetexure;
@@ -267,78 +274,11 @@ export default class SSThreeJs {
   };
 
   /**
-   * 缓动设置模型中心位置信息
-   * @param {*} aCameraPosition 镜头位置
-   * @param {*} aCenterPosition 模型中心点坐标
-   * @param {*} animate 是否动画
-   * @param {*} speed 速度
-   * @param {*} cb 回调
-   * @deprecated 请使用 SSThreeObject中的 setEye 方法
-   */
-  setModelPosition = (
-    aCameraPosition = { x: 0, y: 0, z: 0 },
-    aCenterPosition = { x: 0, y: 0, z: 0 },
-    animate = false,
-    speed = 0.5,
-    cb = null
-  ) => {
-    if (!this.ssThreeObject.threeCamera) {
-      return;
-    }
-    if (!animate) {
-      this.ssThreeObject.threeCamera.position.set(
-        aCameraPosition.x,
-        aCameraPosition.y,
-        aCameraPosition.z
-      );
-      const center = new THREE.Vector3(aCenterPosition.x, aCenterPosition.y, aCenterPosition.z);
-      this.ssThreeObject.threeOrbitControl.target.set(center.x, center.y, center.z);
-      this.ssThreeObject.threeOrbitControl.update();
-    } else {
-      //
-      const startPoint = {
-        camera_x: this.ssThreeObject.threeCamera.position.x,
-        camera_y: this.ssThreeObject.threeCamera.position.y,
-        camera_z: this.ssThreeObject.threeCamera.position.z,
-        orbitControl_x: this.ssThreeObject.threeOrbitControl.target.x,
-        orbitControl_y: this.ssThreeObject.threeOrbitControl.target.y,
-        orbitControl_z: this.ssThreeObject.threeOrbitControl.target.z
-      };
-      const endPoint = {
-        camera_x: aCameraPosition.x,
-        camera_y: aCameraPosition.y,
-        camera_z: aCameraPosition.z,
-        orbitControl_x: aCenterPosition.x,
-        orbitControl_y: aCenterPosition.y,
-        orbitControl_z: aCenterPosition.z
-      };
-      SSThreeTool.useTweenAnimate(
-        startPoint,
-        endPoint,
-        (e) => {
-          this.ssThreeObject.threeCamera.position.set(e.camera_x, e.camera_y, e.camera_z);
-          this.ssThreeObject.threeOrbitControl.target.set(
-            e.orbitControl_x,
-            e.orbitControl_y,
-            e.orbitControl_z
-          );
-          this.ssThreeObject.threeOrbitControl.update();
-        },
-        speed,
-        cb?.()
-      );
-    }
-  };
-
-  /**
    * dynamic debug
    */
   addDymaicDebug = () => {
     this._addAxisControl(this.ssThreeObject.threeScene);
     this._addStatAnalyse();
-    window.ssThreeJs = this;
-    window.ssThreeObject = this.ssThreeObject;
-    window.THREE = THREE;
   };
 
   /**
@@ -347,20 +287,22 @@ export default class SSThreeJs {
   removeDymaicDebug = () => {
     this._removeAxisControl();
     this._removeStatAnalyse();
-    window.ssthreeJs = null;
-    window.THREE = null;
-    window.ssThreeObject = null;
   };
 
   /**
    * v3.0方案 根据配置文件加载模型
-   * @param {Array<{type: string, obj: string, mtl: string, gltf: string, draco:string}>} list 模型配置
-   * @param {function((THREE.Object3D | import('three/examples/jsm/loaders/GLTFLoader').GLTF)[]): void} [onComplete] 页面熏染完成 参数：全部模型
-   * @param {function({type: string, title: string, obj: string, mtl: string, gltf: string, draco:string}, THREE.Group | import('three/examples/jsm/loaders/GLTFLoader').GLTF):void} [onBeforeRender] 场景添加前 参数：(对象条目, 模型)
-   * @param {function({type: string, title: string, obj: string, mtl: string, gltf: string, draco:string}, THREE.Group | import('three/examples/jsm/loaders/GLTFLoader').GLTF):void} [onAfterRender] 场景添加后 参数：(对象条目, 模型)
+   * @param list 模型配置
+   * @param onComplete 页面熏染完成 参数：全部模型
+   * @param onBeforeRender 场景添加前 参数：(对象条目, 模型)
+   * @param onAfterRender 场景添加后 参数：(对象条目, 模型)
    * @returns
    */
-  loadModelQueue = (list, onComplete, onBeforeRender, onAfterRender) => {
+  loadModelQueue = (
+    list: SSModelQueueItem[],
+    onComplete: (e: (THREE.Object3D | GLTF)[]) => void,
+    onBeforeRender: (option: SSModelQueueItem, e: THREE.Object3D | GLTF) => void,
+    onAfterRender: (option: SSModelQueueItem, e: THREE.Object3D | GLTF) => void
+  ) => {
     if (list.length === 0) {
       onComplete?.([]);
       return;
@@ -370,7 +312,7 @@ export default class SSThreeJs {
     }
     const objList = [];
     list.forEach((config) => {
-      let promise = Promise.resolve();
+      let promise: Promise<any> = Promise.resolve();
       switch (config.type) {
         case 'obj':
           promise = SSLoader.loadObj(
@@ -427,34 +369,6 @@ export default class SSThreeJs {
     });
   };
 
-  // /**
-  //  * load obj
-  //  * @param {string} aObjPath obj path
-  //  * @param {string} aMaterialPath material path
-  //  * @param {boolean} addToScene shadow shadow
-  //  * @returns {Promise<THREE.Group>}
-  //  */
-  // loadObj = (aObjPath = '', aMaterialPath = '', addToScene = true) => {
-  //   const getDirectoryText = (aPath = '') => {
-  //     const baseDirectoryArry = aPath.split('/');
-  //     baseDirectoryArry.pop();
-  //     return `${baseDirectoryArry.join('/')}/`;
-  //   };
-  //   return this.ssLoadingManager.getModelDataByUrl(aMaterialPath).then((materialdata) => {
-  //     const mtlloader = new MTLLoader(this.ssLoadingManager.threeLoadingManager);
-  //     const mtltext = String.fromCharCode.apply(null, new Uint8Array(materialdata));
-  //     const materials = mtlloader.parse(mtltext, getDirectoryText(aMaterialPath));
-  //     return this.ssLoadingManager.getModelDataByUrl(aObjPath).then((objdata) => {
-  //       const objloader = new OBJLoader(this.ssLoadingManager.threeLoadingManager);
-  //       objloader.setMaterials(materials);
-  //       const group = objloader.parse(objdata);
-  //       if (addToScene) {
-  //         this.ssThreeObject.threeScene.add(group);
-  //       }
-  //       return group;
-  //     });
-  //   });
-  // };
 
   /**
    * 获取模型路径目录
@@ -469,11 +383,10 @@ export default class SSThreeJs {
 
   /**
    * load fbx
-   * @param {string} aFbxpath fbx path
-   * @param {string} addToScene add to scene
+   * @param aFbxpath fbx path
    * @returns {Promise<THREE.Group>}
    */
-  loadFbx = (aFbxpath = '') =>
+  loadFbx = (aFbxpath:string) =>
     this.ssLoadingManager
       .getModelDataByUrl(aFbxpath)
       .then((data) =>
@@ -486,11 +399,9 @@ export default class SSThreeJs {
 
   /**
    * load gltf
-   * @param {string} path model path
-   * @param {THREE.LoadingManager} manager loading manager
-   * @returns {Promise<import('three/examples/jsm/loaders/GLTFLoader').GLTF>}
+   * @param path 路径
    */
-  loadGltf = (path) =>
+  loadGltf:(path: string)=> Promise<GLTF> = (path) =>
     this.ssLoadingManager
       .getModelDataByUrl(path)
       .then((data) =>
@@ -503,10 +414,10 @@ export default class SSThreeJs {
 
   /**
    * load gltf
-   * @param {*} path
+   * @param path 路径
    * @returns
    */
-  loadGltfDraco = (path) =>
+  loadGltfDraco = (path: string) =>
     this.ssLoadingManager
       .getModelDataByUrl(path)
       .then((data) =>
@@ -519,10 +430,10 @@ export default class SSThreeJs {
 
   /**
    * load gltf
-   * @param {*} path
+   * @param path 路径
    * @returns
    */
-  loadGltfOptKTX = (path) =>
+  loadGltfOptKTX = (path: string) =>
     this.ssLoadingManager
       .getModelDataByUrl(path)
       .then((data) =>
@@ -535,11 +446,12 @@ export default class SSThreeJs {
 
   /**
    * add orbitControl
-   * @param {*} aContainer
-   * @returns
+   * @param aCamera 摄像头
+   * @param aDomElement dom元素
+   * @returns 
    */
-  _addOrbitControl = (aCamera = new THREE.Camera(), aDomElement = document.getElementById()) => {
-    const control = new OrbitControls(aCamera, aDomElement);
+  _addOrbitControl = (aCamera: THREE.Camera, aDomElement: HTMLElement) => {
+    const control = new OrbitControls(aCamera || this.ssThreeObject.threeCamera, aDomElement || this.ssThreeObject.threeContainer);
     control.enableDamping = true;
     control.dampingFactor = 0.25;
     control.enableZoom = true;
@@ -565,7 +477,7 @@ export default class SSThreeJs {
    * create axis helper
    * @returns
    */
-  _addAxisControl = (aScene = this.ssThreeObject.threeScene) => {
+  _addAxisControl = (aScene: THREE.Scene = this.ssThreeObject.threeScene) => {
     const axis = new THREE.AxesHelper(100);
     aScene.add(axis);
     this._axisControlHelper = axis;
@@ -584,14 +496,14 @@ export default class SSThreeJs {
   /**
    * add stats
    */
-  _addStatAnalyse = (aContainer = this.ssThreeObject.threeContainer) => {
+  _addStatAnalyse = (aContainer: HTMLElement = this.ssThreeObject.threeContainer) => {
     const stats = new Stats();
     this._statsJs = stats;
     stats.showPanel(0);
-    aContainer.appendChild(stats.domElement);
-    stats.domElement.style.position = 'absolute';
-    stats.domElement.style.top = 'unset';
-    stats.domElement.style.bottom = '0px';
+    aContainer.appendChild(stats.dom);
+    stats.dom.style.position = 'absolute';
+    stats.dom.style.top = 'unset';
+    stats.dom.style.bottom = '0px';
     SSThreeLoop.add(() => {
       stats.update();
     }, 'fps render');
@@ -602,7 +514,7 @@ export default class SSThreeJs {
    */
   _removeStatAnalyse = () => {
     if (this._statsJs !== null) {
-      this._statsJs.domElement.remove();
+      this._statsJs.dom.remove();
       this._statsJs.end();
       this._statsJs = null;
       SSThreeLoop.removeId('fps render');
@@ -612,7 +524,7 @@ export default class SSThreeJs {
   /**
    * 将屏幕坐标转化为世界坐标 <目前不是很准确>
    */
-  transformPositionToVector3 = (aPoint = { x: 0, y: 0 }) => {
+  transformPositionToVector3 = (aPoint: THREE.Vector2) => {
     const canvas = this.ssThreeObject.threeContainer;
     const mousex = ((aPoint.x - canvas.getBoundingClientRect().left) / canvas.offsetWidth) * 2 - 1;
     const mousey = -((aPoint.y - canvas.getBoundingClientRect().top) / canvas.offsetHeight) * 2 + 1;
@@ -621,91 +533,4 @@ export default class SSThreeJs {
     return worldVector;
   };
 
-  // createOptions = (points = []) => {
-  //   // const points = [
-  //   //   new THREE.Vector3(0, 50, 0),
-  //   //   new THREE.Vector3(50, 50, 0),
-  //   //   new THREE.Vector3(80, 40, 0),
-  //   //   new THREE.Vector3(80, 40, -20)
-  //   //   // new Vector3(0, 40, 0),
-  //   //   // new Vector3(-40, 40, 50),
-  //   // ];
-  //   const curvePath = new THREE.CurvePath();
-  //   for (let i = 0; i < points.length - 1; i++) {
-  //     curvePath.add(new THREE.LineCurve3(points[i], points[i + 1]));
-  //   }
-
-  //   const options = {
-  //     steps: 1000,
-  //     bevelEnabled: false,
-  //     bevelThickness: 1,
-  //     extrudePath: curvePath
-  //   };
-  //   return { options, curvePath };
-  // };
-
-  // createShapes = () => {
-  //   const points = [];
-  //   // points.push(new THREE.Vector2(+0.5, -0.5));
-  //   // points.push(new THREE.Vector2(+0.5, +0.5));
-  //   points.push(new THREE.Vector2(+0.5, +0.5));
-  //   points.push(new THREE.Vector2(-0.5, +0.5));
-  //   const shapes = new THREE.Shape(points);
-  //   return shapes;
-  // };
-
-  // // 创建管道
-  // createOptionss = (points, material) => {
-  //   let curvePath = null;
-  //   let options = null;
-  //   const pro = this.createOptions(points);
-  //   curvePath = pro.curvePath;
-  //   options = pro.options;
-  //   const geometry1 = new THREE.ExtrudeBufferGeometry(this.createShapes(), options);
-
-  //   // // ExtrudeBufferGeometry转换BufferGeometry
-  //   const geometry = new THREE.BufferGeometry();
-  //   const verticesByThree = geometry1.attributes.position.array;
-  //   // 4. 设置position
-  //   geometry.setAttribute('position', new THREE.BufferAttribute(verticesByThree, 3));
-  //   // 5. 设置uv 6个点为一个周期 [0, 1, 0, 0, 1, 1, 0, 0, 1, 0, 1, 1]
-  //   // 5.1 以18个顶点为单位分组
-  //   const pointsGroupBy18 = new Array(verticesByThree.length / 3 / 6)
-  //     .fill(0)
-  //     .map((_, i) => verticesByThree.slice(i * 3 * 6, (i + 1) * 3 * 6));
-  //   // 5.2 按uv周期分组
-  //   const pointsGroupBy63 = pointsGroupBy18.map((item) =>
-  //     new Array(item.length / 3).fill(0).map((_, i) => item.slice(i * 3, (i + 1) * 3))
-  //   );
-  //   // 5.3根据BoundingBox确定uv平铺范围
-  //   geometry.computeBoundingBox();
-  //   const { min, max } = geometry.boundingBox;
-  //   const rangeX = max.x - min.x;
-  //   const uvs = [].concat(
-  //     ...pointsGroupBy63.map((item) => {
-  //       const point0 = item[0];
-  //       const point5 = item[5];
-  //       const distance =
-  //         new THREE.Vector3(...point0).distanceTo(new THREE.Vector3(...point5)) / (rangeX / 10);
-  //       return [0, 1, 0, 0, distance, 1, 0, 0, distance, 0, distance, 1];
-  //     })
-  //   );
-  //   geometry.setAttribute('uv', new THREE.BufferAttribute(new Float32Array(uvs), 2));
-  //   // const meshMat =
-  //   //   material ||
-  //   //   new THREE.MeshBasicMaterial({
-  //   //     color: 0x00ffff,
-  //   //     side: THREE.DoubleSide
-  //   //   });
-
-  //   // this.assignUVs(geometry);
-  //   // const material = new THREE.MeshBasicMaterial({
-  //   //   color: 0x00ff00,
-  //   //   wireframe: false
-  //   // });
-  //   const mesh = new THREE.Mesh(geometry, material);
-  //   // const mesh = new THREE.Mesh(geometry, material);
-  //   // this.ssThreeObject.threeScene.add(mesh);
-  //   return { mesh, curvePath };
-  // };
 }

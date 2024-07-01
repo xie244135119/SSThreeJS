@@ -161,32 +161,6 @@ export default class VideoSceneViewerManager extends SSModuleInterface {
     }
   };
 
-  // /**
-  //  * 射线检测，鼠标点击icon，触发视频融合
-  //  * @param {*} models
-  //  */
-  // onClickIcons = (models) => {
-  //   const clickIconData = models.filter(
-  //     (item) => item.object.type === 'Sprite' && item.object.userData.type === 'viewCamera'
-  //   );
-  //   // 点击了icon
-  //   if (clickIconData?.length > 0) {
-  //     const icon = clickIconData[0].object;
-  //     console.log('icon', icon);
-  //     // todo
-  //     this.openVideoFusion([icon.userData.data]);
-  //     // this.videoSceneView.initialize([icon.userData.data]);//
-  //     // 镜头位置
-  //     const findConfig = this.cameraData.find(
-  //       (item) => `视频融合${item.camera.name}` === icon.name
-  //     );
-  //     console.log('findConfig', findConfig);
-  //     if (findConfig.eye) {
-  //       this.ssThreeJs.setModelPosition(findConfig.eye.position, findConfig.eye.target, true);
-  //     }
-  //   }
-  // };
-
   _setConfigValue = () => {
     if (!this.videoSceneView) {
       this.videoSceneView = new VideoSceneViewer({

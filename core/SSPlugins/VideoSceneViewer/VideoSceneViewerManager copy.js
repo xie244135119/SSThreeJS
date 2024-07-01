@@ -160,7 +160,7 @@ export default class VideoSceneViewerManager {
       );
       console.log('findConfig', findConfig);
       if (findConfig.eye) {
-        this.ssThreeJs.setModelPosition(findConfig.eye.position, findConfig.eye.target, true);
+        this.ssThreeJs.ssThreeObject.setEye(findConfig.eye.position, findConfig.eye.target);
       }
     }
   };

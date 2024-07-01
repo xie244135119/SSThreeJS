@@ -1,66 +1,52 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
+import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer';
 import SSThreeLoop from './SSThreeLoop';
 import SSThreeTool from './SSTool/index';
 
 export default class SSThreeObject {
   /**
-   * @type HTMLElement three dom
+   * @description container dom
    */
-  threeContainer = null;
+  threeContainer: HTMLElement = null;
 
   /**
-   * @type THREE.Scene
+   * @description scene
    */
-  threeScene = null;
+  threeScene: THREE.Scene = null;
 
   /**
    * @description 场景相机
-   * @type THREE.PerspectiveCamera | THREE.OrthographicCamera
    */
-  threeCamera = null;
+  threeCamera: THREE.PerspectiveCamera | THREE.OrthographicCamera = null;
 
   /**
-   * @type THREE.WebGLRenderer
+   * @description WebGl渲染器
    */
-  threeRenderer = null;
+  threeRenderer: THREE.WebGLRenderer = null;
 
   /**
-   * @type OrbitControls
+   * @description 轨道控制器
    */
-  threeOrbitControl = null;
+  threeOrbitControl: OrbitControls = null;
 
   /**
-   * @type EffectComposer
+   * @description 后处理
    */
-  threeEffectComposer = null;
+  threeEffectComposer: EffectComposer  = null;
 
   /**
-   * @enum {string} CameraType
-   * @property {string} Perspective 透视目标
-   * @property {string} Orthographic 正位目标
+   * @description 响应监听器
    */
-  static CameraType = {
-    /**
-     * 透视相机
-     */
-    Perspective: 'PerspectiveCamera',
-    /**
-     * 正交相机
-     */
-    Orthographic: 'OrthographicCamera'
-  };
+  _resizeObserver: ResizeObserver = null;
 
-  /**
-   * @param {{ container: HTMLElement, scene: THREE.Scene, control: OrbitControls, camera: THREE.PerspectiveCamera | THREE.OrthographicCamera, renderer: THREE.WebGLRenderer ,effectComposer}} param0 构造参数
-   */
-  constructor({ container, scene, control, camera, renderer, effectComposer } = {}) {
-    this.threeContainer = container;
-    this.threeScene = scene;
-    this.threeOrbitControl = control;
-    this.threeCamera = camera;
-    this.threeRenderer = renderer;
-    this.threeEffectComposer = effectComposer;
+  constructor(props: { container: HTMLElement, scene: THREE.Scene, control: OrbitControls, camera: THREE.PerspectiveCamera | THREE.OrthographicCamera, renderer: THREE.WebGLRenderer, effectComposer?: EffectComposer}) {
+    this.threeContainer = props.container;
+    this.threeScene = props.scene;
+    this.threeOrbitControl = props.control;
+    this.threeCamera = props.camera;
+    this.threeRenderer = props.renderer;
+    this.threeEffectComposer = props.effectComposer;
   }
 
   destory() {
@@ -72,19 +58,18 @@ export default class SSThreeObject {
 
   /**
    * 设置视角位置
-   * @param {THREE.Vector3} cameraPosition 相机位置
-   * @param {THREE.Vector3} controlPosition 场景位置
-   * @param {boolean} [animate=true] 是否开启动画
-   * @param {number} [animateSpeed] 动画速度
-   * @param {function ():void} [complete] 结束事件
+   * @param cameraPosition 相机位置
+   * @param controlPosition 场景位置
+   * @param animate 开启动画
+   * @param animateSpeed 动画速度
+   * @param complete 结束事件
    */
-  setEye(cameraPosition, controlPosition, animate = true, animateSpeed = 0.5, complete = null) {
+  setEye(cameraPosition: THREE.Vector3, controlPosition: THREE.Vector3, animate: boolean = true, animateSpeed = 0.5, complete?: ()=>void) {
     if (!animate) {
       this.threeCamera.position.copy(cameraPosition);
       this.threeOrbitControl.target.copy(controlPosition);
       this.threeOrbitControl.update();
     } else {
-      //
       const startPoint = {
         camera_x: this.threeCamera.position.x,
         camera_y: this.threeCamera.position.y,
@@ -117,10 +102,9 @@ export default class SSThreeObject {
 
   /**
    * 选择视角位置
-   * @returns {{ camera:THREE.Vector3, target: THREE.Vector3 }}
    */
   getEye() {
-    return JSON.stringify({
+    return ({
       camera: this.threeCamera.position,
       target: this.threeOrbitControl.target
     });
@@ -186,7 +170,7 @@ export default class SSThreeObject {
    * 改变相机类型 正交或透视
    * @param {CameraType} type 相机类型
    */
-  changeCameraMode = (type = '') => {
+  changeCameraMode = (type: 'PerspectiveCamera' | 'OrthographicCamera') => {
     if (type === this.threeCamera.type) {
       return;
     }
@@ -198,12 +182,12 @@ export default class SSThreeObject {
       this.threeOrbitControl = null;
     }
 
-    if (type === SSThreeObject.CameraType.Perspective) {
+    if (type === 'PerspectiveCamera') {
       const camera = new THREE.PerspectiveCamera();
       camera.position.set(2, 2, 2);
       this.threeCamera = camera;
       this.threeOrbitControl = new OrbitControls(this.threeCamera, this.threeContainer);
-    } else if (type === SSThreeObject.CameraType.Orthographic) {
+    } else if (type === 'OrthographicCamera') {
       const camera = new THREE.OrthographicCamera();
       camera.position.set(0, 4, 0);
       this.threeCamera = camera;

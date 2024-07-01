@@ -14,7 +14,6 @@ export default defineConfig({
   },
   publicDir: 'public',
   server: {
-    host: 'localhost',
     open: true,
     hmr: true,
 

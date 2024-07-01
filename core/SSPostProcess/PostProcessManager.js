@@ -26,9 +26,9 @@ import {
   BrightnessContrastEffect,
   KernelSize
 } from 'postprocessing';
-import SSThreeObject from './SSThreeObject';
-import ThreeLoop from './SSThreeLoop';
-import SSModuleInterface from './SSModule/module.interface';
+// import SSThreeObject from './SSThreeObject';
+import ThreeLoop from '../SSThreeLoop';
+import SSModuleInterface from '../SSModule/module.interface';
 
 export default class SSPostProcessManagerModule extends SSModuleInterface {
   composer = null;

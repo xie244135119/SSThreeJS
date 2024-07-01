@@ -10,34 +10,29 @@ export default class SSLoadingManager {
   threeLoadingManager = null;
 
   /**
-   * 数据库操作
-   * @type {SSDB}
+   * @description 数据库操作
    */
-  db = null;
+  db: SSDB = null;
 
   /**
-   * 消息队列
-   * @type {MessageQueue}
+   * @description 消息队列
    */
-  messageQueue = null;
+  messageQueue: MessageQueue = null;
 
   /**
-   * 进度条后背景标签 (progress element)
-   * @type {HTMLElement}
+   * @description 进度条后背景标签 (progress element)
    */
-  _progressBgElement = null;
+  _progressBgElement: HTMLElement = null;
 
   /**
-   * 进度条文本标签 (progress text element)
-   * @type {HTMLElement}
+   * @description 进度条文本标签 (progress text element)
    */
-  _progressTextElement = null;
+  _progressTextElement: HTMLElement = null;
 
   /**
-   * progress标签 (progress element)
-   * @type {HTMLElement}
+   * @description progress标签 (progress element)
    */
-  _progressElement = null;
+  _progressElement: HTMLElement = null;
 
   destory() {
     this.db?.destory();
@@ -49,9 +44,9 @@ export default class SSLoadingManager {
   }
 
   /**
-   * @param {HTMLElement} container
+   * @description container
    */
-  constructor(container = document.body) {
+  constructor(container: HTMLElement) {
     this.threeLoadingManager = new THREE.LoadingManager();
     this.db = new SSDB();
     this.messageQueue = new MessageQueue();
@@ -62,7 +57,7 @@ export default class SSLoadingManager {
   /**
    * loadding progress
    */
-  addProgressView = (parentContainer = document.body) => {
+  addProgressView = (parentContainer: HTMLElement) => {
     if (document.getElementById('threeloadingprogress')) {
       return;
     }
@@ -79,7 +74,7 @@ export default class SSLoadingManager {
     bgDiv.style.left = '50%';
     bgDiv.style.transform = 'translateX(-50%)';
     bgDiv.style.transition = 'opacity 1s linear';
-    bgDiv.style.opacity = 0;
+    bgDiv.style.opacity = '0';
     parentContainer.appendChild(bgDiv);
     this._progressBgElement = bgDiv;
 
@@ -105,19 +100,19 @@ export default class SSLoadingManager {
     this._progressTextElement = textDiv;
 
     this.threeLoadingManager.onStart = (url, loaded, total) => {
-      bgDiv.style.opacity = 1;
+      bgDiv.style.opacity = '1';
       textDiv.innerText = '模型渲染中...';
     };
 
     this.threeLoadingManager.onLoad = () => {
-      bgDiv.style.opacity = 0;
+      bgDiv.style.opacity = '0';
     };
 
     this.threeLoadingManager.onProgress = (url, loaded, total) => {
       progress.style.width = `${(loaded / total) * 100}%`;
     };
     this.threeLoadingManager.onError = (url) => {
-      bgDiv.style.opacity = 0;
+      bgDiv.style.opacity = '0';
     };
   };
 
@@ -133,7 +128,7 @@ export default class SSLoadingManager {
   /**
    * download url
    */
-  downloadUrl = (aUrl) =>
+  downloadUrl = (aUrl: string) =>
     fetch(aUrl, {
       method: 'GET'
     }).then((res) => {
@@ -149,7 +144,7 @@ export default class SSLoadingManager {
       return Promise.reject(new Error('model fetch error'));
     });
 
-  downloadUrl2 = async (aUrl = '', onProgress = () => {}) => {
+  downloadUrl2 = async (aUrl: string, onProgress?:(e: number, c: any[])=>void) => {
     const response = await fetch(aUrl, {
       method: 'GET',
       headers: { responseType: 'arraybuffer' }
@@ -185,49 +180,16 @@ export default class SSLoadingManager {
     return chunksAll.buffer;
   };
 
-  // /**
-  //  * background queue
-  //  */
-  // addToDownloadQueue = (aUrl) => {
-  //     if (this.#pendingDownloadFilePaths.indexOf(aUrl) !== -1) {
-  //         return;
-  //     }
-  //     this.#pendingDownloadFilePaths.push(aUrl);
-
-  //     // remove
-  //     const removeQueue = (fileUrl = '') => {
-  //         const findIndex = this.#pendingDownloadFilePaths.findIndex((item) => item === fileUrl);
-  //         this.#pendingDownloadFilePaths.splice(findIndex, 1);
-  //         this.messageQueue.remove();
-  //     };
-
-  //     this.messageQueue.add(() => {
-  //         this.downloadUrl(aUrl)
-  //             .then((res) => DB.shareInstance.insertModel(aUrl, res))
-  //             .then((res) => {
-  //                 const blobUrl = URL.createObjectURL(new Blob([res]));
-  //                 this.#cacheFileBlobMap[aUrl] = blobUrl;
-  //                 removeQueue(aUrl);
-  //             })
-  //             .catch((e) => {
-  //                 console.log(` fetch ${aUrl} error `, e);
-  //                 removeQueue(aUrl);
-  //             });
-  //     });
-  //     // });
-  // };
-
   /**
    * query model local path
-   * @param {*} aUrl load url
+   * @param aUrl load url
    * @returns
    */
-  getModelFilePathByUrl = (aUrl) => {
+  getModelFilePathByUrl = (aUrl:string) => {
     if (aUrl.startsWith('data:') || aUrl.startsWith('blob:')) {
       return Promise.resolve(aUrl);
     }
     return this.db.getModel(aUrl).then((res) => {
-      // console.log(' getModelFilePathByUrl 获取到的数据信息 ', res);
       if (res) {
         const blobUrl = URL.createObjectURL(new Blob([res?.data]));
         return blobUrl;
@@ -238,17 +200,17 @@ export default class SSLoadingManager {
 
   /**
    * query model local path
-   * @param {*} aUrl load url
+   * @param aUrl load url
    * @returns
    */
-  getModelDataByUrl = (aUrl) =>
+  getModelDataByUrl = (aUrl: string) =>
     this.db.getModel(aUrl).then((res) => {
       if (res) {
         return res.data;
       }
       return this.downloadUrl2(aUrl, (percent) => {
         if (this._progressBgElement) {
-          this._progressBgElement.style.opacity = 1;
+          this._progressBgElement.style.opacity = '1';
         }
         if (this._progressTextElement) {
           this._progressTextElement.innerText = '模型下载中...';

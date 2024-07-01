@@ -66,10 +66,9 @@ const STORAGE_KEY_USAGE = `${DATABASE_NAME}_size`;
 
 export default class SSDB {
   /**
-   * 操作数据库
-   * @type {IDBDatabase}
+   * @description 操作数据库
    */
-  targetDataBase = null;
+  targetDataBase: IDBDatabase = null;
 
   destory() {
     this.targetDataBase?.close();
@@ -78,9 +77,8 @@ export default class SSDB {
 
   /**
    * open database
-   * @returns {Promise<IDBDatabase>}
    */
-  open() {
+  open(): Promise<IDBDatabase> {
     if (this.targetDataBase instanceof IDBDatabase) {
       return Promise.resolve(this.targetDataBase);
     }
@@ -93,27 +91,27 @@ export default class SSDB {
         reslove(this.targetDataBase);
       };
       dbRequest.onerror = (event) => {
-        console.log(' 数据库打开失败 ', event);
+        console.log('【LOG】数据库打开失败 ', event);
         this.targetDataBase = null;
         reject(event);
       };
       dbRequest.onupgradeneeded = (event) => {
-        console.log(' 数据库版本不一致 ', event);
-        const db = event.target.result;
+        console.log('【LOG】数据库版本不一致 ', event.target);
+        const db = (event.target as any).result;
         this.createDataTables(db, DATABASE_TABLES);
       };
-      dbRequest.blocked = (e) => {
-        console.log(' 当前数据库连接暂未关闭 ', e);
+      dbRequest.onblocked = (e) => {
+        console.log('【LOG】当前数据库连接暂未关闭 ', e);
       };
     });
   }
 
   /**
    * create data tables
-   * @param {IDBDatabase} aDatabase 数据库对象
-   * @param {*} 数据库表配置
+   * @param aDatabase 数据库对象
+   * @param aTables 数据库表配置
    */
-  createDataTables = (aDatabase, aTables = DATABASE_TABLES) => {
+  createDataTables = (aDatabase: IDBDatabase, aTables = DATABASE_TABLES) => {
     for (let index = 0; index < aTables.length; index++) {
       const element = aTables[index];
       const { name, columns = [], dbVersion } = element;
@@ -129,9 +127,7 @@ export default class SSDB {
               unique: column.unique
             });
           } else if (column.type === 'del') {
-            objectStore.deleteIndex(column.name, column.name, {
-              unique: column.unique
-            });
+            objectStore.deleteIndex(column.name);
           }
         });
       } else {
@@ -178,9 +174,11 @@ export default class SSDB {
 
   /**
    * insert model
-   * @param {*} obj 数据信息
+   * @param aName 名称
+   * @param aData 二进制数据
+   * @returns 
    */
-  insertModel = (aName = '', aData = new ArrayBuffer()) =>
+  insertModel: (aName:string, aData: ArrayBuffer)=>Promise<boolean> = (aName, aData) =>
     this.autoLRU(aData.byteLength).then(() =>
       this.open().then(
         (db) =>
@@ -205,13 +203,12 @@ export default class SSDB {
 
             transaction.oncomplete = () => {
               this.updateTotalSize(aData.byteLength);
-              // console.log(' insertModel 插入事务完成 ', aName, aData.byteLength);
-              reslove();
+              reslove(true);
             };
-            transaction.onerror = (_, e) => {
+            transaction.onerror = (e: Event) => {
               reject(e);
             };
-            transaction.onabort = (_, e) => {
+            transaction.onabort = (e: Event) => {
               reject(e);
             };
           })
@@ -220,20 +217,19 @@ export default class SSDB {
 
   /**
    * get model by fullpath
-   * @param {string} aModelName 完整地址
+   * @param aModelName 模型名称
    */
-  getModel = (aModelName = '') => {
+  getModel = (aModelName: string) => {
     const modelFileTableName = DATABASE_TABLES[1].name;
     return this.get(aModelName, modelFileTableName).then((model) => {
       // 更新 模型数据时间
       if (model) {
         const modelTableName = DATABASE_TABLES[0].name;
-        this.get(aModelName, modelTableName).then((res) => {
+        this.get(aModelName, modelTableName).then((res: any) => {
           if (res) {
             res.update_time = new Date().valueOf();
             return this.update(res, modelTableName);
           }
-          console.log(' getModel 出错 res ', res, model);
           return null;
         });
       }
@@ -243,13 +239,13 @@ export default class SSDB {
 
   /**
    * delete model
-   * @param {[]} aNames
+   * @param aNames 一组模型名称
    * @returns
    */
-  deleteModels = (aNames = []) =>
+  deleteModels = (aModelNames: string[]): Promise<boolean> =>
     this.open().then((db) => {
-      if (aNames.length === 0) {
-        return Promise.resolve();
+      if (aModelNames.length === 0) {
+        return Promise.resolve(false);
       }
       return new Promise((reslove, reject) => {
         const modelTableName = DATABASE_TABLES[0].name;
@@ -257,17 +253,17 @@ export default class SSDB {
         const transaction = db.transaction([modelTableName, modelFileTableName], 'readwrite');
         const modelStore = transaction.objectStore(modelTableName);
         const modelFileStore = transaction.objectStore(modelFileTableName);
-        aNames.forEach((name) => {
+        aModelNames.forEach((name) => {
           modelStore.delete(name);
           modelFileStore.delete(name);
         });
         transaction.oncomplete = () => {
-          reslove();
+          reslove(true);
         };
-        transaction.onerror = (_, e) => {
+        transaction.onerror = (e) => {
           reject(e);
         };
-        transaction.onabort = (_, e) => {
+        transaction.onabort = (e) => {
           reject(e);
         };
       });
@@ -275,9 +271,10 @@ export default class SSDB {
 
   /**
    * get
-   * @param {*} fullPath 完整地址
+   * @param aModelName 完整地址
+   * @param aTableName 表名
    */
-  get = (aModelName = '', aTableName = DATABASE_TABLES[1].name) =>
+  get = (aModelName: string, aTableName: string = DATABASE_TABLES[1].name): Promise<any> =>
     new Promise((reslove, reject) => {
       this.open().then((db) => {
         if (db instanceof IDBDatabase) {
@@ -297,7 +294,7 @@ export default class SSDB {
   /**
    * update
    */
-  update = (aModel = {}, aTableName = DATABASE_TABLES[1].name) =>
+  update = (aModel: {[key:string]: any}, aTableName: string = DATABASE_TABLES[1].name) =>
     new Promise((reslove, reject) => {
       this.open().then((db) => {
         if (db instanceof IDBDatabase) {
@@ -338,7 +335,7 @@ export default class SSDB {
    * LRU 策略
    * @returns
    */
-  autoLRU = (needSize = 0) => {
+  autoLRU = (needSize: number = 0) => {
     // 达到最大空间
     const totalSize = this.getTotalSize();
     // 需要预留的空间
@@ -381,10 +378,10 @@ export default class SSDB {
             };
           })
       )
-      .then((res) => {
+      .then((res: any) => {
         const { modelNames, reduceSize } = res;
         return this.deleteModels(modelNames).then(() => {
-          console.log(' 删除模型结束 ', modelNames, reduceSize);
+          // console.log(' 删除模型结束 ', modelNames, reduceSize);
           this.updateTotalSize(reduceSize * -1);
         });
       });
@@ -404,27 +401,27 @@ export default class SSDB {
   /**
    * set current total size
    */
-  updateTotalSize = (aAddSize = 0) => {
+  updateTotalSize = (aAddSize: number = 0) => {
     const totalSize = this.getTotalSize();
     // console.log(
     //     `更新本地空间大小 总共：${totalSize}, 增加${aAddSize}, 上限${MAX_STORAGE_USAGE}`
     // );
-    localStorage.setItem(STORAGE_KEY_USAGE, totalSize + aAddSize);
+    localStorage.setItem(STORAGE_KEY_USAGE, `${totalSize + aAddSize}`);
   };
 }
 
-// eslint-disable-next-line no-extend-native
-String.prototype.hashCode = () => {
-  let hash = 0;
-  let i;
-  let chr;
-  if (this.length === 0) return hash;
-  for (i = 0; i < this.length; i++) {
-    chr = this.charCodeAt(i);
-    // eslint-disable-next-line no-bitwise
-    hash = (hash << 5) - hash + chr;
-    // eslint-disable-next-line no-bitwise
-    hash |= 0; // Convert to 32bit integer
-  }
-  return hash;
-};
+// // eslint-disable-next-line no-extend-native
+// String.prototype.hashCode = () => {
+//   let hash = 0;
+//   let i;
+//   let chr;
+//   if (this.length === 0) return hash;
+//   for (i = 0; i < this.length; i++) {
+//     chr = this.charCodeAt(i);
+//     // eslint-disable-next-line no-bitwise
+//     hash = (hash << 5) - hash + chr;
+//     // eslint-disable-next-line no-bitwise
+//     hash |= 0; // Convert to 32bit integer
+//   }
+//   return hash;
+// };
