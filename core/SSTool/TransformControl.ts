@@ -10,7 +10,8 @@ export interface SSTransformControlParams {
   name: string;
   uuid: string;
   type: 'focus' | 'change' | 'delete';
-  target: THREE.Object3D;
+  target?: THREE.Object3D;
+  targetId?: number;
   position?: THREE.Vector3;
   rotation?: THREE.Vector3;
   scale?: THREE.Vector3;
@@ -139,7 +140,7 @@ export default class SSTransformControl {
           case '-': // size大小减小
             this._control.setSize(this._control.size * 0.9);
             break;
-          case 'f':// 聚焦
+          case 'f': // 聚焦
             if (!this._control.object) return;
             this.focus(this._control.object);
             this.onControlChange?.({
@@ -157,13 +158,14 @@ export default class SSTransformControl {
             if (!this._control.object) return;
             this._boxHeloper.removeFromParent();
             this._boxHeloper = null;
+            const { name, uuid, id } = this._control.object;
+            this._control.detach();
             this.onControlChange?.({
-              name: this._control.object.name,
-              uuid: this._control.object.uuid,
-              target: this._control.object,
+              name,
+              uuid,
+              targetId: id,
               type: 'delete'
             });
-            this._control.detach();
             break;
           case 'ArrowRight': // x 轴左移
             break;
@@ -221,8 +223,10 @@ export default class SSTransformControl {
 
     delta.set(0, 0, 1);
     delta.applyQuaternion(camera.quaternion);
-    delta.multiplyScalar(distance * 4);
+    delta.multiplyScalar(distance * 2);
 
     camera.position.copy(center).add(delta);
+    this._ssThreeObject.threeOrbitControl.target.copy(center);
+    this._ssThreeObject.threeOrbitControl.update();
   };
 }

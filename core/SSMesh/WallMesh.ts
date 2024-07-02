@@ -3,32 +3,63 @@ import jianbian from '../assets/textures/jianbian2.png';
 import flow from '../assets/textures/flow.png';
 
 export interface SSWallMeshParameters {
+  /**
+   * @description 墙高
+   */
   wallHeight?: number;
-  bgTextureUrl: string;
-  flowTextureUrl: string; 
-  flowTextureUrl2: string; 
-  bgColor: THREE.Color
+  /**
+   * @description 背景地址
+   */
+  bgTextureUrl?: string;
+  /**
+   * @description 流向图
+   */
+  flowTextureUrl?: string;
+  /**
+   * @description 叠加流线图
+   */
+  flowTextureUrl2?: string;
+  /**
+   * @description 背景色
+   */
+  bgColor?: THREE.Color;
 }
 
-
 export default class SSWallMesh {
+
+    /**
+   * 创建基础的墙体材质
+   * @param paths 所有路径点
+   * @param options 墙体高度
+   * @param {Number} wallHeight 材质参数信息
+   * @returns
+   */
+    static baseFromPaths = (paths: THREE.Vector3[], material?: THREE.Material, wallHeight = 2) => {
+      const geometry = SSWallMesh._getGeomertry(paths, wallHeight);
+      return new THREE.Mesh(geometry, material);
+    };
+
   /**
-   * 创建墙体材质
+   * 创建渐变墙体材质
    * @param paths 所有路径点
    * @param options 墙体高度
    * @param materialOptions 材质参数信息
    * @returns
    */
-  static fromPaths = (paths: THREE.Vector3[], options: SSWallMeshParameters, materialOptions: THREE.ShaderMaterialParameters) => {
+  static gradientFromPaths = (
+    paths: THREE.Vector3[],
+    options?: SSWallMeshParameters,
+    shaderMaterialOptions?: THREE.ShaderMaterialParameters
+  ) => {
     const newOptions = {
       bgTextureUrl: jianbian,
       flowTextureUrl: flow,
       flowTextureUrl2: flow,
       bgColor: new THREE.Color(0 / 255, 68 / 255, 176 / 255),
-      ...options
+      ...(options || {})
     };
 
-    const material = SSWallMesh._getMaterial(newOptions, materialOptions);
+    const material = SSWallMesh._getMaterial(newOptions, shaderMaterialOptions);
     const geometry = SSWallMesh._getGeomertry(paths, newOptions.wallHeight);
     return new THREE.Mesh(geometry, material);
   };
@@ -46,7 +77,7 @@ export default class SSWallMesh {
       flowTextureUrl2: flow,
       bgColor: new THREE.Color(0 / 255, 68 / 255, 176 / 255)
     },
-    materialOptions: THREE.ShaderMaterialParameters
+    materialOptions?: THREE.ShaderMaterialParameters
   ) => {
     // 顶点
     const vertexShader = `
@@ -114,7 +145,7 @@ export default class SSWallMesh {
       side: THREE.DoubleSide,
       vertexShader,
       fragmentShader,
-      ...materialOptions
+      ...(materialOptions || {})
     });
   };
 

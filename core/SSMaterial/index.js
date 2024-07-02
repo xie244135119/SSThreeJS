@@ -1,5 +1,19 @@
 //
 import SSLightScanMaterial from './SSLightScanMaterial';
 import SSLinearGradientMaterial from './SSLinearGradientMaterial';
+import MeshReflectorMaterial from './MeshReflectorMaterial';
 
-export { SSLinearGradientMaterial, SSLightScanMaterial };
+export default {
+  /**
+   * @description
+   */
+  SSLinearGradientMaterial,
+  /**
+   * @description
+   */
+  SSLightScanMaterial,
+  /**
+   * @description 反射
+   */
+  MeshReflectorMaterial
+};

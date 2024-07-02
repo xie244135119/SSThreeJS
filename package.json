@@ -1,10 +1,9 @@
 {
   "name": "ss-threejs",
-  "version": "1.4.0",
+  "version": "1.4.7",
   "description": "a 3d tool base threejs",
-  "main": "./core/index.js",
-  "types": "./core/types/index.d.ts",
-  "module": "./core/index.js",
+  "main": "./core/index.ts",
+  "module": "./core/index.ts",
   "author": "xie244135119",
   "license": "ISC",
   "type": "module",
@@ -18,10 +17,10 @@
     "lil-gui": "0.18.2",
     "postprocessing": "6.32.2",
     "stats.js": "0.17.0",
-    "three": "^0.152.0"
+    "three": "0.152.1"
   },
   "devDependencies": {
-    "@types/three": "0.154.0",
+    "@types/three": "0.152.1",
     "vite": "4.4.8",
     "vite-plugin-eslint": "1.8.1",
     "@types/react": "18.2.0",

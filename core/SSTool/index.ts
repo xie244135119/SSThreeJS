@@ -3,26 +3,25 @@ import TWEEN from '@tweenjs/tween.js';
 import { BufferGeometry } from 'three';
 import { Line2 } from 'three/examples/jsm/lines/Line2';
 import { LineGeometry } from 'three/examples/jsm/lines/LineGeometry';
-import { LineMaterial } from 'three/examples/jsm/lines/LineMaterial';
-import SSThreeLoop from '../SSThreeLoop';
-import SSLoader from '../SSLoader';
+import { LineMaterial, LineMaterialParameters } from 'three/examples/jsm/lines/LineMaterial';
+import { SSThreeLoop, SSLoader } from '../index';
 import LineStartPng from '../assets/line_start.png';
 
 export default class SSThreeTool {
   /**
    * use tween animation
-   * @param {object} aStartPoint 开始的起点
-   * @param {object} aEndPoint 结束的起点
-   * @param {function(object, number): void} onUpdate 更新过程
-   * @param {number} [speed=1] 运行速度
-   * @param {function ():void} onComplete
+   * @param aStartPoint 开始的起点
+   * @param aEndPoint 结束的起点
+   * @param onUpdate 更新过程
+   * @param speed 运行速度
+   * @param onComplete 完成事件
    */
   static useTweenAnimate<T>(
-    aStartPoint:T,
-    aEndPoint:T,
-    onUpdate: (T)=>void,
+    aStartPoint: T,
+    aEndPoint: T,
+    onUpdate: (T) => void,
     speed: number = 1,
-    onComplete?: () =>void
+    onComplete?: () => void
   ) {
     let _animateFrameRef;
     const tweenAnimate = new TWEEN.Tween(aStartPoint);
@@ -44,37 +43,13 @@ export default class SSThreeTool {
         TWEEN.update();
       }
     });
-  };
-
-  /**
-   * 经过拆分后的模型数据，根据子物体获取拆分前 原始物体名称
-   * @param {THREE.Object3D} obj3d object
-   * @returns
-   */
-  static getOriginMesh = (obj3d) => {
-    if (!(obj3d instanceof THREE.Object3D)) {
-      return null;
-    }
-    if (obj3d.name.indexOf('_') === -1) {
-      return obj3d;
-    }
-    const nameArry = obj3d.name.split('_') || [];
-    const lastText = nameArry[nameArry.length - 1];
-    if (!lastText) {
-      return obj3d;
-    }
-    if (Number.isNaN(lastText)) {
-      return obj3d;
-    }
-    nameArry.pop();
-    return obj3d.parent;
-  };
+  }
 
   /**
    * set model center
-   * @param {THREE.Object3D} obj object3D
+   * @param obj object3D
    */
-  static setObjectCenter = (obj) => {
+  static setObjectCenter = (obj: THREE.Object3D) => {
     const setMesh = (mesh) => {
       if (mesh instanceof THREE.Mesh) {
         const { geometry } = mesh;
@@ -94,10 +69,10 @@ export default class SSThreeTool {
 
   /**
    * get object center
-   * @param {THREE.Object3D} obj object3D
+   * @param obj object3D
    * @returns
    */
-  static getObjectCenter = (obj) => {
+  static getObjectCenter = (obj: THREE.Object3D) => {
     if (obj instanceof THREE.Object3D) {
       return obj.getWorldPosition(new THREE.Vector3());
     }
@@ -105,10 +80,31 @@ export default class SSThreeTool {
   };
 
   /**
-   * get obj box center
-   * @param {THREE.Object3D} obj object3D
+   * 经过拆分后的模型数据，根据子物体获取拆分前 原始物体名称
+   * @param obj3d object
+   * @returns
    */
-  static getBoxCenter = (obj) => {
+  static getOriginObject = (obj3d: THREE.Object3D) => {
+    if (obj3d.name.indexOf('_') === -1) {
+      return obj3d;
+    }
+    const nameArry = obj3d.name.split('_') || [];
+    const lastText = nameArry[nameArry.length - 1];
+    if (!lastText) {
+      return obj3d;
+    }
+    if (Number.isNaN(Number(lastText))) {
+      return obj3d;
+    }
+    nameArry.pop();
+    return obj3d.parent;
+  };
+
+  /**
+   * get obj box center
+   * @param obj object3D
+   */
+  static getBoxCenter = (obj: THREE.Object3D) => {
     const box = new THREE.Box3();
     box.setFromObject(obj);
     const { max, min } = box;
@@ -117,15 +113,14 @@ export default class SSThreeTool {
 
   /**
    * get camera and scene  on object3D front (reslove 80% )
-   * @param {THREE.Object3D} obj object3D
-   * @param {string} forwardFirection mesh direction x,y,z
+   * @param obj object3D
+   * @param forwardFirection mesh direction x,y,z
    * @returns
    */
-  static getCameraScenePositionByObject = (obj, forwardFirection = 'z') => {
-    if (!(obj instanceof THREE.Object3D)) {
-      return { cameraPosition: new THREE.Vector3(), scenePosition: new THREE.Vector3() };
-    }
-
+  static getCameraScenePositionByObject = (
+    obj: THREE.Object3D,
+    forwardFirection: 'x' | '-x' | 'y' | '-y' | 'z' | '-z' = 'z'
+  ) => {
     const { max, min } = this.setBoundingBox(obj);
     const xWidth = max.x - min.x;
     const zWidth = max.z - min.z;
@@ -146,12 +141,12 @@ export default class SSThreeTool {
 
   /**
    * 防抖
-   * @param {function} fn 虚函数
-   * @param {number} [wait=200] 防抖时间
-   * @param {boolean} [immediate=false] 立刻执行
+   * @param fn 虚函数
+   * @param wait 防抖时间
+   * @param immediate 立刻执行
    * @returns
    */
-  static debounce = (fn, wait = 200, immediate = false) => {
+  static debounce = (fn: (e: any) => any, wait: number = 200, immediate: boolean = false) => {
     let timer;
     return function block() {
       if (immediate) {
@@ -168,11 +163,11 @@ export default class SSThreeTool {
 
   /**
    * 节流
-   * @param {function} fn 虚函数
-   * @param {number} [wait=200] 等待时间
+   * @param fn 虚函数
+   * @param wait 等待时间
    * @returns
    */
-  static throttle = (fn, wait = 200) => {
+  static throttle = (fn: (e: any) => any, wait: number = 200) => {
     let timer = null;
     return function block() {
       const context = this;
@@ -188,11 +183,11 @@ export default class SSThreeTool {
 
   /**
    * 将三维坐标转化为屏幕坐标
-   * @param {THREE.Vector3} worldVector
-   * @param {THREE.Camera} camera
+   * @param worldVector
+   * @param camera
    * @returns
    */
-  static worldToScreen = (worldVector, camera) => {
+  static worldToScreen = (worldVector: THREE.Vector3, camera: THREE.Camera) => {
     const standardVector = worldVector.project(camera); // 世界坐标转标准设备坐标
     const a = window.innerWidth / 2;
     const b = window.innerHeight / 2;
@@ -208,7 +203,12 @@ export default class SSThreeTool {
   /**
    * 将二维坐标转化为三维坐标
    */
-  static screenToWorld = (aPoint, aContainer = document.body, threeCamera, targetZ = 0) => {
+  static screenToWorld = (
+    aPoint: THREE.Vector2,
+    aContainer: HTMLElement,
+    threeCamera: THREE.Camera,
+    targetZ: number = 0
+  ) => {
     const x =
       ((aPoint.x - aContainer.getBoundingClientRect().left) / aContainer.offsetWidth) * 2 - 1; // 规范设施横坐标
     const y =
@@ -221,67 +221,66 @@ export default class SSThreeTool {
 
     const res = new THREE.Vector3();
     res.copy(threeCamera.position).add(vec.multiplyScalar(distance));
-    // res.copy(threeCamera.position).add(vec);
     return res;
   };
 
   /**
    * 根据物体生成包围盒子
-   * @param {THREE.Object3D} object
+   * @param object
    */
-  static setBoundingBox = (object) => {
+  static setBoundingBox = (object: THREE.Object3D) => {
     const box = new THREE.Box3().setFromObject(object);
     return { max: box.max, min: box.min };
   };
 
   /**
    * 根据物体生成包围盒子
-   * @param {THREE.Object3D} object
+   * @param object
    */
-  static getBoundingBox = (object) => {
+  static getBoundingBox = (object: THREE.Object3D) => {
     const box = new THREE.Box3().setFromObject(object);
     return box;
   };
 
-  /**
-   * 场景无用模型过滤
-   * @param {string[]} nameList 模型name列表
-   * @param {string[]} castNameList 过滤name列表
-   * @returns
-   */
-  static _modelsFilter = (nameList = [], castNameList = []) => {
-    if (nameList?.length === 0) {
-      return [];
-    }
-    // 筛选掉可视域视锥体mesh
-    // eslint-disable-next-line no-param-reassign
-    nameList =
-      nameList?.length === 0
-        ? []
-        : nameList.filter(
-            (item) => item.object.name !== '可视域视锥体' && item.object.visible === true
-          );
-    // 墙体过滤 , 不过滤地板
-    const newarray = [];
-    nameList.forEach((item) => {
-      if (!castNameList.includes(item.object.name)) {
-        newarray.push(item);
-      }
-    });
-    // eslint-disable-next-line no-param-reassign
-    nameList = newarray;
-    return nameList;
-  };
+  // /**
+  //  * 场景无用模型过滤
+  //  * @param nameList 模型name列表
+  //  * @param castNameList 过滤name列表
+  //  * @returns
+  //  */
+  // static _modelsFilter = (nameList: string[], castNameList: string[]) => {
+  //   if (nameList?.length === 0) {
+  //     return [];
+  //   }
+  //   // 筛选掉可视域视锥体mesh
+  //   // eslint-disable-next-line no-param-reassign
+  //   nameList =
+  //     nameList?.length === 0
+  //       ? []
+  //       : nameList.filter(
+  //           (item) => item.object.name !== '可视域视锥体' && item.object.visible === true
+  //         );
+  //   // 墙体过滤 , 不过滤地板
+  //   const newarray = [];
+  //   nameList.forEach((item) => {
+  //     if (!castNameList.includes(item.object.name)) {
+  //       newarray.push(item);
+  //     }
+  //   });
+  //   // eslint-disable-next-line no-param-reassign
+  //   nameList = newarray;
+  //   return nameList;
+  // };
 
   /**
    * 几何体合并
-   * @param {THREE.Mesh[]} objects mesh列表
+   * @param objects mesh列表
    * @returns
    */
-  static mergeBufferGeometry = (objects) => {
+  static mergeBufferGeometry = (meshs: THREE.Mesh[]) => {
     const modelGeometry = new THREE.BufferGeometry();
     const positions = [];
-    objects.forEach((e) => {
+    meshs.forEach((e) => {
       const geo = e.geometry;
       positions.push(...geo.getAttribute('position').array);
     });
@@ -290,39 +289,16 @@ export default class SSThreeTool {
   };
 
   /**
-   * 创建连线
-   * @param {THREE.Vector3[]} points
-   * @param {string} color
-   * @returns line
-   */
-  static createLine = (points, color = '#00CEFF', depthTest = true) => {
-    const pointArr = [];
-    let line = null;
-
-    if (points?.length > 1) {
-      points.forEach((item) => {
-        pointArr.push(item.x);
-        pointArr.push(item.y);
-        pointArr.push(item.z);
-      });
-      const lineMaterial = new LineMaterial({
-        color,
-        linewidth: 0.001,
-        depthTest
-      });
-      const lineGeometry = new LineGeometry().setPositions(pointArr);
-      line = new Line2(lineGeometry, lineMaterial);
-    }
-    return line;
-  };
-
-  /**
    * set mesh opacity
-   * @param {number} [aOpacity=0.5] opacity  range:[0,1]
-   * @param {Array<string>} meshNames material names defaut all
-   * @param {THREE.Object3D[]} targetObject3Ds target object
+   * @param aOpacity opacity  range:[0,1]
+   * @param meshNames material names defaut all
+   * @param targetObject3Ds target object
    */
-  static setOpacity = (aOpacity, targetObject3Ds, meshNames = []) => {
+  static setOpacity = (
+    aOpacity: number,
+    targetObject3Ds: THREE.Object3D[],
+    meshNames: string[]
+  ) => {
     let opacity = aOpacity;
     if (opacity === undefined || opacity === null) {
       opacity = 0.5;
@@ -362,11 +338,15 @@ export default class SSThreeTool {
 
   /**
    * set mesh visible
-   * @param {number} aVisible 可见  range:[0,1]
-   * @param {Array<string} meshNames material names defaut all
-   * @param {THREE.Object3D[]} targetObject3Ds 目标object3d
+   * @param aVisible 可见
+   * @param meshNames material names defaut all
+   * @param targetObject3Ds 目标object3d
    */
-  static setVisible = (aVisible = true, targetObject3Ds = null, meshNames = []) => {
+  static setVisible = (
+    aVisible: boolean = true,
+    targetObject3Ds: THREE.Object3D[] = null,
+    meshNames: string[]
+  ) => {
     // set material transpant
     const setObjVisible = (aObj) => {
       if (aObj instanceof THREE.Object3D) {
@@ -410,11 +390,10 @@ export default class SSThreeTool {
 
   /**
    * zoom
-   * @param {number} aValue 放大缩小的倍数
-   * @param {THREE.PerspectiveCamera} camera 目标相机
+   * @param aValue 放大缩小的倍数
+   * @param camera 目标相机
    */
-  static zoom = (aValue, camera) => {
-    camera.translateZ();
+  static zoom = (aValue: number, camera: THREE.PerspectiveCamera) => {
     const endPosition = camera.position.clone().multiplyScalar(aValue);
     this.useTweenAnimate(
       {
@@ -433,10 +412,10 @@ export default class SSThreeTool {
 
   /**
    * 模型爆炸效果 ，距离中心线等距离增加长度
-   * @param {number} [aValue] 爆炸比例
-   * @param {THREE.Object3D} [targetObject3D] 目标物体
+   * @param aValue 爆炸比例
+   * @param targetObject3D 目标物体
    */
-  static explode = (aValue, targetObject3D) => {
+  static explode = (aValue: number, targetObject3D: THREE.Object3D) => {
     const startPoint = {};
     const endPoint = {};
     const objs = {};
@@ -464,12 +443,16 @@ export default class SSThreeTool {
 
   /**
    * 设置物体其他颜色
-   * @param {Array<string} meshNames 材质物体
-   * @param { string | number} materialColor color 物体颜色
-   * @param {THREE.Object3D[]} targetObject3Ds object 目标物体
+   * @param meshNames 材质物体
+   * @param materialColor color 物体颜色
+   * @param targetObject3Ds object 目标物体
    * @returns
    */
-  static setMeshColorByNames = (meshNames, materialColor, targetObject3Ds) => {
+  static setMeshColorByNames = (
+    meshNames: string[],
+    materialColor: string | number,
+    targetObject3Ds: THREE.Object3D[]
+  ) => {
     if (meshNames?.length === 0) {
       return;
     }
@@ -508,11 +491,11 @@ export default class SSThreeTool {
 
   /**
    * 重置物体颜色
-   * @param {Array<string} meshNames 一组meshname
-   * @param {THREE.Object3D[]} targetObject3Ds 目标物体
+   * @param meshNames 一组meshname
+   * @param targetObject3Ds 目标物体
    * @returns
    */
-  static resetMeshNames = (meshNames, targetObject3Ds) => {
+  static resetMeshNames = (meshNames: string[], targetObject3Ds: THREE.Object3D[]) => {
     if (meshNames?.length === 0) {
       return;
     }
@@ -536,17 +519,20 @@ export default class SSThreeTool {
 
   /**
    * 根据物体生成包围盒子
-   * @param {THREE.Object3D} object
-   * @param {THREE.MeshBasicMaterialParameters} materialParams 参数
+   * @param object
+   * @param materialParams 材质参数
    */
-  static addBoundingBoxByObject = (object, materialParams) => {
+  static addBoundingBoxByObject = (
+    object: THREE.Object3D,
+    materialParams: THREE.MeshBasicMaterialParameters
+  ) => {
     const box = new THREE.Box3().setFromObject(object);
     const v = {
       x: Math.abs(box.max.x - box.min.x),
       y: Math.abs(box.max.y - box.min.y),
       z: Math.abs(box.max.z - box.min.z)
     };
-    const geometry = new THREE.BoxBufferGeometry(v.x + 0.01, v.y + 0.01, v.z + 0.01);
+    const geometry = new THREE.BoxGeometry(v.x + 0.01, v.y + 0.01, v.z + 0.01);
     const material = new THREE.MeshBasicMaterial({
       color: new THREE.Color(0, 1, 1),
       transparent: true,
@@ -559,36 +545,41 @@ export default class SSThreeTool {
   };
 
   /**
-   * 增加描线
-   * @param {THREE.Vector3} startPoint 起点
-   * @param {THREE.Vector3} endPoint 终点
-   * @param {LineMaterialParameters} [lineOptions] 线框效果
-   * @param {boolean} [centerIcon=false] 中心icon
-   * @returns {{ line: Line2, group: THREE.Group }}
+   * 增加连线
+   * @param startPoint 起点
+   * @param endPoint 终点
+   * @param lineOptions 线框效果
+   * @param centerIcon 中心icon
    */
-  static addLine = (startPoint, endPoint, lineOptions = {}, centerIcon = false) => {
+  static addLineByPoints = (
+    points: THREE.Vector3[],
+    lineOptions?: LineMaterialParameters,
+    centerIcon: boolean = false
+  ) => {
+    if (points.length <= 1) {
+      return null;
+    }
     const material = new LineMaterial({
-      color: new THREE.Color(111 / 255, 175 / 255, 173 / 255),
+      color: 0x00ceff,
       linewidth: 0.001,
       depthTest: false,
-      ...lineOptions
+      ...(lineOptions || {})
     });
+    const positions = [];
+    points.forEach((item) => {
+      positions.push(item.x, item.y, item.z);
+    });
+
     const geo = new LineGeometry();
-    geo.setPositions([
-      startPoint.x,
-      startPoint.y,
-      startPoint.z,
-      endPoint.x,
-      endPoint.y,
-      endPoint.z
-    ]);
+    geo.setPositions(positions);
+
     const group = new THREE.Group();
     group.name = 'LineGroup';
     const line = new Line2(geo, material);
     group.add(line);
     if (centerIcon) {
       SSLoader.loadSprite(LineStartPng).then((obj) => {
-        obj.position.copy(startPoint);
+        obj.position.copy(points[0]);
         obj.scale.set(0.2, 0.2, 0.2);
         group.attach(obj);
       });
@@ -601,16 +592,16 @@ export default class SSThreeTool {
 
   /**
    * auto compute position and create line
-   * @param {THREE.Object3D} aObj obj model
-   * @param {string} [meshTowards='z'] direction
-   * @param {LineMaterialParameters} [lineOptions] 线条效案
+   * @param aObj obj model
+   * @param meshTowards direction
+   * @param lineOptions 线条效案
    * @returns
    */
-  static addLineFromObject = (aObj, meshTowards = 'z', lineOptions = {}) => {
-    if (!(aObj instanceof THREE.Object3D)) {
-      return {};
-    }
-
+  static addLineFromObject = (
+    aObj: THREE.Object3D,
+    meshTowards: 'x' | '-x' | 'y' | '-y' | 'z' | '-z' = 'z',
+    lineMaterialOptions?: LineMaterialParameters
+  ) => {
     const startVector = SSThreeTool.getObjectCenter(aObj);
     const endVector = startVector.clone();
     const { max, min } = SSThreeTool.setBoundingBox(aObj);
@@ -634,13 +625,39 @@ export default class SSThreeTool {
       endVector.x += xWidth * sidescale * directionScale;
     }
     endVector.y += (yHeight * 0.5 * 4) / 5;
-    //
-    const { group, line } = this.addLine(startVector, endVector, lineOptions, true);
+    const { group, line } = this.addLineByPoints(
+      [startVector, endVector],
+      lineMaterialOptions,
+      true
+    );
     return {
       group,
       line,
       startVector,
       endVector
     };
+  };
+
+  /**
+   * 获取物体z轴朝向且距离半径的坐标位置(z + radius)
+   * @param object
+   */
+  static getObjectWorldDirection = (object: THREE.Object3D, offset: number = 0) => {
+    const box = new THREE.Box3().setFromObject(object);
+    const center = this.getBoundingBox(object).getCenter(new THREE.Vector3());
+    box.applyMatrix4(object.matrix);
+    // 获取边界框的尺寸
+    const size = new THREE.Vector3();
+    box.getSize(size);
+    const offSetZ = size.z / 2 + offset;
+    // 获取物体的局部坐标系
+    const localMatrix = new THREE.Matrix4().copy(object.matrixWorld).invert();
+    // 将边界框的中心点转换为物体的局部坐标系
+    center.applyMatrix4(localMatrix);
+    // 在 z 轴上移动到半径位置
+    center.z += offSetZ;
+    // 将半径位置转换回世界坐标系
+    center.applyMatrix4(object.matrixWorld);
+    return center;
   };
 }

@@ -1,34 +1,34 @@
 import * as THREE from 'three';
-import ThreeLoop from './SSThreeLoop';
-import ThreeTool from './SSTool';
+import ThreeLoop from '../SSThreeLoop';
+import ThreeTool from '../SSTool';
 
 export default class Points {
   // three.js
-  #threeJs = null;
+  _threeJs = null;
 
   // particle
-  #threePointGeomtery = null;
+  _threePointGeomtery = null;
 
   // mesh
-  #pointsMesh = null;
+  _pointsMesh = null;
 
   // loop idenfiters
-  #loopIdenfiters = [];
+  _loopIdenfiters = [];
 
   /**
    * bind threejs
    * @param {*} aThreeJs
    */
   bindThreeJs = (aThreeJs) => {
-    this.#threeJs = aThreeJs;
+    this._threeJs = aThreeJs;
   };
 
   destroy() {
-    ThreeLoop.removeIds(this.#loopIdenfiters);
-    const { threeScene } = this.#threeJs;
+    ThreeLoop.removeIds(this._loopIdenfiters);
+    const { threeScene } = this._threeJs;
     const object = threeScene?.getObjectByName('custom_points');
     if (object instanceof THREE.Object3D) {
-      this.#threeJs.destroyObj(object);
+      this._threeJs.destroyObj(object);
       object.removeFromParent();
     }
   }
@@ -110,14 +110,14 @@ export default class Points {
     geometry.setAttribute('position', new THREE.Float32BufferAttribute(positionsData.positions, 3));
     const points = new THREE.Points(geometry, material);
     points.name = 'custom_points';
-    this.#threeJs.threeScene.add(points);
-    this.#threePointGeomtery = geometry;
-    this.#pointsMesh = points;
+    this._threeJs.threeScene.add(points);
+    this._threePointGeomtery = geometry;
+    this._pointsMesh = points;
     points.userData.vectorData = positionsData;
     console.log(' geometry ', geometry.attributes, positionsData);
 
     const idenfiters = ThreeLoop.add(this.animate);
-    this.#loopIdenfiters.push(idenfiters);
+    this._loopIdenfiters.push(idenfiters);
   };
 
   /**
@@ -149,14 +149,14 @@ export default class Points {
     geometry.setAttribute('position', new THREE.Float32BufferAttribute(positionsData.positions, 3));
     const points = new THREE.Points(geometry, material);
     points.name = 'custom_points';
-    this.#threeJs.threeScene.add(points);
-    this.#threePointGeomtery = geometry;
-    this.#pointsMesh = points;
+    this._threeJs.threeScene.add(points);
+    this._threePointGeomtery = geometry;
+    this._pointsMesh = points;
     points.userData.vectorData = positionsData;
     console.log(' geometry ', geometry.attributes, positionsData);
 
     const idenfiters = ThreeLoop.add(this.animate);
-    this.#loopIdenfiters.push(idenfiters);
+    this._loopIdenfiters.push(idenfiters);
   };
 
   /**
@@ -184,13 +184,13 @@ export default class Points {
     geometry.setAttribute('position', new THREE.Float32BufferAttribute(positionsData.positions, 3));
     const points = new THREE.Points(geometry, material);
     points.name = 'custom_points';
-    this.#threeJs.threeScene.add(points);
-    this.#threePointGeomtery = geometry;
-    this.#pointsMesh = points;
+    this._threeJs.threeScene.add(points);
+    this._threePointGeomtery = geometry;
+    this._pointsMesh = points;
     points.userData.vectorData = positionsData;
 
     const idenfiters = ThreeLoop.add(this.animate);
-    this.#loopIdenfiters.push(idenfiters);
+    this._loopIdenfiters.push(idenfiters);
   };
 
   /**
@@ -198,11 +198,11 @@ export default class Points {
    * @returns
    */
   removePoints = () => {
-    ThreeLoop.removeIds(this.#loopIdenfiters);
-    const { threeScene } = this.#threeJs;
+    ThreeLoop.removeIds(this._loopIdenfiters);
+    const { threeScene } = this._threeJs;
     const object = threeScene.getObjectByName('custom_points');
     if (object instanceof THREE.Object3D) {
-      this.#threeJs.destroyObj(object);
+      this._threeJs.destroyObj(object);
       object.removeFromParent();
     }
   };
@@ -211,11 +211,11 @@ export default class Points {
    * animate
    */
   animate = () => {
-    if (!(this.#threePointGeomtery instanceof THREE.BufferGeometry)) {
+    if (!(this._threePointGeomtery instanceof THREE.BufferGeometry)) {
       return;
     }
-    const positions = this.#threePointGeomtery.attributes.position.array;
-    const { vectorData = {} } = this.#pointsMesh.userData;
+    const positions = this._threePointGeomtery.attributes.position.array;
+    const { vectorData = {} } = this._pointsMesh.userData;
     const {
       speeds: vectorSpeeds,
       minX,
@@ -248,6 +248,6 @@ export default class Points {
       }
     }
     //
-    this.#threePointGeomtery.attributes.position.needsUpdate = true;
+    this._threePointGeomtery.attributes.position.needsUpdate = true;
   };
 }

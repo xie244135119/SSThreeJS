@@ -19,8 +19,9 @@ import SSLightModule from '../../core/SSModule/light.module';
 // import videoBlendImg from '../../core/assets/default_ground1.png';
 // import SSEvent from '../../core/SSEvent';
 import SSPostProcessManagerModule from '../../core/SSPostProcess/PostProcessManager';
-// import SSPostProcessModule from '../../core/SSModule/basepostprocess.module';
+import SSPostProcessModule from '../../core/SSModule/basepostprocess.module';
 import SSWatchLookModule from '../../core/SSModule/watchlook.module';
+import { SSMesh } from '../../core/index';
 
 export default function ParentIndex(props) {
   // eslint-disable-next-line react/prop-types
@@ -176,7 +177,7 @@ export default function ParentIndex(props) {
     // const videoBlend = new VideoSceneViewerManager(jsRef.current, videoFusionData, true);
     // videoBlend.openVideoFusion(videoFusionData);
 
-    // 引用配置
+    // // 引用配置
     jsRef.current.ssModuleCenter.registerModules([
       SSPickPointMode,
       SSLightModule,
@@ -191,36 +192,38 @@ export default function ParentIndex(props) {
     //
     // test360Video();
 
-    /**
-     * @type {SSDevelopMode}
-     */
-    // const developModule = jsRef.current.ssModuleCenter.getModuleByClassName('SSDevelopMode');
-    // console.log(' developModule ', developModule);
 
     /**
      * @type {SSPostProcessManagerModule}
      */
-    const ssPostProcessManagerModule = jsRef.current.ssModuleCenter.getModuleByClassName(
-      'SSPostProcessManagerModule'
-    );
+    // const ssPostProcessManagerModule = jsRef.current.ssModuleCenter.getModuleByClassName(
+    //   'SSPostProcessManagerModule'
+    // );
 
-    /* jsRef.current.threeEvent.addEventListener(SSEvent.SSEventType.CLICK, (event) => {
-      const models = jsRef.current.ssThreeObject.getModelsByPoint(event);
-      if (models.length > 0) {
-        const castObj = models[0].object;
-        console.log('models[0].object ', models[0].object);
-        ssPostProcessManagerModule.outlineObjects([castObj]);
-      }
-    });
-    /**
-     * @type {SSWater}
-     */
-    const ssWater = jsRef.current.ssModuleCenter.getModuleByClassName('SSWater');
-
+    //  jsRef.current.threeEvent.addEventListener(SSEvent.SSEventType.CLICK, (event) => {
+    //   const models = jsRef.current.ssThreeObject.getModelsByPoint(event);
+    //   if (models.length > 0) {
+    //     const castObj = models[0].object;
+    //     console.log('models[0].object ', models[0].object);
+    //     ssPostProcessManagerModule.outlineObjects([castObj]);
+    //   }
+    // });
+    
     return () => {
       jsRef.current.destroy();
     };
   }, []);
+
+
+  /**
+   * 测试水材质
+   */
+  const testWater = ()=>{
+    const water = SSMesh.WaterMesh.fromOptions(100, 100);
+    jsRef.current.ssThreeObject.threeScene.add(water);
+    jsRef.current.ssTransformControl.attach(water);
+  }
+
 
   return (
     <div>

@@ -4,10 +4,10 @@ import WEBGL from 'three/examples/jsm/capabilities/WebGL';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 import { RGBELoader } from 'three/examples/jsm/loaders/RGBELoader';
 import { HDRCubeTextureLoader } from 'three/examples/jsm/loaders/HDRCubeTextureLoader';
+import { Sky } from 'three/examples/jsm/objects/Sky';
 import SSThreeLoop from './SSThreeLoop';
 import SSDispose from './SSDispose';
 import SSEvent from './SSEvent';
-import SSThreeTool from './SSTool';
 import SSThreeObject from './SSThreeObject';
 import SSLoader from './SSLoader';
 import SSModuleCenter from './SSModule';
@@ -45,9 +45,24 @@ export default class SSThreeJs {
   ssPostProcessModule: SSPostProcessModule = null;
 
   /**
+   * @description 基础场景
+   */
+  threeScene: THREE.Scene = null;
+
+  /**
+   * @description 默认相机
+   */
+  threeCamera: THREE.PerspectiveCamera = null;
+
+  /**
    * @description 环境光
    */
   threeAmbientLight: THREE.AmbientLight = null;
+
+  /**
+   * @description webgl渲染器
+   */
+  threeRenderer: THREE.WebGLRenderer = null;
 
   /**
    * @description 事件系统
@@ -92,20 +107,20 @@ export default class SSThreeJs {
     this.threeEvent.destory();
     this.threeEvent = null;
 
-    if (this.ssThreeObject.threeScene !== null) {
-      SSDispose.dispose(this.ssThreeObject.threeScene);
-      if (this.ssThreeObject.threeRenderer.info.programs.length !== 0) {
-        console.log('scene material has not released', this.ssThreeObject.threeRenderer.info);
-      } else if (this.ssThreeObject.threeRenderer.info.memory.geometries) {
-        console.log('scene geometries has not released', this.ssThreeObject.threeRenderer.info);
-      } else if (this.ssThreeObject.threeRenderer.info.memory.textures) {
-        console.log('scene textures has not released', this.ssThreeObject.threeRenderer.info);
+    if (this.threeScene !== null) {
+      SSDispose.dispose(this.threeScene);
+      if (this.threeRenderer.info.programs.length !== 0) {
+        console.log('scene material has not released', this.threeRenderer.info);
+      } else if (this.threeRenderer.info.memory.geometries) {
+        console.log('scene geometries has not released', this.threeRenderer.info);
+      } else if (this.threeRenderer.info.memory.textures) {
+        console.log('scene textures has not released', this.threeRenderer.info);
       }
     }
-    if (this.ssThreeObject.threeRenderer !== null) {
-      this.ssThreeObject.threeRenderer.dispose();
-      this.ssThreeObject.threeRenderer.forceContextLoss();
-      this.ssThreeObject.threeContainer.removeChild(this.ssThreeObject.threeRenderer.domElement);
+    if (this.threeRenderer !== null) {
+      this.threeRenderer.dispose();
+      this.threeRenderer.forceContextLoss();
+      this.ssThreeObject.threeContainer.removeChild(this.threeRenderer.domElement);
     }
   }
 
@@ -133,12 +148,15 @@ export default class SSThreeJs {
 
     // scene
     const scene = new THREE.Scene();
+    this.threeScene = scene;
     const aspect = container.offsetWidth / container.offsetHeight;
     const camera = new THREE.PerspectiveCamera(45, aspect, 0.1, 20000);
     camera.position.set(10, 10, 10);
+    this.threeCamera = camera;
     // webgl render
     const render = this._addRender();
     container.append(render.domElement);
+    this.threeRenderer = render;
 
     // ambient light
     const ambientlight = new THREE.AmbientLight(new THREE.Color(0xffffff), 1);
@@ -164,12 +182,12 @@ export default class SSThreeJs {
     // window resize
     this.ssThreeObject.autoWindowResize();
     // add webgl render
-    this.ssThreeObject.render();
+    this.ssThreeObject.renderLoop();
     // module center
     this.ssModuleCenter = new SSModuleCenter(this.ssThreeObject);
     // postprocess module
     this.ssPostProcessModule = new SSPostProcessModule(this.ssThreeObject);
-    //
+    // 物体变换控制器
     this.ssTransformControl = new SSTransformControl(this.ssThreeObject);
     //
     SSThreeLoop.add(() => {
@@ -182,20 +200,20 @@ export default class SSThreeJs {
   };
 
   /**
-   * sky box
+   * old sky box
    * @param {*} hdrs
    * @returns
    */
-  addSky = (skys = []) => {
-    const pmremGenerator = new THREE.PMREMGenerator(this.ssThreeObject.threeRenderer);
+  addSkyOld = (skys = []) => {
+    const pmremGenerator = new THREE.PMREMGenerator(this.threeRenderer);
     const hdrLoader = new THREE.CubeTextureLoader(this.ssLoadingManager.threeLoadingManager);
     return new Promise((reslove, reject) => {
       hdrLoader.load(
         skys,
         (texture) => {
           const cubetexure = pmremGenerator.fromCubemap(texture).texture;
-          this.ssThreeObject.threeScene.environment = cubetexure;
-          this.ssThreeObject.threeScene.background = cubetexure;
+          this.threeScene.environment = cubetexure;
+          this.threeScene.background = cubetexure;
           pmremGenerator.dispose();
           reslove(texture);
         },
@@ -209,11 +227,55 @@ export default class SSThreeJs {
   };
 
   /**
+   *  new Sky
+   */
+  addSun = () => {
+    // Skybox
+    const sun = new THREE.Vector3();
+    const sky = new Sky();
+    sky.name = 'Sky';
+    sky.scale.setScalar(10000);
+    this.threeScene.add(sky);
+
+    const skyUniforms = sky.material.uniforms;
+    skyUniforms.turbidity.value = 10;
+    skyUniforms.rayleigh.value = 2;
+    skyUniforms.mieCoefficient.value = 0.005;
+    skyUniforms.mieDirectionalG.value = 0.8;
+    const parameters = {
+      elevation: 10,
+      azimuth: 76,
+      turbidity: 0,
+      rayleigh: 0.1,
+      mieCoefficient: 0.005,
+      mieDirectionalG: 0.8
+    };
+
+    const updateSun = () => {
+      sky.material.uniforms.turbidity.value = parameters.turbidity;
+      sky.material.uniforms.rayleigh.value = parameters.rayleigh;
+      sky.material.uniforms.mieCoefficient.value = parameters.mieCoefficient;
+      sky.material.uniforms.mieDirectionalG.value = parameters.mieDirectionalG;
+      const phi = THREE.MathUtils.degToRad(90 - parameters.elevation);
+      const theta = THREE.MathUtils.degToRad(parameters.azimuth);
+      sun.setFromSphericalCoords(1, phi, theta);
+      sky.material.uniforms.sunPosition.value.copy(sun);
+      // water.material.uniforms['sunDirection'].value.copy(sun).normalize();
+      // uniforms[ 'sunPosition' ].value.copy( sun );
+      // renderer.toneMappingExposure = effectController.exposure;
+      // renderer.render( scene, camera );
+    };
+
+    updateSun();
+    return sky;
+  };
+
+  /**
    * addHdr
    * @param hdrs hdr材质
    */
   addHDR = (hdrs: string | string[]) => {
-    const pmremGenerator = new THREE.PMREMGenerator(this.ssThreeObject.threeRenderer);
+    const pmremGenerator = new THREE.PMREMGenerator(this.threeRenderer);
     if (hdrs.length === 1) {
       return new Promise((reslove, reject) => {
         const rgbeLoader = new RGBELoader(this.ssLoadingManager.threeLoadingManager);
@@ -221,8 +283,8 @@ export default class SSThreeJs {
           hdrs as any,
           (texture) => {
             const cubetexure = pmremGenerator.fromEquirectangular(texture).texture;
-            this.ssThreeObject.threeScene.background = cubetexure;
-            this.ssThreeObject.threeScene.environment = cubetexure;
+            this.threeScene.background = cubetexure;
+            this.threeScene.environment = cubetexure;
             pmremGenerator.dispose();
             reslove(texture);
           },
@@ -241,8 +303,8 @@ export default class SSThreeJs {
         hdrs as any,
         (texture) => {
           const cubetexure = pmremGenerator.fromCubemap(texture).texture;
-          this.ssThreeObject.threeScene.environment = cubetexure;
-          this.ssThreeObject.threeScene.background = cubetexure;
+          this.threeScene.environment = cubetexure;
+          this.threeScene.background = cubetexure;
           pmremGenerator.dispose();
           reslove(texture);
         },
@@ -277,7 +339,7 @@ export default class SSThreeJs {
    * dynamic debug
    */
   addDymaicDebug = () => {
-    this._addAxisControl(this.ssThreeObject.threeScene);
+    this._addAxisControl(this.threeScene);
     this._addStatAnalyse();
   };
 
@@ -369,7 +431,6 @@ export default class SSThreeJs {
     });
   };
 
-
   /**
    * 获取模型路径目录
    * @returns
@@ -386,7 +447,7 @@ export default class SSThreeJs {
    * @param aFbxpath fbx path
    * @returns {Promise<THREE.Group>}
    */
-  loadFbx = (aFbxpath:string) =>
+  loadFbx = (aFbxpath: string) =>
     this.ssLoadingManager
       .getModelDataByUrl(aFbxpath)
       .then((data) =>
@@ -401,7 +462,7 @@ export default class SSThreeJs {
    * load gltf
    * @param path 路径
    */
-  loadGltf:(path: string)=> Promise<GLTF> = (path) =>
+  loadGltf: (path: string) => Promise<GLTF> = (path) =>
     this.ssLoadingManager
       .getModelDataByUrl(path)
       .then((data) =>
@@ -448,10 +509,13 @@ export default class SSThreeJs {
    * add orbitControl
    * @param aCamera 摄像头
    * @param aDomElement dom元素
-   * @returns 
+   * @returns
    */
   _addOrbitControl = (aCamera: THREE.Camera, aDomElement: HTMLElement) => {
-    const control = new OrbitControls(aCamera || this.ssThreeObject.threeCamera, aDomElement || this.ssThreeObject.threeContainer);
+    const control = new OrbitControls(
+      aCamera || this.threeCamera,
+      aDomElement || this.ssThreeObject.threeContainer
+    );
     control.enableDamping = true;
     control.dampingFactor = 0.25;
     control.enableZoom = true;
@@ -477,7 +541,7 @@ export default class SSThreeJs {
    * create axis helper
    * @returns
    */
-  _addAxisControl = (aScene: THREE.Scene = this.ssThreeObject.threeScene) => {
+  _addAxisControl = (aScene: THREE.Scene = this.threeScene) => {
     const axis = new THREE.AxesHelper(100);
     aScene.add(axis);
     this._axisControlHelper = axis;
@@ -522,15 +586,42 @@ export default class SSThreeJs {
   };
 
   /**
-   * 将屏幕坐标转化为世界坐标 <目前不是很准确>
+   * 射线检测
+   * @param pointEvent 点击事件
+   * @param targetObject3Ds 目标物体
+   * @param ignoreMeshNames 忽略的物体
+   * @returns
    */
-  transformPositionToVector3 = (aPoint: THREE.Vector2) => {
-    const canvas = this.ssThreeObject.threeContainer;
-    const mousex = ((aPoint.x - canvas.getBoundingClientRect().left) / canvas.offsetWidth) * 2 - 1;
-    const mousey = -((aPoint.y - canvas.getBoundingClientRect().top) / canvas.offsetHeight) * 2 + 1;
-    const sdvector = new THREE.Vector3(mousex, mousey, 0.5);
-    const worldVector = sdvector.unproject(this.ssThreeObject.threeCamera);
-    return worldVector;
+  getModelsByPoint = (
+    pointEvent: Event,
+    targetObject3Ds?: THREE.Object3D[],
+    ignoreMeshNames?: string[]
+  ) => {
+    return this.ssThreeObject.getModelsByPoint(pointEvent, targetObject3Ds, ignoreMeshNames);
   };
 
+  /**
+   * 设置视角位置
+   * @param cameraPosition 相机位置
+   * @param controlPosition 场景位置
+   * @param animate 开启动画
+   * @param animateSpeed 动画速度
+   * @param complete 结束事件
+   */
+  setEye(
+    cameraPosition: THREE.Vector3,
+    controlPosition: THREE.Vector3,
+    animate: boolean = true,
+    animateSpeed = 0.5,
+    complete?: () => void
+  ) {
+    this.ssThreeObject.setEye(cameraPosition, controlPosition, animate, animateSpeed, complete);
+  }
+
+  /**
+   * 选择视角位置
+   */
+  getEye() {
+    return this.ssThreeObject.getEye();
+  }
 }

@@ -1,36 +1,29 @@
 import * as THREE from 'three';
 import SSThreeJs from './SSCore';
+import SSMaterial from './SSMaterial/index';
 import SSThreeTool from './SSTool/index';
-import SSThreeLoop from './SSThreeLoop';
-import SSEvent from './SSEvent';
 import SSCssRenderer, { CSS2DObject, CSS3DObject } from './SSCssRenderer';
-import * as SSMaterial from './SSMaterial/index';
-import * as SSMesh from './SSMesh/index';
-import SSFileSetting from './SSModule';
-import SSThreeObject from './SSThreeObject';
+import SSLoader from './SSLoader';
 import SSDispose from './SSDispose';
+import SSThreeEvent from './SSEvent';
+import SSFileSetting from './SSModule';
+import SSThreeLoop from './SSThreeLoop';
+import SSMesh from './SSMesh/index';
+import SSThreeObject from './SSThreeObject';
 
 export default SSThreeJs;
 export {
   THREE,
-  // ssthree 事件
-  SSEvent,
-  // css2d, css3d 面板渲染
+  SSThreeEvent,
   SSCssRenderer,
-  // base tool
   SSThreeTool,
-  // three loop
   SSThreeLoop,
-  // three object
   SSThreeObject,
-  // material
   SSMaterial,
-  // mesh
   SSMesh,
-  // file setting
   SSFileSetting,
-  // dispose
   SSDispose,
+  SSLoader,
   CSS2DObject,
   CSS3DObject
 };

@@ -16,6 +16,11 @@ export default class SSThreeObject {
   threeScene: THREE.Scene = null;
 
   /**
+   * @description scene 调试 helper
+   */
+  sceneHelper: THREE.Scene = null;
+
+  /**
    * @description 场景相机
    */
   threeCamera: THREE.PerspectiveCamera | THREE.OrthographicCamera = null;
@@ -33,16 +38,25 @@ export default class SSThreeObject {
   /**
    * @description 后处理
    */
-  threeEffectComposer: EffectComposer  = null;
+  threeEffectComposer: EffectComposer = null;
 
   /**
    * @description 响应监听器
    */
   _resizeObserver: ResizeObserver = null;
 
-  constructor(props: { container: HTMLElement, scene: THREE.Scene, control: OrbitControls, camera: THREE.PerspectiveCamera | THREE.OrthographicCamera, renderer: THREE.WebGLRenderer, effectComposer?: EffectComposer}) {
+  constructor(props: {
+    container: HTMLElement;
+    scene: THREE.Scene;
+    sceneHelper?: THREE.Scene;
+    control: OrbitControls;
+    camera: THREE.PerspectiveCamera | THREE.OrthographicCamera;
+    renderer: THREE.WebGLRenderer;
+    effectComposer?: EffectComposer;
+  }) {
     this.threeContainer = props.container;
     this.threeScene = props.scene;
+    this.sceneHelper = props.sceneHelper;
     this.threeOrbitControl = props.control;
     this.threeCamera = props.camera;
     this.threeRenderer = props.renderer;
@@ -52,7 +66,7 @@ export default class SSThreeObject {
   destory() {
     this._resizeObserver.disconnect();
     this._resizeObserver = null;
-    this.cancelRender();
+    this.cancelRenderLoop();
     this.removeCameraHelper();
   }
 
@@ -64,7 +78,13 @@ export default class SSThreeObject {
    * @param animateSpeed 动画速度
    * @param complete 结束事件
    */
-  setEye(cameraPosition: THREE.Vector3, controlPosition: THREE.Vector3, animate: boolean = true, animateSpeed = 0.5, complete?: ()=>void) {
+  setEye(
+    cameraPosition: THREE.Vector3,
+    controlPosition: THREE.Vector3,
+    animate: boolean = true,
+    animateSpeed = 0.5,
+    complete?: () => void
+  ) {
     if (!animate) {
       this.threeCamera.position.copy(cameraPosition);
       this.threeOrbitControl.target.copy(controlPosition);
@@ -104,23 +124,23 @@ export default class SSThreeObject {
    * 选择视角位置
    */
   getEye() {
-    return ({
+    return {
       camera: this.threeCamera.position,
       target: this.threeOrbitControl.target
-    });
+    };
   }
 
   /**
    * 根据二维坐标 拾取模型数据
-   * @param {PointerEvent|KeyboardEvent} pointEvent 点位信息
-   * @param {Array<THREE.Object3D>} targetObject3Ds 目标模型
-   * @param {Array<string>} [ignoreMeshNames] 忽略的材质名称
+   * @param pointEvent 点位信息
+   * @param targetObject3Ds 目标模型
+   * @param ignoreMeshNames 忽略的材质名称
    * @returns
    */
   getModelsByPoint = (
-    pointEvent,
-    targetObject3Ds = this.threeScene.children,
-    ignoreMeshNames = []
+    pointEvent: PointerEvent,
+    targetObject3Ds: THREE.Object3D[] = this.threeScene.children,
+    ignoreMeshNames: string[] = []
   ) => {
     const point = new THREE.Vector2(
       (pointEvent.offsetX / this.threeContainer.offsetWidth) * 2 - 1, // 规范设施横坐标
@@ -136,7 +156,8 @@ export default class SSThreeObject {
       'DirectionalLightHelper',
       'TransformControls',
       'CameraHelper',
-      'AxesHelper'
+      'AxesHelper',
+      'GridHelper'
     ];
     const object3ds = targetObject3Ds || this.threeScene.children;
     const object3Ds = object3ds.filter(
@@ -168,13 +189,12 @@ export default class SSThreeObject {
 
   /**
    * 改变相机类型 正交或透视
-   * @param {CameraType} type 相机类型
+   * @param type 相机类型
    */
   changeCameraMode = (type: 'PerspectiveCamera' | 'OrthographicCamera') => {
     if (type === this.threeCamera.type) {
       return;
     }
-    this.cancelRender();
     this.removeCameraHelper();
     if (this.threeCamera) {
       this.threeCamera = null;
@@ -193,7 +213,7 @@ export default class SSThreeObject {
       this.threeCamera = camera;
       this.threeOrbitControl = new OrbitControls(this.threeCamera, this.threeContainer);
     }
-    this.render();
+    this.renderOnce();
     this.threeOrbitControl.update();
     this.addCameraHelper();
   };
@@ -203,9 +223,9 @@ export default class SSThreeObject {
    */
   updateCameraMatrix() {
     const ascale = this.threeContainer.offsetWidth / this.threeContainer.offsetHeight;
-    if (this.threeCamera.isPerspectiveCamera) {
+    if (this.threeCamera instanceof THREE.PerspectiveCamera) {
       this.threeCamera.aspect = ascale;
-    } else {
+    } else if (this.threeCamera instanceof THREE.OrthographicCamera) {
       const s = 1;
       this.threeCamera.left = -ascale * s;
       this.threeCamera.right = ascale * s;
@@ -218,7 +238,7 @@ export default class SSThreeObject {
   /**
    * webgl render
    */
-  render() {
+  renderLoop() {
     this.updateCameraMatrix();
     SSThreeLoop.add(() => {
       this.threeRenderer.render(this.threeScene, this.threeCamera);
@@ -226,9 +246,21 @@ export default class SSThreeObject {
   }
 
   /**
+   * 页面渲染
+   */
+  renderOnce() {
+    this.threeRenderer.render(this.threeScene, this.threeCamera);
+    if (this.sceneHelper) {
+      this.threeRenderer.autoClear = false;
+      this.threeRenderer.render(this.sceneHelper, this.threeCamera);
+      this.threeRenderer.autoClear = true;
+    }
+  }
+
+  /**
    * cancel webgl render
    */
-  cancelRender() {
+  cancelRenderLoop() {
     SSThreeLoop.removeId('webglrender update');
   }
 

@@ -7,11 +7,11 @@ import DefaultSetting from './defaultSetting';
 
 
 const modules = import.meta.glob([
-  './layouts/*.jsx',
-  './pages/*.jsx',
-  './pages/*/*.jsx',
-  './pages/*/*/*.jsx',
-  './pages/*/*/*/*.jsx'
+  './layouts/*.*sx',
+  './pages/*.*sx',
+  './pages/*/*.*sx',
+  './pages/*/*/*.*sx',
+  './pages/*/*/*/*.*sx'
 ]);
 export default class RouteIndex {
   //

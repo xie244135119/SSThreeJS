@@ -102,7 +102,7 @@ export default class SSPostProcessManagerModule extends SSModuleInterface {
     this.ssThreeObject.threeEffectComposer = composer;
     console.log('composer', composer);
 
-    this.ssThreeObject.cancelRender();
+    this.ssThreeObject.cancelRenderLoop();
     ThreeLoop.add(() => {
       composer.render();
     }, 'PostProcessManager Render');
