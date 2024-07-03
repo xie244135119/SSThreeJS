@@ -64,7 +64,7 @@ export default class SSThreeObject {
   }
 
   destory() {
-    this._resizeObserver.disconnect();
+    this._resizeObserver?.disconnect();
     this._resizeObserver = null;
     this.cancelRenderLoop();
     this.removeCameraHelper();
@@ -157,7 +157,8 @@ export default class SSThreeObject {
       'TransformControls',
       'CameraHelper',
       'AxesHelper',
-      'GridHelper'
+      'GridHelper',
+      'BoxHelper'
     ];
     const object3ds = targetObject3Ds || this.threeScene.children;
     const object3Ds = object3ds.filter(
