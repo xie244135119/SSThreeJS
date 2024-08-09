@@ -71,12 +71,14 @@ export default class SSThreeLoop {
    * @param {Array<string | Symbol>} identifier string 标识符
    */
   static removeIds = (identifiers = []) => {
-    identifiers.forEach((e) => {
-      const findIndex = this.renderLoopList.findIndex((item) => item.type === e);
-      if (findIndex !== -1) {
-        this.renderLoopList.splice(findIndex, 1);
-      }
-    });
+    if (this.renderLoopList) {
+      identifiers.forEach((e) => {
+        const findIndex = this.renderLoopList.findIndex((item) => item.type === e);
+        if (findIndex !== -1) {
+          this.renderLoopList.splice(findIndex, 1);
+        }
+      });
+    }
   };
 
   /**
@@ -100,7 +102,6 @@ export default class SSThreeLoop {
       if (this.isLoopDestory) {
         return;
       }
-      // console.log(' 每帧渲染中 ', renderLoopList);
       const update = multiUpdate();
       if (update) {
         this.animateRenderRef = window.requestAnimationFrame(animateFrame);

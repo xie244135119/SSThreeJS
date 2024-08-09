@@ -660,4 +660,32 @@ export default class SSThreeTool {
     center.applyMatrix4(object.matrixWorld);
     return center;
   };
+
+  /**
+   * 获取物体本地朝向(跟随父物体逆矩阵) 返回局部坐标系中的 X、Y、Z 轴朝向
+   * @param object 目标物体
+   */
+  static getLocalDirection2 = (object: THREE.Object3D) => {
+    // 获取物体的局部变换矩阵
+    const localMatrix = new THREE.Matrix4();
+    localMatrix.extractRotation(object.matrix); // 从物体的变换矩阵中提取旋转部分
+
+    // 重要： 获取物体的局部变换矩阵的逆矩阵，解决物体旋转时错乱问题
+    const localMatrixInverse = localMatrix.clone().invert();
+
+    // 获取局部坐标系中的 Z 轴和 X 轴朝向
+    const LocalXDirection = new THREE.Vector3(1, 0, 0)
+      .applyMatrix4(localMatrix)
+      .applyMatrix4(localMatrixInverse)
+      .normalize(); // X 轴
+    const LocalYDirection = new THREE.Vector3(0, 1, 0)
+      .applyMatrix4(localMatrix)
+      .applyMatrix4(localMatrixInverse)
+      .normalize(); // Y 轴
+    const LocalZDirection = new THREE.Vector3(0, 0, 1)
+      .applyMatrix4(localMatrix)
+      .applyMatrix4(localMatrixInverse)
+      .normalize(); // Z 轴
+    return { LocalXDirection, LocalYDirection, LocalZDirection }; // 返回局部坐标系中的 X、Y、Z 轴朝向
+  };
 }

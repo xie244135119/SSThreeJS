@@ -1,5 +1,9 @@
 import * as THREE from 'three';
-import { PathGeometry, PathTubeGeometry, PathPointList } from './three.path.module';
+import {
+  PathGeometry,
+  PathTubeGeometry,
+  PathPointList
+} from '../../libs/three.path/three.path.module';
 import SSThreeLoop from '../../SSThreeLoop';
 import SSDispose from '../../SSDispose';
 import SSThreeObject from '../../SSThreeObject';
@@ -8,8 +12,8 @@ export default class ThreePath {
   // 创建 更新的标记
   _isLoopRender = false;
 
-  // 
-  ssThreeObject: SSThreeObject= null;
+  //
+  ssThreeObject: SSThreeObject = null;
 
   // 所有测点数据
   _pathDataList = [];

@@ -1,13 +1,14 @@
+/**
+ * @description 取点插件
+ */
 import * as THREE from 'three';
-import SSDispose from '../SSDispose';
-import SSEvent from '../SSEvent';
-import SSThreeTool from '../SSTool/index';
+import { SSDispose, SSThreeEvent, SSThreeTool, SSThreeObject } from '../index';
 
-export default class SSDrawLineTool {
+export default class SSDrawLinePlugin {
   /**
-   * @type {import('../SSThreeObject').default} 物体
+   * @description 物体
    */
-  ssThreeObject = null;
+  ssThreeObject: SSThreeObject = null;
 
   /**
    * 类标题
@@ -15,39 +16,39 @@ export default class SSDrawLineTool {
   title = '工具-路径取点';
 
   /**
-   * @type THREE.Group
+   * @description 路径分组
    */
-  _pathGroup = null;
+  _pathGroup: THREE.Group = null;
 
   /**
-   * @type THREE.Group
+   * @description 取点分组
    */
-  _pointGroup = null;
+  _pointGroup: THREE.Group = null;
 
   /**
-   * @type {SSEvent}
+   * @description 事件通道
    */
-  _threeEvent = null;
+  _threeEvent: SSThreeEvent = null;
 
   /**
-   * @type THREE.Vector3[]
+   * @description 线变量
    */
-  _lineVectors = null;
+  _lineVectors: THREE.Vector3[] = null;
 
   /**
-   * 当前点位
+   * @description 点位模型
    */
-  // _currentVector = { x: 0, y: 0, z: 0 };
-
-  _mousePointModel = null;
-
-  _ground = null;
+  _mousePointModel: THREE.Mesh = null;
 
   /**
-   * 取点结束回调
-   * @type {function (THREE.Vector3[]):void} e [ Vector3(),... ]
+   * @description 虚拟地板
    */
-  onComplete = null;
+  _ground: THREE.Mesh = null;
+
+  /**
+   * @description 取点结束回调
+   */
+  onComplete: (e?: THREE.Vector3[]) => void = null;
 
   /**
    * 绘制结束
@@ -70,50 +71,34 @@ export default class SSDrawLineTool {
   openChoosePathMode() {
     this._addDebugGround();
     this._lineVectors = [];
-    console.log(' ssThreeObject xxxxx ', this.ssThreeObject);
     this._addEvent();
     const linegroup = new THREE.Group();
     linegroup.position.set(0, 0, 0);
     linegroup.name = 'debug_linepath';
-    this.ssThreeObject?.threeSceneHelper.add(linegroup);
+    this.ssThreeObject.sceneHelper.add(linegroup);
     this._pathGroup = linegroup;
     const pointgroup = new THREE.Group();
     pointgroup.position.set(0, 0, 0);
     pointgroup.name = 'debug_linepoint';
-    this.ssThreeObject?.threeSceneHelper.add(pointgroup);
+    this.ssThreeObject.sceneHelper.add(pointgroup);
     this._pointGroup = pointgroup;
-    console.log(' this._pointGroup', this._pointGroup);
   }
-
-  _addDebugGround = () => {
-    const geometries = new THREE.PlaneGeometry();
-    const material = new THREE.MeshBasicMaterial({
-      transparent: true,
-      color: '#000', // '#216E73',
-      opacity: 0.1
-    });
-    const planeMesh = new THREE.Mesh(geometries, material);
-    planeMesh.scale.set(1000, 1000, 1000);
-    planeMesh.rotateX((Math.PI / 180) * -90);
-    this._ground = planeMesh;
-    this.ssThreeObject?.threeSceneHelper.add(planeMesh);
-    console.log('_ground', this._ground);
-  };
 
   /**
    * 关闭选择路径模式
    */
   closeChoosePathMode() {
     this._removeEvent();
-    // this.ssThreeObject.changeCameraMode(SSThreeObject.CameraType.Perspective);
 
     if (this._pathGroup) {
       SSDispose.dispose(this._pathGroup);
       this._pathGroup.removeFromParent();
+      this._pathGroup = null;
     }
     if (this._pointGroup) {
       SSDispose.dispose(this._pointGroup);
       this._pointGroup.removeFromParent();
+      this._pointGroup = null;
     }
 
     if (this._mousePointModel) {
@@ -127,32 +112,22 @@ export default class SSDrawLineTool {
       this._ground.removeFromParent();
       this._ground = null;
     }
-    this.ssThreeObject.update();
+    this.renderOnce();
   }
 
-  pointGroup = [];
-
-  pointMeshGroup = [];
-
-  /**
-   * 取点
-   * @param {*} e
-   */
-  addPointDebug = (e) => {
-    const models = this.ssThreeObject.getModelsByPoint(e);
-    const pos = models[0].point;
-
-    const geo = new THREE.SphereGeometry(0.2);
-    const mat = new THREE.MeshBasicMaterial({ color: 0xff0000 });
-    const mesh = new THREE.Mesh(geo, mat);
-    mesh.name = 'debug_sphere';
-    mesh.scale.set(0.2, 0.2, 0.2);
-    mesh.scale.set(0.2, 0.2, 0.2);
-    mesh.position.copy(pos);
-    this.ssThreeObject.threeScene.add(mesh);
-    this.pointMeshGroup.push(mesh);
-    this.pointGroup.push(pos);
-    console.log('点位列表', JSON.stringify(this.pointGroup));
+  _addDebugGround = () => {
+    const geometries = new THREE.PlaneGeometry(200, 200);
+    const material = new THREE.MeshBasicMaterial({
+      transparent: true,
+      color: '#000', // '#216E73',
+      opacity: 0.1
+    });
+    const planeMesh = new THREE.Mesh(geometries, material);
+    planeMesh.scale.set(1000, 1000, 1000);
+    planeMesh.position.y = 0;
+    planeMesh.rotateX((Math.PI / 180) * -90);
+    this._ground = planeMesh;
+    this.ssThreeObject?.sceneHelper.add(planeMesh);
   };
 
   /**
@@ -165,46 +140,21 @@ export default class SSDrawLineTool {
       depthTest: true
     });
     this._mousePointModel = new THREE.Mesh(sphereGeometry, material);
-    this.ssThreeObject.threeSceneHelper?.add(this._mousePointModel);
+    this.ssThreeObject.sceneHelper?.add(this._mousePointModel);
 
-    const threeEvent = new SSEvent(this.ssThreeObject.threeContainer);
+    const threeEvent = new SSThreeEvent(this.ssThreeObject.threeContainer);
     this._threeEvent = threeEvent;
 
-    // // ---------取点调试----------
-    // threeEvent.addEventListener(SSEvent.SSEventType.CLICK, (e) => {
-    //   this.addPointDebug(e);
-    //   this.ssThreeObject.update();
-    // });
-
-    // // 后退
-    // window.addEventListener('keydown', (e) => {
-    //   switch (e.key) {
-    //     case 'Escape':
-    //       // 移除绘制的一条
-    //       this.pointMeshGroup[this.pointMeshGroup.length - 1]?.removeFromParent();
-    //       this.pointMeshGroup.pop();
-    //       this.pointGroup.pop();
-    //       this.ssThreeObject.update();
-    //       console.log('pointGroup', JSON.stringify(this.pointGroup));
-    //       break;
-
-    //     default:
-    //       break;
-    //   }
-    // });
-    // // ------------------------------
-
-    threeEvent.addEventListener(SSEvent.SSEventType.CLICK, (e) => {
+    threeEvent.addEventListener(SSThreeEvent.SSEventType.CLICK, (e) => {
       const models = this.ssThreeObject.getModelsByPoint(
         e,
-        this.ssThreeObject.threeSceneHelper.children || this.ssThreeObject.threeScene
+        this.ssThreeObject.sceneHelper.children,
+        ['GridHelper']
       );
       if (models.length === 0) return;
       // 目标点位
       const currentVector = this.getOverlapsPointByPoint(models[0].point);
-      // console.log(' 选中的目标点位 ', currentVector);
       this._lineVectors.push(currentVector);
-      // this._currentVector = point;
       // 目标几何体
       const boxgeo = new THREE.SphereGeometry(this._dynamicConfig.pointWidth);
       const material = new THREE.MeshBasicMaterial({
@@ -233,27 +183,25 @@ export default class SSDrawLineTool {
         ).group
       );
 
-      this.ssThreeObject.update();
+      this.renderOnce();
     });
 
-    threeEvent.addEventListener(SSEvent.SSEventType.MOUSEMOVE, (e) => {
+    threeEvent.addEventListener(SSThreeEvent.SSEventType.MOUSEMOVE, (e) => {
       if (this._lineVectors.length === 0) {
         return;
       }
       const models = this.ssThreeObject.getModelsByPoint(
         e,
-        this.ssThreeObject.threeSceneHelper.children
+        this.ssThreeObject.sceneHelper.children,
+        ['GridHelper']
       );
 
-      // console.log(' 点位 ', e, models, this.ssThreeObject.threeSceneHelper.children);
+      // console.log(' 点位 ', e, models, this.ssThreeObject.sceneHelper.children);
       if (models.length === 0) return;
-      // this._currentVector = models[0].point;
-      // const currentVector = models[0].point;
       // 当前的点位 与 已有的点位中 是否重合
       const currentVector = this.getOverlapsPointByPoint(models[0].point);
 
       // 与现有的点位队列判断是否重叠
-      // this._mousePointModel.position.copy(currentVector);
       // 移除时刻渲染的一条
       this._pathGroup.getObjectByName('debug_line_moveline')?.removeFromParent();
       // 新增一条
@@ -267,11 +215,11 @@ export default class SSDrawLineTool {
       );
       group.name = 'debug_line_moveline';
       this._pathGroup.add(group);
-      this.ssThreeObject.update();
+      this.renderOnce();
     });
 
     // 后退
-    threeEvent.addEventListener(SSEvent.SSEventType.REVOKE, (e) => {
+    threeEvent.addEventListener(SSThreeEvent.SSEventType.REVOKE, (e) => {
       // 回退
       if (this._lineVectors.length === 0) {
         return;
@@ -281,11 +229,11 @@ export default class SSDrawLineTool {
       this._pathGroup.getObjectByName('debug_line_moveline')?.removeFromParent();
       this._pathGroup.children.pop();
       this._pointGroup.children.pop();
-      this.ssThreeObject.update();
+      this.renderOnce();
     });
 
     // 确认
-    threeEvent.addEventListener(SSEvent.SSEventType.CONFIRM, (e) => {
+    threeEvent.addEventListener(SSThreeEvent.SSEventType.CONFIRM, (e) => {
       if (this._lineVectors.length === 0) {
         return;
       }
@@ -342,4 +290,22 @@ export default class SSDrawLineTool {
     // console.log(' 当前滑块距离处理 ', minPoint, minDistance, this._lineVectors);
     return minPoint || aTargetVector;
   };
+
+  /**
+   * 页面渲染
+   */
+  renderOnce() {
+    this.ssThreeObject.threeRenderer.render(
+      this.ssThreeObject.threeScene,
+      this.ssThreeObject.threeCamera
+    );
+    if (this.ssThreeObject.sceneHelper) {
+      this.ssThreeObject.threeRenderer.autoClear = false;
+      this.ssThreeObject.threeRenderer.render(
+        this.ssThreeObject.sceneHelper,
+        this.ssThreeObject.threeCamera
+      );
+      this.ssThreeObject.threeRenderer.autoClear = true;
+    }
+  }
 }

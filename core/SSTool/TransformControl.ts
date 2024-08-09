@@ -73,10 +73,10 @@ export default class SSTransformControl {
         this._ssThreeObject.threeCamera,
         this._ssThreeObject.threeContainer
       );
-      this._ssThreeObject.threeScene.add(this._control);
+      (this._ssThreeObject.sceneHelper || this._ssThreeObject.threeScene).add(this._control);
       this._control.addEventListener('change', (e) => {
-        // 禁用轨道控制器
-        this._ssThreeObject.threeOrbitControl.enabled = !this._control.dragging;
+        // 禁用轨道控制器的旋转功能
+        this._ssThreeObject.threeOrbitControl.enableRotate = !this._control.dragging;
         //
         if (!this._control.object) {
           return;
@@ -185,7 +185,7 @@ export default class SSTransformControl {
     if (!this._boxHeloper) {
       this._boxHeloper = new THREE.BoxHelper(object3d);
       this._boxHeloper.name = 'boxhelper';
-      this._ssThreeObject.threeScene.add(this._boxHeloper);
+      (this._ssThreeObject.sceneHelper || this._ssThreeObject.threeScene).add(this._boxHeloper);
     }
     this._boxHeloper.setFromObject(object3d);
   }
@@ -229,4 +229,16 @@ export default class SSTransformControl {
     this._ssThreeObject.threeOrbitControl.target.copy(center);
     this._ssThreeObject.threeOrbitControl.update();
   };
+
+  /**
+   * 是否可用
+   */
+  set enabled(enabled: boolean) {
+    if (this._control) {
+      if (!enabled) {
+        this.detach();
+      }
+      this._control.enabled = enabled;
+    }
+  }
 }

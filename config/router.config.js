@@ -12,11 +12,11 @@ export default [
     path: '/scene',
     component: './pages/scene'
   },
-  // {
-  //   name: '场景编排',
-  //   path: '/editor',
-  //   component: './pages/editor'
-  // },
+  {
+    name: '热力图测试',
+    path: '/heatmap',
+    component: './pages/heatmap'
+  },
   {
     component: './pages/404'
   }

@@ -5,7 +5,7 @@ import MeshReflectorMaterial from './MeshReflectorMaterial';
 
 export default {
   /**
-   * @description
+   * @description 先行
    */
   SSLinearGradientMaterial,
   /**
@@ -13,7 +13,7 @@ export default {
    */
   SSLightScanMaterial,
   /**
-   * @description 反射
+   * @description 墙体反射
    */
   MeshReflectorMaterial
 };

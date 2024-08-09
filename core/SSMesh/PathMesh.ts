@@ -5,6 +5,13 @@ import {
   PathPointList
 } from '../libs/three.path/three.path.module';
 
+export interface SSPathPointListOptions {
+  cornerRadius: number;
+  cornerSplit: number;
+  up: number;
+  close: boolean;
+}
+
 export default class SSPathMesh {
   // /**
   //  * 根据点位路径创建道路
@@ -210,29 +217,59 @@ export default class SSPathMesh {
   // };
 
   /**
-   * 路径几何体
+   * 根据点位创建路径
+   * @param points
+   * @param pathOption
+   * @param material
+   * @returns
    */
-  static pathGeomery(points: THREE.Vector3[]) {
+  static pathFromPoints(
+    points: THREE.Vector3[],
+    material: THREE.Material,
+    pathOption?: SSPathPointListOptions
+  ) {
+    const geo = this.pathGeomery(points, pathOption);
+    const mesh = new THREE.Mesh(geo, material);
+    return mesh;
+  }
+
+  /**
+   * 根据点位创建路径
+   * @param points
+   * @param pathOption
+   * @param material
+   * @returns
+   */
+  static pathTubefromPoints(
+    points: THREE.Vector3[],
+    material: THREE.Material,
+    pathOption?: SSPathPointListOptions
+  ) {
+    const geo = this.pathGeomery(points, pathOption);
+    const mesh = new THREE.Mesh(geo, material);
+    return mesh;
+  }
+
+  /**
+   * @description 路径几何体(线条拐角方正)
+   */
+  static pathGeomery(points: THREE.Vector3[], options?: SSPathPointListOptions) {
     // create PathPointList
     const pathPointList = new PathPointList();
-    // pathPointList.set(points, 0.3, 10, up, false);
-    pathPointList.set(points, 0.3, 10);
+    pathPointList.set(points, options.cornerRadius, options.cornerSplit, options.up, options.close);
     // Init by max vertex
     // const geometry = new PathGeometry(2000, false);
     // Init by data
-    const geometry = new PathGeometry(
-      {
-        pathPointList: pathPointList,
-        options: {
-          width: 0.1, // default is 0.1
-          arrow: true, // default is true
-          progress: 1, // default is 1
-          side: 'both' // "left"/"right"/"both", default is "both"
-        },
-        usage: THREE.StaticDrawUsage // geometry usage
+    const geometry = new PathGeometry({
+      pathPointList: pathPointList,
+      options: {
+        width: 0.1, // default is 0.1
+        arrow: true, // default is true
+        progress: 1, // default is 1
+        side: 'both' // "left"/"right"/"both", default is "both"
       },
-      false
-    );
+      usage: THREE.StaticDrawUsage // geometry usage
+    });
     // 更新的时候触发
     geometry.update(pathPointList, {
       width: 0.1, // default is 0.1
@@ -244,13 +281,12 @@ export default class SSPathMesh {
   }
 
   /**
-   * 路径几何体
+   * @description 路径几何体(线条拐角方正)
    */
-  static pathTubeGeometry(points: THREE.Vector3[]) {
+  static pathTubeGeometry(points: THREE.Vector3[], options?: SSPathPointListOptions) {
     // create PathPointList
     const pathPointList = new PathPointList();
-    // pathPointList.set(points, 0.3, 10, up, false);
-    pathPointList.set(points, 0.3, 10);
+    pathPointList.set(points, options.cornerRadius, options.cornerSplit, options.up, options.close);
     // Init by max vertex
     // const geometry = new PathTubeGeometry(2000, false);
     // Init by data

@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
-import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer';
+import { EffectComposer } from 'postprocessing';
 import SSThreeLoop from './SSThreeLoop';
 import SSThreeTool from './SSTool/index';
 

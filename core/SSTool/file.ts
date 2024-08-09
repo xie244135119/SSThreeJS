@@ -4,7 +4,7 @@ export default class SSFile {
    * @param {*} aJsonObject json结构数据
    * @param {*} aFileName 文件名称
    */
-  static exportJson = (aJsonObject = {}, aFileName = '') => {
+  static exportJson = (aJsonObject: any, aFileName: string) => {
     try {
       const jsonData = JSON.stringify(aJsonObject);
       const blob = new Blob([jsonData], { type: 'text/json' });
@@ -19,15 +19,15 @@ export default class SSFile {
    * @param {*} url 下载的地址
    * @param {*} savename 保存的文件名
    */
-  static download = (url, savename) => {
+  static download = (url: Blob | string, fileName: string) => {
     let newUrl = url;
     if (typeof url === 'object' && url instanceof Blob) {
       newUrl = URL.createObjectURL(url);
     }
 
     const alink = document.createElement('a');
-    alink.href = newUrl;
-    alink.download = savename;
+    alink.href = newUrl as string;
+    alink.download = fileName;
     let event;
     if (window.PointerEvent) {
       event = new PointerEvent('click');
