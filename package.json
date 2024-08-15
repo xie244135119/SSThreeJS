@@ -1,6 +1,6 @@
 {
   "name": "ss-threejs",
-  "version": "1.4.12",
+  "version": "1.4.13",
   "description": "a 3d tool base threejs",
   "main": "./core/index.ts",
   "module": "./core/index.ts",

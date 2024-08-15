@@ -40,21 +40,14 @@ a 3dtool for web base three
 
 ## Update Versions log
 
-	1.0.0 
-	1.0.1 
-	1.0.2 
-	更新日志
- 	1）threejs版本发布
+	1.4.13
+	优化tween动画效果；
+	修复useTweenAnimate调用异常问题;
+	完善SSPlugins/PostProcessPlugin组件;
 
-	1.0.3
-	1）优化模型加载处理
-
-	1.4.8
-	修复TransformControl组件添加boxhelper层级的问题;
-	新增测距组件（SSPlugins/DistanceMeasure.ts）;
-
-	1.4.9
-	修复SSTransformControl组件 旋转事件冲突的问题
+	1.4.11
+	1.4.12
+	做SSThreeLoop.removeIds防御处理
 
 	1.4.10
 	修复DistanceMeasure组件 字体加载异常的问题；
@@ -62,9 +55,23 @@ a 3dtool for web base three
 	优化完善路径 SSMesh/PathMesh组件；
 	优化完善 SSPlugins/DrawLinePlugin 插件；
 
-	1.4.11
-	1.4.12
-	做SSThreeLoop.removeIds防御处理
+	1.4.9
+	修复SSTransformControl组件 旋转事件冲突的问题
+
+	1.4.8
+	修复TransformControl组件添加boxhelper层级的问题;
+	新增测距组件（SSPlugins/DistanceMeasure.ts）;
+
+	1.0.3
+	1）优化模型加载处理
+
+	1.0.0 
+	1.0.1 
+	1.0.2 
+	更新日志
+ 	1）threejs版本发布
+
+
 
 
 ## three版本对应关系

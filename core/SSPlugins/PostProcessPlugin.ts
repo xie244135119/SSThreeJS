@@ -28,7 +28,7 @@ import {
 } from 'postprocessing';
 import { SSThreeObject, SSThreeLoop, SSDispose } from '../index';
 import SSFile from '../SSTool/file';
-import lutImg from '../assets/textures/lut3d_texture.png?url';
+import lutImg from './assets/filmic1.png?url';
 
 interface SSEffectComposerOptions {
   depthBuffer?: boolean;
@@ -155,7 +155,7 @@ export default class SSPostProcessPlugin {
       blur: false
     },
     lut3DEffect: {
-      blendFunction: BlendFunction.SRC,
+      blendFunction: BlendFunction.SKIP,
       tetrahedralInterpolation: false
     },
     vignetteEffect: {
@@ -284,13 +284,13 @@ export default class SSPostProcessPlugin {
     if (!this.outlineEffect) {
       const { threeScene, threeCamera, threeRenderer } = this.ssThreeObject;
       const outlineEffect = new OutlineEffect(threeScene, threeCamera, {
-        blendFunction: options.blendFunction,
-        edgeStrength: options.edgeStrength || 4.42, // 亮度，强度
-        pulseSpeed: options.pulseSpeed || 0.7, // 闪烁呼吸频率
-        visibleEdgeColor: options.visibleEdgeColor || new THREE.Color('#00FFFF').getHex(), // 描边颜色
-        hiddenEdgeColor: options.hiddenEdgeColor || new THREE.Color('#00FFFF').getHex(), // 遮挡面颜色
+        blendFunction: options?.blendFunction,
+        edgeStrength: options?.edgeStrength || 4.42, // 亮度，强度
+        pulseSpeed: options?.pulseSpeed || 0.7, // 闪烁呼吸频率
+        visibleEdgeColor: options?.visibleEdgeColor || new THREE.Color('#00FFFF').getHex(), // 描边颜色
+        hiddenEdgeColor: options?.hiddenEdgeColor || new THREE.Color('#00FFFF').getHex(), // 遮挡面颜色
         height: 480,
-        blur: options.blur || false
+        blur: options?.blur || false
       });
       this.outlineEffect = outlineEffect;
     }
@@ -300,13 +300,13 @@ export default class SSPostProcessPlugin {
   /**
    * @description 添加抗锯齿效果
    */
-  addSMAAEffect = () => {
+  addSMAAEffect = (option?: SSSMAAEffectOptions) => {
     // 抗锯齿
     if (!this.smaaEffect) {
       this.smaaEffect = new SMAAEffect({
-        preset: SMAAPreset.LOW,
-        edgeDetectionMode: EdgeDetectionMode.COLOR,
-        predicationMode: PredicationMode.DEPTH
+        preset: option?.preset,
+        edgeDetectionMode: option?.edgeDetectionMode,
+        predicationMode: option?.predicationMode
       });
       // 材质
       const { edgeDetectionMaterial } = this.smaaEffect;
@@ -344,7 +344,10 @@ export default class SSPostProcessPlugin {
       );
     }).then((t: THREE.Texture) => {
       const lut = LookupTexture.from(t);
-      this.lutEffect = new LUT3DEffect(lut);
+      this.lutEffect = new LUT3DEffect(lut, {
+        blendFunction: options?.blendFunction,
+        tetrahedralInterpolation: options?.tetrahedralInterpolation
+      });
       return this.lutEffect;
     });
   };
@@ -352,14 +355,14 @@ export default class SSPostProcessPlugin {
   /**
    * @description 边角压暗 Effect
    */
-  addVignetteEffect = (options: SSVignetteEffectOptions = {}) => {
+  addVignetteEffect = (options?: SSVignetteEffectOptions) => {
     if (!this.vignetteEffect) {
       // 边角压暗效果
       this.vignetteEffect = new VignetteEffect({
-        blendFunction: options.blendFunction,
-        technique: options.technique,
-        offset: options.offset,
-        darkness: options.darkness
+        blendFunction: options?.blendFunction,
+        technique: options?.technique,
+        offset: options?.offset,
+        darkness: options?.darkness
       });
     }
     return this.vignetteEffect;
@@ -474,7 +477,7 @@ export default class SSPostProcessPlugin {
    * 目标渲染
    */
   render() {
-    this.addLUTEffect().then((lutEffect) => {
+    this.addLUTEffect(this.postProcessOptions.lut3DEffect).then((lutEffect) => {
       const { threeCamera, threeScene } = this.ssThreeObject;
       const effectComposer = this.addEffectComposer();
       // 添加基础渲染通道
@@ -484,10 +487,9 @@ export default class SSPostProcessPlugin {
         this.addOutlineEffect(this.postProcessOptions.outlineEffect),
         this.addBloomEffect(this.postProcessOptions.bloomEffect),
         this.addVignetteEffect(this.postProcessOptions.vignetteEffect),
-        this.addSMAAEffect(),
+        this.addSMAAEffect(this.postProcessOptions.smaaEffect),
         lutEffect
       ];
-      console.log(' xxx effects xxx ', effects);
       const effectPass = new EffectPass(threeCamera, ...effects);
       effectPass.renderToScreen = true;
       effectComposer.addPass(effectPass);

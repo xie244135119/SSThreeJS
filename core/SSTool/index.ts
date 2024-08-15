@@ -35,12 +35,12 @@ export default class SSThreeTool {
       SSThreeLoop.removeId(_animateFrameRef);
       onComplete?.();
     });
-    tweenAnimate.easing(TWEEN.Easing.Linear.None);
+    tweenAnimate.easing(TWEEN.Easing.Quadratic.InOut);
     tweenAnimate.start();
 
     _animateFrameRef = SSThreeLoop.add(() => {
       if (tweenAnimate.isPlaying()) {
-        TWEEN.update();
+        tweenAnimate.update();
       }
     });
   }
