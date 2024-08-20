@@ -7,6 +7,9 @@ import { LineMaterial, LineMaterialParameters } from 'three/examples/jsm/lines/L
 import { SSThreeLoop, SSLoader } from '../index';
 import LineStartPng from '../assets/line_start.png';
 
+import React from 'react';
+import { createRoot } from 'react-dom/client';
+
 export default class SSThreeTool {
   /**
    * use tween animation
@@ -687,5 +690,115 @@ export default class SSThreeTool {
       .applyMatrix4(localMatrixInverse)
       .normalize(); // Z 轴
     return { LocalXDirection, LocalYDirection, LocalZDirection }; // 返回局部坐标系中的 X、Y、Z 轴朝向
+  };
+
+  /**
+   * 场景无用模型过滤
+   * @param {*} castModelList 射线检测模型列表
+   * @param {string[]} castNameList 过滤name列表
+   * @returns
+   */
+  static modelsFilter = (castModelList: any = [], castNameList: string[] = []) => {
+    if (castModelList?.length === 0) {
+      return [];
+    }
+    // 筛选掉可视域视锥体mesh
+    // eslint-disable-next-line no-param-reassign
+    castModelList =
+      castModelList?.length === 0
+        ? []
+        : castModelList.filter(
+            (item) => item.object.name !== '可视域视锥体' && item.object.visible === true
+          );
+    // 墙体过滤 , 不过滤地板
+    const newarray = [];
+    castModelList.forEach((item) => {
+      if (!castNameList.includes(item.object.name)) {
+        newarray.push(item);
+      }
+    });
+    // eslint-disable-next-line no-param-reassign
+    castModelList = newarray;
+    return castModelList;
+  };
+
+  /**
+   * 将ReactNode渲染为HTML元素并保留事件。异步解决生成换门问题
+   * @param {*} reactNode - 要渲染的ReactNode。
+   * @returns {HTMLElement|null} 转换后的HTML元素，如果转换失败则返回null。
+   */
+  static renderReactNodeInThreeScenePromise = (reactNode) =>
+    new Promise((resolve, reject) => {
+      if (!React.isValidElement(reactNode)) {
+        console.error('类型错误：传入的元素不是合法的ReactNode。');
+        reject(new Error('类型错误：传入的元素不是合法的ReactNode。'));
+        return;
+      }
+
+      const container = document.createElement('div');
+      document.body.appendChild(container); // 确保元素正确渲染
+
+      const root = createRoot(container);
+      root.render(reactNode);
+
+      setTimeout(() => {
+        const renderedNode = container.firstChild;
+        document.body.removeChild(container); // 清理容器
+        resolve(renderedNode);
+      }, 100);
+    });
+
+  /**
+   * 获取物体本地朝向 返回局部坐标系中的 X、Y、Z 轴朝向
+   * @param {*} object
+   */
+  static getLocalDirection = (object: any) => {
+    // 获取物体的局部变换矩阵
+    const localMatrix = new THREE.Matrix4();
+    localMatrix.extractRotation(object.matrix); // 从物体的变换矩阵中提取旋转部分
+
+    // 获取局部坐标系中的 Z 轴和 X 轴朝向
+    const LocalXDirection = new THREE.Vector3(1, 0, 0).applyMatrix4(localMatrix).normalize(); // X 轴
+    const LocalYDirection = new THREE.Vector3(0, 1, 0).applyMatrix4(localMatrix).normalize(); // Y 轴
+    const LocalZDirection = new THREE.Vector3(0, 0, 1).applyMatrix4(localMatrix).normalize(); // Z 轴
+    return { LocalXDirection, LocalYDirection, LocalZDirection }; // 返回局部坐标系中的 X、Y、Z 轴朝向
+  };
+
+  /**
+   * 通过两个点的距离比例 输出该距离比例所在点位置
+   * @param {THREE.Vector3} startPoint 起点
+   * @param {THREE.Vector3} endPoint 终点
+   * @param {*} scale 两点间的比例 （如 1/2 => 中点）
+   * @returns
+   */
+  static getScalePositionByTwoPosition = (
+    startPoint: THREE.Vector3,
+    endPoint: THREE.Vector3,
+    scale: number
+  ) => {
+    // 计算起点到终点的向量
+    const direction = endPoint.clone().sub(startPoint);
+    // 缩小向量的长度为原始长度的 1/2
+    const distance = direction.length() * scale;
+    direction.normalize().multiplyScalar(distance);
+    // 计算 1/2 位置点
+    const threeQuarterPoint = startPoint.clone().add(direction);
+    return threeQuarterPoint;
+  };
+
+  /**
+   * 判断某个物体是否是另一个物体的子孙
+   * @param {*} child
+   * @param {*} parent
+   * @returns
+   */
+  static isChildOf = (child: any, parent: any) => {
+    while (child) {
+      if (child === parent) {
+        return true;
+      }
+      child = child.parent;
+    }
+    return false;
   };
 }

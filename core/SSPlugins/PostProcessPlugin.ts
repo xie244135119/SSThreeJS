@@ -28,7 +28,7 @@ import {
 } from 'postprocessing';
 import { SSThreeObject, SSThreeLoop, SSDispose } from '../index';
 import SSFile from '../SSTool/file';
-import lutImg from './assets/filmic1.png?url';
+import lutImg from '../assets/lut/filmic1.png';
 
 interface SSEffectComposerOptions {
   depthBuffer?: boolean;

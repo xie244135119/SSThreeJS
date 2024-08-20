@@ -320,9 +320,9 @@ export default class SSThreeJs {
   // render
   _addRender = () => {
     const render = new THREE.WebGLRenderer({
-      antialias: true,
-      alpha: true,
-      logarithmicDepthBuffer: true
+      antialias: true
+      // alpha: true,
+      // logarithmicDepthBuffer: true
     });
     render.shadowMap.enabled = true;
     render.shadowMap.type = THREE.PCFSoftShadowMap;
