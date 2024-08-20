@@ -40,6 +40,9 @@ a 3dtool for web base three
 
 ## Update Versions log
 
+	1.4.14
+	修复SSCore addSky的问题
+
 	1.4.13
 	优化tween动画效果；
 	修复useTweenAnimate调用异常问题;

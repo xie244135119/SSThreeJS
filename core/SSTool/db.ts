@@ -1,3 +1,4 @@
+// v2.0版本
 // max Storage 默认 500M
 const MAX_STORAGE_USAGE = 500 * 1024 * 1024;
 // data base name

@@ -274,13 +274,13 @@ export default class SSThreeJs {
    * addHdr
    * @param hdrs hdr材质
    */
-  addHDR = (hdrs: string | string[]) => {
+  addHDR = (hdrs: string[]) => {
     const pmremGenerator = new THREE.PMREMGenerator(this.threeRenderer);
     if (hdrs.length === 1) {
       return new Promise((reslove, reject) => {
         const rgbeLoader = new RGBELoader(this.ssLoadingManager.threeLoadingManager);
         rgbeLoader.load(
-          hdrs as any,
+          hdrs[0],
           (texture) => {
             const cubetexure = pmremGenerator.fromEquirectangular(texture).texture;
             this.threeScene.background = cubetexure;
@@ -300,7 +300,7 @@ export default class SSThreeJs {
     const hdrLoader = new HDRCubeTextureLoader(this.ssLoadingManager.threeLoadingManager);
     return new Promise((reslove, reject) => {
       hdrLoader.load(
-        hdrs as any,
+        hdrs,
         (texture) => {
           const cubetexure = pmremGenerator.fromCubemap(texture).texture;
           this.threeScene.environment = cubetexure;

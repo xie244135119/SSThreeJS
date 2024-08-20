@@ -55,7 +55,7 @@ export default class SSLightScanMaterial {
       uniforms: ShaderBar.uniforms,
       vertexShader: ShaderBar.vertexShader,
       fragmentShader: ShaderBar.fragmentShader,
-      vertexColors: ShaderBar // 暂时未理解该处作用
+      // vertexColors: ShaderBar // 暂时未理解该处作用
     });
     material.needsUpdate = true;
     return [material, ShaderBar];

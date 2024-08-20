@@ -1,7 +1,7 @@
 //
 import SSLightScanMaterial from './SSLightScanMaterial';
 import SSLinearGradientMaterial from './SSLinearGradientMaterial';
-import MeshReflectorMaterial from './MeshReflectorMaterial';
+// import MeshReflectorMaterial from './MeshReflectorMaterial';
 
 export default {
   /**
@@ -15,5 +15,5 @@ export default {
   /**
    * @description 墙体反射
    */
-  MeshReflectorMaterial
+  // MeshReflectorMaterial
 };

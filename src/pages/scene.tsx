@@ -18,8 +18,8 @@ import SSLightModule from '../../core/SSModule/light.module';
 // import VideoSceneViewerManager from '../../core/VideoSceneViewer/VideoSceneViewerManager';
 // import videoBlendImg from '../../core/assets/default_ground1.png';
 // import SSEvent from '../../core/SSEvent';
-import SSPostProcessManagerModule from '../../core/SSPostProcess/PostProcessManager';
-import SSPostProcessModule from '../../core/SSModule/basepostprocess.module';
+// import SSPostProcessManagerModule from '../../core/SSPostProcess/PostProcessManager';
+// import SSPostProcessModule from '../../core/SSModule/basepostprocess.module';
 import SSWatchLookModule from '../../core/SSModule/watchlook.module';
 import { SSMesh } from '../../core/index';
 
@@ -192,7 +192,6 @@ export default function ParentIndex(props) {
     //
     // test360Video();
 
-
     /**
      * @type {SSPostProcessManagerModule}
      */
@@ -208,22 +207,20 @@ export default function ParentIndex(props) {
     //     ssPostProcessManagerModule.outlineObjects([castObj]);
     //   }
     // });
-    
+
     return () => {
       jsRef.current.destroy();
     };
   }, []);
 
-
   /**
    * 测试水材质
    */
-  const testWater = ()=>{
+  const testWater = () => {
     const water = SSMesh.WaterMesh.fromOptions(100, 100);
     jsRef.current.ssThreeObject.threeScene.add(water);
     jsRef.current.ssTransformControl.attach(water);
-  }
-
+  };
 
   return (
     <div>
