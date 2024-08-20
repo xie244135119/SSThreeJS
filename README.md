@@ -42,15 +42,13 @@ to: "static/three/basis",
 
 ## Update Versions log
 
-    1.4.15
+    1.4.14
+    修复SSCore addSky的问题
     增加星空效果Stars组件
     增加反射地面Reflector组件
     丰富SSTool工具类方法
     修复PostProcessPlugin组件bug
     WebGLRenderer默认关闭 alpha/logarithmicDepthBuffer
-
-    1.4.14
-    修复SSCore addSky的问题
 
     1.4.13
     优化tween动画效果；
