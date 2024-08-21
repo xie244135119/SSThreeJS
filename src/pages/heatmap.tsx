@@ -1,10 +1,3 @@
-/*
- * Author  Murphy.xie
- * Date  2023-04-11 18:00:50
- * LastEditors  Kayson.Wan
- * LastEditTime  2023-06-08 18:21:52
- * Description
- */
 import React, { useEffect, useRef } from 'react';
 import SSThreeJs, { THREE, SSCssRenderer, SSThreeLoop, SSThreeTool } from '../../core/index';
 import heatmap from 'heatmapjs/heatmap';

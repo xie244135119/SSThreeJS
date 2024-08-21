@@ -7,9 +7,6 @@ import { LineMaterial, LineMaterialParameters } from 'three/examples/jsm/lines/L
 import { SSThreeLoop, SSLoader } from '../index';
 import LineStartPng from '../assets/line_start.png';
 
-import React from 'react';
-import { createRoot } from 'react-dom/client';
-
 export default class SSThreeTool {
   /**
    * use tween animation
@@ -722,31 +719,31 @@ export default class SSThreeTool {
     return castModelList;
   };
 
-  /**
-   * 将ReactNode渲染为HTML元素并保留事件。异步解决生成换门问题
-   * @param {*} reactNode - 要渲染的ReactNode。
-   * @returns {HTMLElement|null} 转换后的HTML元素，如果转换失败则返回null。
-   */
-  static renderReactNodeInThreeScenePromise = (reactNode) =>
-    new Promise((resolve, reject) => {
-      if (!React.isValidElement(reactNode)) {
-        console.error('类型错误：传入的元素不是合法的ReactNode。');
-        reject(new Error('类型错误：传入的元素不是合法的ReactNode。'));
-        return;
-      }
+  // /**
+  //  * 将ReactNode渲染为HTML元素并保留事件。异步解决生成换门问题
+  //  * @param {*} reactNode - 要渲染的ReactNode。
+  //  * @returns {HTMLElement|null} 转换后的HTML元素，如果转换失败则返回null。
+  //  */
+  // static renderReactNodeInThreeScenePromise = (reactNode) =>
+  //   new Promise((resolve, reject) => {
+  //     if (!React.isValidElement(reactNode)) {
+  //       console.error('类型错误：传入的元素不是合法的ReactNode。');
+  //       reject(new Error('类型错误：传入的元素不是合法的ReactNode。'));
+  //       return;
+  //     }
 
-      const container = document.createElement('div');
-      document.body.appendChild(container); // 确保元素正确渲染
+  //     const container = document.createElement('div');
+  //     document.body.appendChild(container); // 确保元素正确渲染
 
-      const root = createRoot(container);
-      root.render(reactNode);
+  //     const root = createRoot(container);
+  //     root.render(reactNode);
 
-      setTimeout(() => {
-        const renderedNode = container.firstChild;
-        document.body.removeChild(container); // 清理容器
-        resolve(renderedNode);
-      }, 100);
-    });
+  //     setTimeout(() => {
+  //       const renderedNode = container.firstChild;
+  //       document.body.removeChild(container); // 清理容器
+  //       resolve(renderedNode);
+  //     }, 100);
+  //   });
 
   /**
    * 获取物体本地朝向 返回局部坐标系中的 X、Y、Z 轴朝向

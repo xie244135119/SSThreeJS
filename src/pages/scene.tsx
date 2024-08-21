@@ -1,10 +1,3 @@
-/*
- * Author  Murphy.xie
- * Date  2023-04-11 18:00:50
- * LastEditors  Kayson.Wan
- * LastEditTime  2023-06-08 18:21:52
- * Description
- */
 import React, { useEffect, useRef } from 'react';
 // import SSThreejs, { THREE, ThreeEvent } from '../../core/index';
 // import PostProcessUtil from '../../core/PostProcessUtil';
@@ -12,7 +5,7 @@ import React, { useEffect, useRef } from 'react';
 import MeshReflectorMaterial from '../../core/SSMaterial/MeshReflectorMaterial';
 // import SSWater from '../../core/Water/SSWater';
 import SSThreeJs, { THREE, SSCssRenderer, SSThreeLoop, SSThreeTool } from '../../core/index';
-import SceneSetting from './ssthreejs.setting.json';
+// import SceneSetting from './ssthreejs.setting.json';
 import SSPickPointMode from '../../core/SSModule/pickpoint.module';
 import SSLightModule from '../../core/SSModule/light.module';
 // import VideoSceneViewerManager from '../../core/VideoSceneViewer/VideoSceneViewerManager';
@@ -177,18 +170,18 @@ export default function ParentIndex(props) {
     // const videoBlend = new VideoSceneViewerManager(jsRef.current, videoFusionData, true);
     // videoBlend.openVideoFusion(videoFusionData);
 
-    // // 引用配置
-    jsRef.current.ssModuleCenter.registerModules([
-      SSPickPointMode,
-      SSLightModule,
-      // SSPostProcessManagerModule,
-      // SSWater,
-      SSWatchLookModule
-      // VideoSceneViewerManager
-    ]);
-    jsRef.current.ssModuleCenter.import(SceneSetting);
-    // 开启调试
-    jsRef.current.ssModuleCenter.openDebugModel();
+    // // // 引用配置
+    // jsRef.current.ssModuleCenter.registerModules([
+    //   SSPickPointMode,
+    //   SSLightModule,
+    //   // SSPostProcessManagerModule,
+    //   // SSWater,
+    //   SSWatchLookModule
+    //   // VideoSceneViewerManager
+    // ]);
+    // jsRef.current.ssModuleCenter.import(SceneSetting);
+    // // 开启调试
+    // jsRef.current.ssModuleCenter.openDebugModel();
     //
     // test360Video();
 

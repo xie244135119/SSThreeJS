@@ -14,15 +14,15 @@ import dts from 'vite-plugin-dts';
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [
-    // react(),
-    babel({
-      babelHelpers: 'bundled',
-      extensions: ['.js', '.jsx', '.es6', '.es', '.mjs', '.ts']
-      // plugins: ['@babel/plugin-transform-runtime']
-    }),
+    // babel({
+    //   babelHelpers: 'bundled',
+    //   extensions: ['.js', '.jsx', '.es6', '.es', '.mjs', '.ts']
+    //   // plugins: ['@babel/plugin-transform-runtime']
+    // }),
     dts({
       entryRoot: '../core',
-      tsconfigPath: '../jsconfig.json'
+      tsconfigPath: './jsconfig.json'
+      // outputDir: ['./dist/es', './dist/lib']
     })
   ],
   resolve: {
@@ -43,7 +43,7 @@ export default defineConfig({
     exclude: []
   },
   build: {
-    outDir: 'dist',
+    outDir: 'build',
     assetsDir: 'assets',
     assetsInlineLimit: 4 * 1024,
     cssCodeSplit: true,
@@ -55,18 +55,48 @@ export default defineConfig({
     chunkSizeWarningLimit: 500,
     rollupOptions: {
       // 确保外部化处理那些你不想打包进库的依赖
-      external: ['react']
+      external: ['three']
       // output: {
       //   // 在 UMD 构建模式下为这些外部化的依赖提供一个全局变量
       //   globals: {
-      //     // OCSDK: 'OCSDK'
+      //     ssthingjs: 'ssthingjs'
       //   }
       // }
+      // output: [
+      //   {
+      //     //打包格式
+      //     format: 'es',
+      //     //打包后文件名
+      //     entryFileNames: '[name].mjs',
+      //     //让打包目录和我们目录对应
+      //     preserveModules: true,
+      //     exports: 'named',
+      //     //配置打包根目录
+      //     dir: './dist/es'
+      //   },
+      //   {
+      //     //打包格式
+      //     format: 'cjs',
+      //     //打包后文件名
+      //     entryFileNames: '[name].js',
+      //     //让打包目录和我们目录对应
+      //     preserveModules: true,
+      //     exports: 'named',
+      //     //配置打包根目录
+      //     dir: './dist/lib'
+      //   }
+      // ]
     },
     lib: {
-      entry: '../core',
-      name: 'thingjs',
-      formats: ['es', 'umd', 'cjs', 'iife']
+      // entry: {
+      //   core: '../core/index.ts',
+      //   'plugin/BaseLightSetting': '../core/SSPlugins/BaseLightSetting.ts',
+      //   'plugin/PostProcessPlugin': '../core/SSPlugins/PostProcessPlugin.ts',
+      //   'tool/file': '../core/SSTool/file.ts'
+      // },
+      entry: '../core/index.ts',
+      name: 'ssthingjs',
+      formats: ['es', 'cjs']
     }
   },
   preview: {

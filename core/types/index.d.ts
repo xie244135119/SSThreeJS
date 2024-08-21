@@ -9,6 +9,7 @@ declare module '*.json' {
 }
 
 export interface SSModelQueueItem {
+  title: string;
   type: string;
   obj: string;
   mtl: string;

@@ -70,7 +70,6 @@ export default class BaseLightSetting {
   constructor(threeJs, defaultSetting, gui = true) {
     this.threeJs = threeJs;
     this.guiSetting = defaultSetting || this.defaultSetting;
-    // this.addCubeMap();
     this.startShadowTest(gui);
   }
 
@@ -431,23 +430,4 @@ export default class BaseLightSetting {
     //
   };
 
-  /**
-   * 天空盒
-   */
-  addCubeMap = () => {
-    const urls = [
-      '/public/threeTextures/天空/q.jpg',
-      '/public/threeTextures/天空/w.jpg',
-      '/public/threeTextures/天空/e.jpg',
-      '/public/threeTextures/天空/r.jpg',
-      '/public/threeTextures/天空/t.jpg',
-      '/public/threeTextures/天空/y.jpg'
-    ];
-    const cubeLoader = new THREE.CubeTextureLoader();
-    const texture = cubeLoader.load(urls);
-    texture.encoding = THREE.LinearEncoding;
-    this.cubeMap = texture;
-    this.threeJs.threeScene.background = texture;
-    this.threeJs.threeScene.environment = texture;
-  };
 }

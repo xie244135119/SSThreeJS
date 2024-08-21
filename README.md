@@ -41,8 +41,10 @@ to: "static/three/basis",
 3、vite：同理
 
 ## Update Versions log
+    v1.4.15
 
-    1.4.14
+		
+		v1.4.14
     修复SSCore addSky的问题
     增加星空效果Stars组件
     增加反射地面Reflector组件
@@ -50,37 +52,36 @@ to: "static/three/basis",
     修复PostProcessPlugin组件bug
     WebGLRenderer默认关闭 alpha/logarithmicDepthBuffer
 
-    1.4.13
+    v1.4.13
     优化tween动画效果；
     修复useTweenAnimate调用异常问题;
     完善SSPlugins/PostProcessPlugin组件;
 
-    1.4.11
-    1.4.12
+    v1.4.11
+    v1.4.12
     做SSThreeLoop.removeIds防御处理
 
-    1.4.10
+    v1.4.10
     修复DistanceMeasure组件 字体加载异常的问题；
     增加后处理PostProcessPlugin插件；
     优化完善路径 SSMesh/PathMesh组件；
     优化完善 SSPlugins/DrawLinePlugin 插件；
 
-    1.4.9
+    v1.4.9
     修复SSTransformControl组件 旋转事件冲突的问题
 
-    1.4.8
+    v1.4.8
     修复TransformControl组件添加boxhelper层级的问题;
     新增测距组件（SSPlugins/DistanceMeasure.ts）;
 
-    1.0.3
+    v1.0.3
     1）优化模型加载处理
 
-    1.0.0
-    1.0.1
-    1.0.2
+    v1.0.0
+    v1.0.1
+    v1.0.2
     更新日志
 
-1）threejs 版本发布
 
 ## three 版本对应关系
 

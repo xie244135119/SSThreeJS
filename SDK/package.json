@@ -1,15 +1,16 @@
 {
-  "name": "ss-thingjs",
+  "name": "ssthingjs",
   "version": "1.0.0",
   "description": "ss-thingjs",
   "main": "../core/index.ts",
   "author": "xie244135119@163.com",
   "license": "ISC",
   "cliType": "Vite",
+  "type": "module",
   "scripts": {
     "dev": "vite",
     "start": "vite",
-    "build": "vite build",
+    "build": "npx vite build",
     "lint": "eslint src --ext js,jsx --report-unused-disable-directives --max-warnings 0 --fix",
     "preview": "vite preview"
   },

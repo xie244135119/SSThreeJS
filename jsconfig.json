@@ -5,6 +5,8 @@
     "module": "ES2020",
     "types": ["vite/client"],
     "moduleResolution": "node",
+    "declaration": true,
+    "declarationDir": "dist",
     "paths": {
       "@/*": ["src/*"]
     },

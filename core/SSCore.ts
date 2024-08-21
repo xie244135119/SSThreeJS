@@ -362,8 +362,8 @@ export default class SSThreeJs {
   loadModelQueue = (
     list: SSModelQueueItem[],
     onComplete: (e: (THREE.Object3D | GLTF)[]) => void,
-    onBeforeRender: (option: SSModelQueueItem, e: THREE.Object3D | GLTF) => void,
-    onAfterRender: (option: SSModelQueueItem, e: THREE.Object3D | GLTF) => void
+    onBeforeRender?: (option: SSModelQueueItem, e: THREE.Object3D | GLTF) => void,
+    onAfterRender?: (option: SSModelQueueItem, e: THREE.Object3D | GLTF) => void
   ) => {
     if (list.length === 0) {
       onComplete?.([]);

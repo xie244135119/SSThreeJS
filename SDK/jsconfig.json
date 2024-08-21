@@ -2,8 +2,10 @@
   "compilerOptions": {
     "baseUrl": "",
     "experimentalDecorators": true,
+    "declaration": true,
+    "declarationDir": "dist",
     "paths": {
-      "@/*": ["src/*"]
+      "@/*": ["../src/*"]
     },
     "jsx": "react"
   },
