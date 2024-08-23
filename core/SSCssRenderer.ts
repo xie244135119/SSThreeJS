@@ -251,12 +251,40 @@ export default class SSCssRenderer {
    * 添加动态监听
    */
   _addResizeObserver = (aContainer = document.body) => {
-    if (this._resizeObserver !== null) {
+    if (this._resizeObserver === null) {
       const observer = new window.ResizeObserver(() => {
         // 调整labelRender 文字
-        this.css2dRender?.setSize(aContainer.offsetWidth, aContainer.offsetHeight);
-        this.css3dRender?.setSize(aContainer.offsetWidth, aContainer.offsetHeight);
-        this.svgRender?.setSize(aContainer.offsetWidth, aContainer.offsetHeight);
+        // css2d
+        if (this.css2dRender) {
+          SSThreeLoop.removeId('css2dFrameHandle');
+          this.css2dRender.setSize(aContainer.offsetWidth, aContainer.offsetHeight);
+          SSThreeLoop.add(() => {
+            this.css2dRender.render(
+              this._ssThreeObject.threeScene,
+              this._ssThreeObject.threeCamera
+            );
+          }, 'css2dFrameHandle');
+        }
+
+        // css3d
+        if (this.css3dRender) {
+          SSThreeLoop.removeId('css3dFrameHandle');
+          this.css3dRender.setSize(aContainer.offsetWidth, aContainer.offsetHeight);
+          SSThreeLoop.add(() => {
+            this.css3dRender.render(
+              this._ssThreeObject.threeScene,
+              this._ssThreeObject.threeCamera
+            );
+          }, 'css3dFrameHandle');
+        }
+        //
+        if (this.svgRender) {
+          SSThreeLoop.removeId('svgFrameHandle');
+          this.svgRender.setSize(aContainer.offsetWidth, aContainer.offsetHeight);
+          SSThreeLoop.add(() => {
+            this.svgRender.render(this._ssThreeObject.threeScene, this._ssThreeObject.threeCamera);
+          }, 'svgFrameHandle');
+        }
       });
       observer.observe(aContainer);
       this._resizeObserver = observer;
