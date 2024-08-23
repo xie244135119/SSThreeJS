@@ -43,7 +43,7 @@ export default defineConfig({
     exclude: []
   },
   build: {
-    outDir: 'build',
+    outDir: 'ss-threejs',
     assetsDir: 'assets',
     assetsInlineLimit: 4 * 1024,
     cssCodeSplit: true,
@@ -55,7 +55,7 @@ export default defineConfig({
     chunkSizeWarningLimit: 500,
     rollupOptions: {
       // 确保外部化处理那些你不想打包进库的依赖
-      external: ['three']
+      external: ['three', 'lil-gui']
       // output: {
       //   // 在 UMD 构建模式下为这些外部化的依赖提供一个全局变量
       //   globals: {
@@ -88,13 +88,13 @@ export default defineConfig({
       // ]
     },
     lib: {
-      // entry: {
-      //   core: '../core/index.ts',
-      //   'plugin/BaseLightSetting': '../core/SSPlugins/BaseLightSetting.ts',
-      //   'plugin/PostProcessPlugin': '../core/SSPlugins/PostProcessPlugin.ts',
-      //   'tool/file': '../core/SSTool/file.ts'
-      // },
-      entry: '../core/index.ts',
+      entry: {
+        core: '../core/index.ts',
+        'plugin/BaseLightSetting': '../core/SSPlugins/BaseLightSetting.ts',
+        'plugin/PostProcessPlugin': '../core/SSPlugins/PostProcessPlugin.ts',
+        'tool/file': '../core/SSTool/file.ts'
+      },
+      // entry: '../core/index.ts',
       name: 'ssthingjs',
       formats: ['es', 'cjs']
     }
