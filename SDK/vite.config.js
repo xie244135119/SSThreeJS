@@ -92,7 +92,7 @@ export default defineConfig({
         core: '../core/index.ts',
         'plugin/BaseLightSetting': '../core/SSPlugins/BaseLightSetting.ts',
         'plugin/PostProcessPlugin': '../core/SSPlugins/PostProcessPlugin.ts',
-        'tool/file': '../core/SSTool/file.ts'
+        'tool/file': '../core/SSTool/SSFile.ts'
       },
       // entry: '../core/index.ts',
       name: 'ssthingjs',

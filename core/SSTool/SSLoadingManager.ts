@@ -1,36 +1,35 @@
 import * as THREE from 'three';
-import SSDB from './db';
-import MessageQueue from './MessageQueue';
+import SSDB from './SSDB';
+import SSMessageQueue from './SSMessageQueue';
 
 export default class SSLoadingManager {
   /**
-   * loading manager
-   * @type {THREE.LoadingManager} 渲染器
+   * loading manager 渲染器
    */
-  threeLoadingManager = null;
+  threeLoadingManager: THREE.LoadingManager = null;
 
   /**
-   * @description 数据库操作
+   * data base
    */
   db: SSDB = null;
 
   /**
-   * @description 消息队列
+   * message queue
    */
-  messageQueue: MessageQueue = null;
+  messageQueue: SSMessageQueue = null;
 
   /**
-   * @description 进度条后背景标签 (progress element)
+   * 进度条后背景标签 (progress element)
    */
   _progressBgElement: HTMLElement = null;
 
   /**
-   * @description 进度条文本标签 (progress text element)
+   * 进度条文本标签 (progress text element)
    */
   _progressTextElement: HTMLElement = null;
 
   /**
-   * @description progress标签 (progress element)
+   * progress标签 (progress element)
    */
   _progressElement: HTMLElement = null;
 
@@ -43,13 +42,10 @@ export default class SSLoadingManager {
     this.messageQueue = null;
   }
 
-  /**
-   * @description container
-   */
   constructor(container: HTMLElement) {
     this.threeLoadingManager = new THREE.LoadingManager();
     this.db = new SSDB();
-    this.messageQueue = new MessageQueue();
+    this.messageQueue = new SSMessageQueue();
     this.threeLoadingManager.setURLModifier((url) => url);
     this.addProgressView(container);
   }
@@ -128,64 +124,120 @@ export default class SSLoadingManager {
   /**
    * download url
    */
-  downloadUrl = (aUrl: string) =>
-    fetch(aUrl, {
-      method: 'GET'
-    }).then((res) => {
-      if (res.status === 200) {
-        let blob = null;
-        try {
-          blob = res.arrayBuffer();
-        } catch (error) {
-          blob = res.blob();
-        }
-        return blob;
-      }
-      return Promise.reject(new Error('model fetch error'));
-    });
+  // downloadUrl = (aUrl: string) =>
+  //   fetch(aUrl, {
+  //     method: 'GET'
+  //   }).then((res) => {
+  //     if (res.status === 200) {
+  //       let blob = null;
+  //       try {
+  //         blob = res.arrayBuffer();
+  //       } catch (error) {
+  //         blob = res.blob();
+  //       }
+  //       return blob;
+  //     }
+  //     return Promise.reject(new Error('model fetch error'));
+  //   });
 
-  downloadUrl2 = async (aUrl: string, onProgress?:(e: number, c: any[])=>void) => {
-    const response = await fetch(aUrl, {
+  /**
+   * download and progress
+   * @param aUrl
+   * @param onProgress
+   * @returns
+   */
+  downloadUrl = (
+    aUrl: string,
+    onProgress?: (percent: number, buffer: any) => void
+  ): Promise<ArrayBufferLike> =>
+    fetch(aUrl, {
       method: 'GET',
       headers: { responseType: 'arraybuffer' }
-    });
-    const reader = response.body.getReader();
-    const contentLength = +response.headers.get('Content-Length');
-    let receivedLength = 0; // 当前接收到了这么多字节
-    const chunks = []; // 接收到的二进制块的数组（包括 body）
-    let excuteLoop = true;
-    let percent = 0;
-    while (excuteLoop) {
-      // eslint-disable-next-line no-await-in-loop
-      const { done, value } = await reader.read();
-      if (done) {
-        excuteLoop = false;
-        onProgress?.(1, chunks);
-        break;
+    }).then((response) => {
+      if (!onProgress) {
+        try {
+          return response.arrayBuffer();
+        } catch (error) {
+          return response.blob();
+        }
       }
+      //
+      const reader = response.body.getReader();
+      const contentLength = +response.headers.get('Content-Length');
+      // receive length
+      let receivedLength = 0;
+      // percent
+      let percent = 0;
+      // 接收到的二进制块的数组（包括 body）
+      const chunks = [];
 
-      chunks.push(value);
-      receivedLength += value.length;
-      percent += 0.01;
-      percent = Math.min(percent, 0.99);
-      onProgress?.(contentLength >= 0 ? percent : receivedLength / contentLength, chunks);
-      // console.log(`Received ${receivedLength} of ${contentLength}`);
-    }
-    const chunksAll = new Uint8Array(receivedLength); // (4.1)
-    let position = 0;
-    chunks.forEach((chunk) => {
-      chunksAll.set(chunk, position); // (4.2)
-      position += chunk.length;
-    });
-    return chunksAll.buffer;
-  };
+      const progressHandle = (resault: ReadableStreamReadResult<Uint8Array>) => {
+        console.log(' down load下载文件处理 ', resault.done, percent);
+        // finish
+        if (resault.done) {
+          const chunksAll = new Uint8Array(receivedLength); // (4.1)
+          let position = 0;
+          chunks.forEach((chunk) => {
+            chunksAll.set(chunk, position); // (4.2)
+            position += chunk.length;
+          });
+          return chunksAll.buffer;
+        }
+        // read
+        chunks.push(resault.value);
+        receivedLength += resault.value.length;
+        if (contentLength) {
+          percent = receivedLength / contentLength;
+        } else {
+          percent += 0.01;
+          percent = Math.min(percent, 0.99);
+        }
+        onProgress?.(percent, chunks);
+        return reader.read().then(progressHandle);
+      };
+      return reader.read().then(progressHandle);
+    })
+
+    // const response = await fetch(aUrl, {
+    //   method: 'GET',
+    //   headers: { responseType: 'arraybuffer' }
+    // });
+    // const reader = response.body.getReader();
+    // const contentLength = +response.headers.get('Content-Length');
+    // let receivedLength = 0; // 当前接收到了这么多字节
+    // const chunks = []; // 接收到的二进制块的数组（包括 body）
+    // let excuteLoop = true;
+    // let percent = 0;
+    // while (excuteLoop) {
+    //   const { done, value } = await reader.read();
+    //   if (done) {
+    //     excuteLoop = false;
+    //     onProgress?.(1, chunks);
+    //     break;
+    //   }
+
+    //   chunks.push(value);
+    //   receivedLength += value.length;
+    //   percent += 0.01;
+    //   percent = Math.min(percent, 0.99);
+    //   onProgress?.(contentLength >= 0 ? percent : receivedLength / contentLength, chunks);
+    //   // console.log(`Received ${receivedLength} of ${contentLength}`);
+    // }
+    // const chunksAll = new Uint8Array(receivedLength); // (4.1)
+    // let position = 0;
+    // chunks.forEach((chunk) => {
+    //   chunksAll.set(chunk, position); // (4.2)
+    //   position += chunk.length;
+    // });
+    // return chunksAll.buffer;
+    ;
 
   /**
    * query model local path
-   * @param aUrl load url
+   * @param {*} aUrl load url
    * @returns
    */
-  getModelFilePathByUrl = (aUrl:string) => {
+  getModelFilePathByUrl = (aUrl: string) => {
     if (aUrl.startsWith('data:') || aUrl.startsWith('blob:')) {
       return Promise.resolve(aUrl);
     }
@@ -200,7 +252,6 @@ export default class SSLoadingManager {
 
   /**
    * query model local path
-   * @param aUrl load url
    * @returns
    */
   getModelDataByUrl = (aUrl: string) =>
@@ -208,7 +259,7 @@ export default class SSLoadingManager {
       if (res) {
         return res.data;
       }
-      return this.downloadUrl2(aUrl, (percent) => {
+      return this.downloadUrl(aUrl, (percent) => {
         if (this._progressBgElement) {
           this._progressBgElement.style.opacity = '1';
         }

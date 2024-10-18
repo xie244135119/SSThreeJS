@@ -27,7 +27,7 @@ import {
   VignetteTechnique
 } from 'postprocessing';
 import { SSThreeObject, SSThreeLoop, SSDispose } from '../index';
-import SSFile from '../SSTool/file';
+import SSFile from '../SSTool/SSFile';
 import lutImg from '../assets/lut/filmic1.png';
 
 interface SSEffectComposerOptions {

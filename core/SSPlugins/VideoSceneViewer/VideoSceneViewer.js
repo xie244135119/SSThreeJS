@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import GUI from 'lil-gui';
-import { TransformControls } from 'three/examples/jsm/controls/TransformControls';
+import { TransformControls } from 'three/examples/jsm/controls/SSTransformControls';
 import { DepthRender } from './DepthRender';
 import { ColorRender } from './ColorRender';
 import { BlendRender } from './BlendRender';

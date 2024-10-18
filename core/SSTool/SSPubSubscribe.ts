@@ -1,10 +1,3 @@
-/*
- * Author  Murphy.xie
- * Date  2022-09-25 17:25:21
- * LastEditors  Murphy.xie
- * LastEditTime  2022-10-15 13:22:07
- * Description 发布订阅模式
- */
 
 class SSPubSubcribe {
   // 观察者

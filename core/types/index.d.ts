@@ -10,7 +10,8 @@ declare module '*.json' {
 
 export interface SSModelQueueItem {
   title: string;
-  type: string;
+  type: 'obj' | 'mtl' | 'gltf' | 'fbx' | 'draco' | 'opt';
+  url: string;
   obj: string;
   mtl: string;
   gltf: string;

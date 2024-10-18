@@ -1,10 +1,10 @@
 import GUI from 'lil-gui';
 import * as THREE from 'three';
-import SSFile from '../SSTool/file';
+import SSFile from '../SSTool/SSFile';
 import styles from './index.module.css';
 import SSThreeObject from '../SSThreeObject';
 import SSModuleInterface, { SSModuleUpdateScribe } from './module.interface';
-import SSPubSubcribeInstance from '../SSTool/PubSubscribe';
+import SSPubSubcribeInstance from '../SSTool/SSPubSubscribe';
 
 export default class SSModuleCenter {
   /**

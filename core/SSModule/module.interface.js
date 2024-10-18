@@ -1,7 +1,7 @@
 /* eslint-disable no-unused-vars */
 import GUI from 'lil-gui';
 import SSThreeObject from '../SSThreeObject';
-import SSPubSubcribeInstance from '../SSTool/PubSubscribe';
+import SSPubSubcribeInstance from '../SSTool/SSPubSubscribe';
 
 /**
  * @type string 更新通知

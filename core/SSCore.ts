@@ -11,10 +11,10 @@ import SSEvent from './SSEvent';
 import SSThreeObject from './SSThreeObject';
 import SSLoader from './SSLoader';
 import SSModuleCenter from './SSModule';
-import SSMessageQueue from './SSTool/MessageQueue';
-import SSTransformControl from './SSTool/TransformControl';
+import SSMessageQueue from './SSTool/SSMessageQueue';
+import SSTransformControl from './SSTool/SSTransformControl';
 import SSPostProcessModule from './SSModule/basepostprocess.module';
-import SSLoadingManager from './SSTool/LoadingManager';
+import SSLoadingManager from './SSTool/SSLoadingManager';
 import { GLTF } from 'three/examples/jsm/loaders/GLTFLoader';
 import { SSModelQueueItem } from './types';
 
@@ -171,6 +171,8 @@ export default class SSThreeJs {
     this.ssLoadingManager = new SSLoadingManager(container);
     //
     SSThreeLoop.setup();
+
+    this.ssMessageQueue = new SSMessageQueue();
     //
     this.ssThreeObject = new SSThreeObject({
       container,
@@ -369,37 +371,35 @@ export default class SSThreeJs {
       onComplete?.([]);
       return;
     }
-    if (this.ssMessageQueue === null) {
-      this.ssMessageQueue = new SSMessageQueue();
-    }
+
     const objList = [];
     list.forEach((config) => {
-      let promise: Promise<any> = Promise.resolve();
-      switch (config.type) {
-        case 'obj':
-          promise = SSLoader.loadObj(
-            config.obj,
-            config.mtl,
-            null,
-            this.ssLoadingManager.threeLoadingManager
-          );
-          break;
-        case 'fbx':
-          promise = this.loadFbx(config.fbx);
-          break;
-        case 'gltf':
-          promise = this.loadGltf(config.gltf);
-          break;
-        case 'draco':
-          promise = this.loadGltfDraco(config.draco);
-          break;
-        case 'opt':
-          promise = this.loadGltfOptKTX(config.opt);
-          break;
-        default:
-          break;
-      }
       this.ssMessageQueue.add(() => {
+        let promise: Promise<any> = Promise.resolve();
+        switch (config.type) {
+          case 'obj':
+            promise = SSLoader.loadObj(
+              config.obj,
+              config.mtl,
+              null,
+              this.ssLoadingManager.threeLoadingManager
+            );
+            break;
+          case 'fbx':
+            promise = this.loadFbx(config.fbx);
+            break;
+          case 'gltf':
+            promise = this.loadGltf(config.gltf);
+            break;
+          case 'draco':
+            promise = this.loadGltfDraco(config.draco);
+            break;
+          case 'opt':
+            promise = this.loadGltfOptKTX(config.opt);
+            break;
+          default:
+            break;
+        }
         promise
           .then((obj) => {
             onBeforeRender?.(config, obj);
@@ -420,7 +420,7 @@ export default class SSThreeJs {
             this.ssMessageQueue?.remove();
           })
           .catch((e) => {
-            console.log(' 模型渲染失败 ', config, e);
+            console.log('【SSThreejs】模型渲染失败 ', config, e);
             this.ssMessageQueue?.remove();
           });
       });
@@ -445,7 +445,6 @@ export default class SSThreeJs {
   /**
    * load fbx
    * @param aFbxpath fbx path
-   * @returns {Promise<THREE.Group>}
    */
   loadFbx = (aFbxpath: string) =>
     this.ssLoadingManager
@@ -593,7 +592,7 @@ export default class SSThreeJs {
    * @returns
    */
   getModelsByPoint = (
-    pointEvent: Event,
+    pointEvent: PointerEvent,
     targetObject3Ds?: THREE.Object3D[],
     ignoreMeshNames?: string[]
   ) => {
