@@ -1,4 +1,4 @@
-"use strict";const r=require("three"),ve=require("lil-gui"),B=require("../three.path.module-5a19eed3.cjs"),pe=require("../tool/file.cjs");function me(e){const t=Object.create(null,{[Symbol.toStringTag]:{value:"Module"}});if(e){for(const i in e)if(i!=="default"){const s=Object.getOwnPropertyDescriptor(e,i);Object.defineProperty(t,i,s.get?s:{enumerable:!0,get:()=>e[i]})}}return t.default=e,Object.freeze(t)}const M=me(r);/**
+"use strict";const r=require("three"),ve=require("lil-gui"),B=require("../three.path.module-2d3bbe2e.cjs"),pe=require("../tool/file.cjs");function me(e){const t=Object.create(null,{[Symbol.toStringTag]:{value:"Module"}});if(e){for(const i in e)if(i!=="default"){const s=Object.getOwnPropertyDescriptor(e,i);Object.defineProperty(t,i,s.get?s:{enumerable:!0,get:()=>e[i]})}}return t.default=e,Object.freeze(t)}const M=me(r);/**
  * postprocessing v6.32.2 build Sat Jul 01 2023
  * https://github.com/pmndrs/postprocessing
  * Copyright 2015-2023 Raoul van Rüschen

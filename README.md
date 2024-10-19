@@ -41,10 +41,17 @@ to: "static/three/basis",
 3、vite：同理
 
 ## Update Versions log
-    v1.4.15
+    v1.4.18
+    1、修复缓存偶尔崩溃数据销毁的问题
+    2、增加动画定时渲染机制
 
-		
-		v1.4.14
+    v1.4.15
+    v1.4.16
+    v1.4.17
+    修复缓存偶尔崩溃的问题
+    修复视角转场偶尔崩溃的问题
+
+	v1.4.14
     修复SSCore addSky的问题
     增加星空效果Stars组件
     增加反射地面Reflector组件

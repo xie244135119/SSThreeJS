@@ -52,54 +52,67 @@ var yo = { exports: {} };
   });
 })(yo);
 var Cs = yo.exports;
-const qg = /* @__PURE__ */ gs(Cs), eA = class {
+const qg = /* @__PURE__ */ gs(Cs), iA = class {
 };
-eA.renderLoopList = [];
-eA.isRenderLoop = !1;
-eA.isLoopDestory = !1;
-eA.animateRenderRef = null;
-eA.setup = () => {
-  eA.isLoopDestory = !1, eA.isRenderLoop = !1, eA.renderLoopList = [], eA.animateRenderRef = null;
+iA.renderLoopList = [];
+iA.isRenderLoop = !1;
+iA.isLoopDestory = !1;
+iA.animateRenderRef = null;
+iA.setup = () => {
+  iA.isLoopDestory = !1, iA.isRenderLoop = !1, iA.renderLoopList = [], iA.animateRenderRef = null;
 };
-eA.destory = () => {
-  eA.isLoopDestory = !0, eA.isRenderLoop = !1, window.cancelAnimationFrame(eA.animateRenderRef), eA.renderLoopList = null;
+iA.destory = () => {
+  iA.isLoopDestory = !0, iA.isRenderLoop = !1, window.cancelAnimationFrame(iA.animateRenderRef), iA.renderLoopList = null;
 };
-eA.add = (a = () => {
-}, A = "") => {
-  if (eA.isLoopDestory || !a)
+iA.add = (a, A, i) => {
+  if (iA.isLoopDestory || !a)
     return null;
-  if (eA.renderLoopList.find((e) => e.type === A))
+  if (iA.renderLoopList.find((t) => t.uuid === A))
     return "";
-  let o = A;
-  return A || (o = Symbol("render frame")), eA.renderLoopList.push({
-    type: o,
-    fn: a
-  }), eA.isRenderLoop || eA.render(), o;
+  let e = A || Symbol("render frame");
+  return iA.renderLoopList.push({
+    uuid: e,
+    fn: a,
+    interval: i
+  }), iA.isRenderLoop || iA.render(), e;
 };
-eA.removeId = (a) => {
-  eA.removeIds([a]);
+iA.removeId = (a) => {
+  iA.removeIds([a]);
 };
-eA.removeIds = (a = []) => {
-  eA.renderLoopList && a.forEach((A) => {
-    const i = eA.renderLoopList.findIndex((o) => o.type === A);
-    i !== -1 && eA.renderLoopList.splice(i, 1);
+iA.removeIds = (a) => {
+  iA.renderLoopList && a.forEach((A) => {
+    const i = iA.renderLoopList.findIndex((o) => o.uuid === A);
+    i !== -1 && iA.renderLoopList.splice(i, 1);
   });
 };
-eA.render = () => {
-  if (eA.isRenderLoop)
+iA.render = () => {
+  if (iA.isRenderLoop)
     return;
-  eA.isRenderLoop = !0;
-  const a = () => eA.renderLoopList.length === 0 ? !1 : (eA.renderLoopList.forEach((i) => {
-    var o;
-    (o = i.fn) == null || o.call(i);
-  }), !0), A = () => {
-    if (eA.isLoopDestory)
+  iA.isRenderLoop = !0;
+  const a = () => {
+    var i, o, e;
+    if (iA.renderLoopList.length === 0)
+      return !1;
+    for (let t = 0; t < iA.renderLoopList.length; t++) {
+      const s = iA.renderLoopList[t];
+      if (s.interval) {
+        s.lastTime ? performance.now() - s.lastTime >= s.interval && ((i = s.fn) == null || i.call(s), s.lastTime = performance.now()) : ((o = s.fn) == null || o.call(s), s.lastTime = performance.now());
+        continue;
+      }
+      (e = s.fn) == null || e.call(s);
+    }
+    return iA.renderLoopList.forEach((t) => {
+      var s;
+      t.interval && (t.lastTime || (t.lastTime = Date.now())), (s = t.fn) == null || s.call(t);
+    }), !0;
+  }, A = () => {
+    if (iA.isLoopDestory)
       return;
-    a() ? eA.animateRenderRef = window.requestAnimationFrame(A) : (eA.isRenderLoop = !1, window.cancelAnimationFrame(eA.animateRenderRef));
+    a() ? iA.animateRenderRef = window.requestAnimationFrame(A) : (iA.isRenderLoop = !1, window.cancelAnimationFrame(iA.animateRenderRef));
   };
-  eA.animateRenderRef = window.requestAnimationFrame(A);
+  iA.animateRenderRef = window.requestAnimationFrame(A);
 };
-let te = eA;
+let te = iA;
 const Ri = class bo {
   constructor() {
     this.operationQueue = null, this.add = (A) => {
@@ -1437,15 +1450,14 @@ const Ks = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAANcAAADcCAYAAADjujR2AA
    * @param onComplete 完成事件
    */
   static useTweenAnimate(A, i, o, e = 1, t) {
-    let s;
-    const g = new se.Tween(A);
-    g.to(i, e * 1e3), g.onUpdate(o), g.onStop(() => {
+    const s = `usetween_${Date.now()}`, g = new se.Tween(A);
+    return g.to(i, e * 1e3), g.onUpdate(o), g.onStop(() => {
       se.remove(g), te.removeId(s);
     }), g.onComplete(() => {
       te.removeId(s), t == null || t();
-    }), g.easing(se.Easing.Quadratic.InOut), g.start(), s = te.add(() => {
+    }), g.easing(se.Easing.Quadratic.InOut), g.start(), te.add(() => {
       g.isPlaying() && g.update();
-    });
+    }, s), g;
   }
 };
 oA.setObjectCenter = (a) => {
@@ -2480,7 +2492,7 @@ class vs extends kt {
     return o.copy(t[1]).normalize(), o;
   }
 }
-let iA, QA, KA;
+let eA, QA, KA;
 class _o extends _A {
   constructor(A) {
     super(A);
@@ -2497,17 +2509,17 @@ class _o extends _A {
   }
   parse(A, i) {
     if (ea(A))
-      iA = new ia().parse(A);
+      eA = new ia().parse(A);
     else {
       const e = et(A);
       if (!oa(e))
         throw new Error("THREE.FBXLoader: Unknown format.");
       if (Co(e) < 7e3)
         throw new Error("THREE.FBXLoader: FBX version not supported, FileVersion: " + Co(e));
-      iA = new Aa().parse(e);
+      eA = new Aa().parse(e);
     }
     const o = new $i(this.manager).setPath(this.resourcePath || i).setCrossOrigin(this.crossOrigin);
-    return new zs(o, this.manager).parse(iA);
+    return new zs(o, this.manager).parse(eA);
   }
 }
 class zs {
@@ -2523,7 +2535,7 @@ class zs {
   // and details the connection type
   parseConnections() {
     const A = /* @__PURE__ */ new Map();
-    return "Connections" in iA && iA.Connections.connections.forEach(function(o) {
+    return "Connections" in eA && eA.Connections.connections.forEach(function(o) {
       const e = o[0], t = o[1], s = o[2];
       A.has(e) || A.set(e, {
         parents: [],
@@ -2543,8 +2555,8 @@ class zs {
   // via FBXTree.Connections.
   parseImages() {
     const A = {}, i = {};
-    if ("Video" in iA.Objects) {
-      const o = iA.Objects.Video;
+    if ("Video" in eA.Objects) {
+      const o = eA.Objects.Video;
       for (const e in o) {
         const t = o[e], s = parseInt(e);
         if (A[s] = t.RelativeFilename || t.Filename, "Content" in t) {
@@ -2599,8 +2611,8 @@ class zs {
   // to images in FBXTree.Objects.Video
   parseTextures(A) {
     const i = /* @__PURE__ */ new Map();
-    if ("Texture" in iA.Objects) {
-      const o = iA.Objects.Texture;
+    if ("Texture" in eA.Objects) {
+      const o = eA.Objects.Texture;
       for (const e in o) {
         const t = this.parseTexture(o[e], A);
         i.set(parseInt(e), t);
@@ -2640,8 +2652,8 @@ class zs {
   // Parse nodes in FBXTree.Objects.Material
   parseMaterials(A) {
     const i = /* @__PURE__ */ new Map();
-    if ("Material" in iA.Objects) {
-      const o = iA.Objects.Material;
+    if ("Material" in eA.Objects) {
+      const o = eA.Objects.Material;
       for (const e in o) {
         const t = this.parseMaterial(o[e], A);
         t !== null && i.set(parseInt(e), t);
@@ -2723,15 +2735,15 @@ class zs {
   }
   // get a texture from the textureMap for use by a material.
   getTexture(A, i) {
-    return "LayeredTexture" in iA.Objects && i in iA.Objects.LayeredTexture && (console.warn("THREE.FBXLoader: layered textures are not supported in three.js. Discarding all but first layer."), i = QA.get(i).children[0].ID), A.get(i);
+    return "LayeredTexture" in eA.Objects && i in eA.Objects.LayeredTexture && (console.warn("THREE.FBXLoader: layered textures are not supported in three.js. Discarding all but first layer."), i = QA.get(i).children[0].ID), A.get(i);
   }
   // Parse nodes in FBXTree.Objects.Deformer
   // Deformer node can contain skinning or Vertex Cache animation data, however only skinning is supported here
   // Generates map of Skeleton-like objects for use later when generating and binding skeletons.
   parseDeformers() {
     const A = {}, i = {};
-    if ("Deformer" in iA.Objects) {
-      const o = iA.Objects.Deformer;
+    if ("Deformer" in eA.Objects) {
+      const o = eA.Objects.Deformer;
       for (const e in o) {
         const t = o[e], s = QA.get(parseInt(e));
         if (t.attrType === "Skin") {
@@ -2794,7 +2806,7 @@ class zs {
   // create the main Group() to be returned by the loader
   parseScene(A, i, o) {
     KA = new Ci();
-    const e = this.parseModels(A.skeletons, i, o), t = iA.Objects.Model, s = this;
+    const e = this.parseModels(A.skeletons, i, o), t = eA.Objects.Model, s = this;
     e.forEach(function(C) {
       const I = t[C.ID];
       s.setLookAtProperties(C, I), QA.get(C.ID).parents.forEach(function(B) {
@@ -2813,7 +2825,7 @@ class zs {
   }
   // parse nodes in FBXTree.Objects.Model
   parseModels(A, i, o) {
-    const e = /* @__PURE__ */ new Map(), t = iA.Objects.Model;
+    const e = /* @__PURE__ */ new Map(), t = eA.Objects.Model;
     for (const s in t) {
       const g = parseInt(s), C = t[s], I = QA.get(g);
       let Q = this.buildSkeleton(I, A, g, C.attrName);
@@ -2864,7 +2876,7 @@ class zs {
   createCamera(A) {
     let i, o;
     if (A.children.forEach(function(e) {
-      const t = iA.Objects.NodeAttribute[e.ID];
+      const t = eA.Objects.NodeAttribute[e.ID];
       t !== void 0 && (o = t);
     }), o === void 0)
       i = new ki();
@@ -2899,7 +2911,7 @@ class zs {
   createLight(A) {
     let i, o;
     if (A.children.forEach(function(e) {
-      const t = iA.Objects.NodeAttribute[e.ID];
+      const t = eA.Objects.NodeAttribute[e.ID];
       t !== void 0 && (o = t);
     }), o === void 0)
       i = new ki();
@@ -2957,7 +2969,7 @@ class zs {
   setLookAtProperties(A, i) {
     "LookAtProperty" in i && QA.get(A.ID).children.forEach(function(e) {
       if (e.relationship === "LookAtProperty") {
-        const t = iA.Objects.Model[e.ID];
+        const t = eA.Objects.Model[e.ID];
         if ("Lcl_Translation" in t) {
           const s = t.Lcl_Translation.value;
           A.target !== void 0 ? (A.target.position.fromArray(s), KA.add(A.target)) : A.lookAt(new O().fromArray(s));
@@ -2981,8 +2993,8 @@ class zs {
   }
   parsePoseNodes() {
     const A = {};
-    if ("Pose" in iA.Objects) {
-      const i = iA.Objects.Pose;
+    if ("Pose" in eA.Objects) {
+      const i = eA.Objects.Pose;
       for (const o in i)
         if (i[o].attrType === "BindPose" && i[o].NbPoseNodes > 0) {
           const e = i[o].PoseNode;
@@ -2995,8 +3007,8 @@ class zs {
   }
   // Parse ambient color in FBXTree.GlobalSettings - if it's not set to black (default), create an ambient light
   createAmbientLight() {
-    if ("GlobalSettings" in iA && "AmbientColor" in iA.GlobalSettings) {
-      const A = iA.GlobalSettings.AmbientColor.value, i = A[0], o = A[1], e = A[2];
+    if ("GlobalSettings" in eA && "AmbientColor" in eA.GlobalSettings) {
+      const A = eA.GlobalSettings.AmbientColor.value, i = A[0], o = A[1], e = A[2];
       if (i !== 0 || o !== 0 || e !== 0) {
         const t = new IA(i, o, e).convertSRGBToLinear();
         KA.add(new wt(t, 1));
@@ -3011,8 +3023,8 @@ class _s {
   // Parse nodes in FBXTree.Objects.Geometry
   parse(A) {
     const i = /* @__PURE__ */ new Map();
-    if ("Geometry" in iA.Objects) {
-      const o = iA.Objects.Geometry;
+    if ("Geometry" in eA.Objects) {
+      const o = eA.Objects.Geometry;
       for (const e in o) {
         const t = QA.get(parseInt(e)), s = this.parseGeometry(t, o[e], A);
         i.set(parseInt(e), s);
@@ -3032,7 +3044,7 @@ class _s {
   // Parse single node mesh geometry in FBXTree.Objects.Geometry
   parseMeshGeometry(A, i, o) {
     const e = o.skeletons, t = [], s = A.parents.map(function(B) {
-      return iA.Objects.Model[B.ID];
+      return eA.Objects.Model[B.ID];
     });
     if (s.length === 0)
       return;
@@ -3154,7 +3166,7 @@ class _s {
     const t = this;
     o.forEach(function(s) {
       s.rawTargets.forEach(function(g) {
-        const C = iA.Objects.Geometry[g.geoID];
+        const C = eA.Objects.Geometry[g.geoID];
         C !== void 0 && t.genMorphGeometry(A, i, C, e, g.name);
       });
     });
@@ -3268,7 +3280,7 @@ class $s {
     return A;
   }
   parseClips() {
-    if (iA.Objects.AnimationCurve === void 0)
+    if (eA.Objects.AnimationCurve === void 0)
       return;
     const A = this.parseAnimationCurveNodes();
     this.parseAnimationCurves(A);
@@ -3279,7 +3291,7 @@ class $s {
   // each AnimationCurveNode holds data for an animation transform for a model (e.g. left arm rotation )
   // and is referenced by an AnimationLayer
   parseAnimationCurveNodes() {
-    const A = iA.Objects.AnimationCurveNode, i = /* @__PURE__ */ new Map();
+    const A = eA.Objects.AnimationCurveNode, i = /* @__PURE__ */ new Map();
     for (const o in A) {
       const e = A[o];
       if (e.attrName.match(/S|R|T|DeformPercent/) !== null) {
@@ -3297,7 +3309,7 @@ class $s {
   // previously parsed AnimationCurveNodes. Each AnimationCurve holds data for a single animated
   // axis ( e.g. times and values of x rotation)
   parseAnimationCurves(A) {
-    const i = iA.Objects.AnimationCurve;
+    const i = eA.Objects.AnimationCurve;
     for (const o in i) {
       const e = {
         id: i[o].id,
@@ -3314,7 +3326,7 @@ class $s {
   // to various AnimationCurveNodes and is referenced by an AnimationStack node
   // note: theoretically a stack can have multiple layers, however in practice there always seems to be one per stack
   parseAnimationLayers(A) {
-    const i = iA.Objects.AnimationLayer, o = /* @__PURE__ */ new Map();
+    const i = eA.Objects.AnimationLayer, o = /* @__PURE__ */ new Map();
     for (const e in i) {
       const t = [], s = QA.get(parseInt(e));
       s !== void 0 && (s.children.forEach(function(C, I) {
@@ -3326,7 +3338,7 @@ class $s {
                 return r.relationship !== void 0;
               })[0].ID;
               if (B !== void 0) {
-                const r = iA.Objects.Model[B.toString()];
+                const r = eA.Objects.Model[B.toString()];
                 if (r === void 0) {
                   console.warn("THREE.FBXLoader: Encountered a unused curve.", C);
                   return;
@@ -3348,9 +3360,9 @@ class $s {
             if (t[I] === void 0) {
               const B = QA.get(C.ID).parents.filter(function(p) {
                 return p.relationship !== void 0;
-              })[0].ID, r = QA.get(B).parents[0].ID, E = QA.get(r).parents[0].ID, F = QA.get(E).parents[0].ID, l = iA.Objects.Model[F], U = {
+              })[0].ID, r = QA.get(B).parents[0].ID, E = QA.get(r).parents[0].ID, F = QA.get(E).parents[0].ID, l = eA.Objects.Model[F], U = {
                 modelName: l.attrName ? Di.sanitizeNodeName(l.attrName) : "",
-                morphName: iA.Objects.Deformer[B].attrName
+                morphName: eA.Objects.Deformer[B].attrName
               };
               t[I] = U;
             }
@@ -3364,7 +3376,7 @@ class $s {
   // parse nodes in FBXTree.Objects.AnimationStack. These are the top level node in the animation
   // hierarchy. Each Stack node will be used to create a AnimationClip
   parseAnimStacks(A) {
-    const i = iA.Objects.AnimationStack, o = {};
+    const i = eA.Objects.AnimationStack, o = {};
     for (const e in i) {
       const t = QA.get(parseInt(e)).children;
       t.length > 1 && console.warn("THREE.FBXLoader: Encountered an animation stack with multiple layers, this is currently not supported. Ignoring subsequent layers.");
@@ -8898,14 +8910,15 @@ export {
   Is as b,
   Gg as c,
   RA as d,
-  qg as e,
-  Jg as f,
-  Eg as g,
-  We as h,
-  Fs as i,
-  ug as j,
-  fg as k,
-  dg as l,
-  Ug as m,
+  se as e,
+  qg as f,
+  Jg as g,
+  Eg as h,
+  We as i,
+  Fs as j,
+  ug as k,
+  fg as l,
+  dg as m,
+  Ug as n,
   xg as s
 };

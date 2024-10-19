@@ -1,11 +1,3 @@
-/*
- * @Author: Kayson.Wan
- * @Date: 2022-11-14 15:19:21
- * LastEditors  Murphy.xie
- * LastEditTime  2023-06-08 16:08:53
- * @Description:
- */
-
 import * as THREE from 'three';
 import ThreeLoop from '../../SSThreeLoop';
 

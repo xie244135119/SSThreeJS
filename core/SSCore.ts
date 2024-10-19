@@ -17,6 +17,7 @@ import SSPostProcessModule from './SSModule/basepostprocess.module';
 import SSLoadingManager from './SSTool/SSLoadingManager';
 import { GLTF } from 'three/examples/jsm/loaders/GLTFLoader';
 import { SSModelQueueItem } from './types';
+import { WebGLRendererParameters } from 'three';
 
 export default class SSThreeJs {
   /**
@@ -128,7 +129,7 @@ export default class SSThreeJs {
    * 场景初始化
    * @param aCanvasElement canvasid 或 element
    */
-  setup = (aCanvasElement: string | HTMLElement) => {
+  setup = (aCanvasElement: string | HTMLElement, renderOptions?: WebGLRendererParameters) => {
     let container = null;
     if (typeof aCanvasElement === 'string') {
       const element = document.getElementById(aCanvasElement);
@@ -154,7 +155,7 @@ export default class SSThreeJs {
     camera.position.set(10, 10, 10);
     this.threeCamera = camera;
     // webgl render
-    const render = this._addRender();
+    const render = this._addRender(renderOptions);
     container.append(render.domElement);
     this.threeRenderer = render;
 
@@ -320,12 +321,8 @@ export default class SSThreeJs {
   };
 
   // render
-  _addRender = () => {
-    const render = new THREE.WebGLRenderer({
-      antialias: true
-      // alpha: true,
-      // logarithmicDepthBuffer: true
-    });
+  _addRender = (options: WebGLRendererParameters) => {
+    const render = new THREE.WebGLRenderer(options);
     render.shadowMap.enabled = true;
     render.shadowMap.type = THREE.PCFSoftShadowMap;
     render.setPixelRatio(window.devicePixelRatio);

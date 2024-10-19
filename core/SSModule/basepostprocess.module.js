@@ -1,10 +1,3 @@
-/*
- * Author  Murphy.xie
- * Date  2023-06-23 17:48:56
- * LastEditors  Kayson.Wan
- * LastEditTime  2023-06-24 20:12:18
- * Description
- */
 import * as THREE from 'three';
 // 后处理
 import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer';

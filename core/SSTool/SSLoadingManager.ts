@@ -172,7 +172,6 @@ export default class SSLoadingManager {
       const chunks = [];
 
       const progressHandle = (resault: ReadableStreamReadResult<Uint8Array>) => {
-        console.log(' down load下载文件处理 ', resault.done, percent);
         // finish
         if (resault.done) {
           const chunksAll = new Uint8Array(receivedLength); // (4.1)
@@ -197,40 +196,6 @@ export default class SSLoadingManager {
       };
       return reader.read().then(progressHandle);
     })
-
-    // const response = await fetch(aUrl, {
-    //   method: 'GET',
-    //   headers: { responseType: 'arraybuffer' }
-    // });
-    // const reader = response.body.getReader();
-    // const contentLength = +response.headers.get('Content-Length');
-    // let receivedLength = 0; // 当前接收到了这么多字节
-    // const chunks = []; // 接收到的二进制块的数组（包括 body）
-    // let excuteLoop = true;
-    // let percent = 0;
-    // while (excuteLoop) {
-    //   const { done, value } = await reader.read();
-    //   if (done) {
-    //     excuteLoop = false;
-    //     onProgress?.(1, chunks);
-    //     break;
-    //   }
-
-    //   chunks.push(value);
-    //   receivedLength += value.length;
-    //   percent += 0.01;
-    //   percent = Math.min(percent, 0.99);
-    //   onProgress?.(contentLength >= 0 ? percent : receivedLength / contentLength, chunks);
-    //   // console.log(`Received ${receivedLength} of ${contentLength}`);
-    // }
-    // const chunksAll = new Uint8Array(receivedLength); // (4.1)
-    // let position = 0;
-    // chunks.forEach((chunk) => {
-    //   chunksAll.set(chunk, position); // (4.2)
-    //   position += chunk.length;
-    // });
-    // return chunksAll.buffer;
-    ;
 
   /**
    * query model local path

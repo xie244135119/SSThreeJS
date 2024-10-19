@@ -23,26 +23,27 @@ export default class SSThreeTool {
     speed: number = 1,
     onComplete?: () => void
   ) {
-    let _animateFrameRef;
+    const animateKey = `usetween_${Date.now()}`;
     const tweenAnimate = new TWEEN.Tween(aStartPoint);
     tweenAnimate.to(aEndPoint, speed * 1000);
     tweenAnimate.onUpdate(onUpdate);
     tweenAnimate.onStop(() => {
       TWEEN.remove(tweenAnimate);
-      SSThreeLoop.removeId(_animateFrameRef);
+      SSThreeLoop.removeId(animateKey);
     });
     tweenAnimate.onComplete(() => {
-      SSThreeLoop.removeId(_animateFrameRef);
+      SSThreeLoop.removeId(animateKey);
       onComplete?.();
     });
     tweenAnimate.easing(TWEEN.Easing.Quadratic.InOut);
     tweenAnimate.start();
 
-    _animateFrameRef = SSThreeLoop.add(() => {
+    SSThreeLoop.add(() => {
       if (tweenAnimate.isPlaying()) {
         tweenAnimate.update();
       }
-    });
+    }, animateKey);
+    return tweenAnimate;
   }
 
   /**

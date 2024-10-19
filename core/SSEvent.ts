@@ -1,11 +1,3 @@
-/*
- * Author  xie244135119
- * Date  2021-12-01 18:29:01
- * LastEditors  Murphy.xie
- * LastEditTime  2024-06-28 17:13:00
- * Description three.js event
- */
-
 /**
  * @enum {string}
  * @property {string} CLICK 单击事件

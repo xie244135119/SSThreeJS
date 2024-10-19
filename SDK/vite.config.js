@@ -1,10 +1,3 @@
-/*
- * Author  Murphy.xie
- * Date  2024-02-27 19:04:12
- * LastEditors  Murphy.xie
- * LastEditTime  2024-03-19 16:13:34
- * Description
- */
 import { defineConfig } from 'vite';
 import path from 'path';
 // import react from '@vitejs/plugin-react-swc';

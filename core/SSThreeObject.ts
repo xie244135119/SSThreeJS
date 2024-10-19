@@ -3,6 +3,7 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 import { EffectComposer } from 'postprocessing';
 import SSThreeLoop from './SSThreeLoop';
 import SSThreeTool from './SSTool/index';
+import TWEEN, { Tween } from '@tweenjs/tween.js';
 
 export default class SSThreeObject {
   /**
@@ -16,34 +17,39 @@ export default class SSThreeObject {
   threeScene: THREE.Scene = null;
 
   /**
-   * @description scene 调试 helper
+   * @description scene debug helper
    */
   sceneHelper: THREE.Scene = null;
 
   /**
-   * @description 场景相机
+   * @description camera
    */
   threeCamera: THREE.PerspectiveCamera | THREE.OrthographicCamera = null;
 
   /**
-   * @description WebGl渲染器
+   * @description webGl render
    */
   threeRenderer: THREE.WebGLRenderer = null;
 
   /**
-   * @description 轨道控制器
+   * @description orbitControl
    */
   threeOrbitControl: OrbitControls = null;
 
   /**
-   * @description 后处理
+   * @description effect
    */
   threeEffectComposer: EffectComposer = null;
 
   /**
-   * @description 响应监听器
+   * @description resize observer
    */
   _resizeObserver: ResizeObserver = null;
+
+  /**
+   * @description animating tween
+   */
+  _animatingTween: Tween<any> = null;
 
   constructor(props: {
     container: HTMLElement;
@@ -64,6 +70,12 @@ export default class SSThreeObject {
   }
 
   destory() {
+    if (this._animatingTween) {
+      this._animatingTween.stop();
+      TWEEN.remove(this._animatingTween);
+      this._animatingTween = null;
+    }
+    
     this._resizeObserver?.disconnect();
     this._resizeObserver = null;
     this.cancelRenderLoop();
@@ -106,7 +118,12 @@ export default class SSThreeObject {
         orbitControl_y: controlPosition.y,
         orbitControl_z: controlPosition.z
       };
-      SSThreeTool.useTweenAnimate(
+      if (this._animatingTween) {
+        this._animatingTween.stop();
+        TWEEN.remove(this._animatingTween);
+        this._animatingTween = null;
+      }
+      const eyeAnimate = SSThreeTool.useTweenAnimate<any>(
         startPoint,
         endPoint,
         (e) => {
@@ -115,8 +132,12 @@ export default class SSThreeObject {
           this.threeOrbitControl.update();
         },
         animateSpeed,
-        complete
+        ()=>{
+          this._animatingTween = null;
+          complete?.();
+        }
       );
+      this._animatingTween = eyeAnimate;
     }
   }
 

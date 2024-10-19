@@ -1,5 +1,14 @@
+type SSLoopFn = (e?: any) => void;
+
+interface SSLoopItem {
+  uuid: string | Symbol;
+  fn: SSLoopFn;
+  interval?: number;
+  lastTime?: number;
+}
+
 export default class SSThreeLoop {
-  static renderLoopList = [];
+  static renderLoopList: SSLoopItem[] = [];
   // is render
   static isRenderLoop = false;
   // is destory
@@ -8,7 +17,7 @@ export default class SSThreeLoop {
   static animateRenderRef = null;
 
   /**
-   * setup
+   * @description setup
    */
   static setup = () => {
     this.isLoopDestory = false;
@@ -18,7 +27,7 @@ export default class SSThreeLoop {
   };
 
   /**
-   * destory
+   * @description destory
    */
   static destory = () => {
     this.isLoopDestory = true;
@@ -28,29 +37,28 @@ export default class SSThreeLoop {
   };
 
   /**
-   * add new event
-   * @param {func} fn render fps
-   * @param {string} identifier identifer
+   * @description add new loop event
+   * @param fn 执行函数
+   * @param identifier 标识
+   * @param interval 间隔时间 默认一帧 可选时间单位 ms
    * @returns
    */
-  static add = (fn = () => {}, identifier = '') => {
+  static add = (fn: SSLoopFn, identifier?: string, interval?: number) => {
     if (this.isLoopDestory) {
       return null;
     }
     if (!fn) {
       return null;
     }
-    const isExist = this.renderLoopList.find((item) => item.type === identifier);
+    const isExist = this.renderLoopList.find((item) => item.uuid === identifier);
     if (isExist) {
       return '';
     }
-    let uniqeid: string | Symbol = identifier;
-    if (!identifier) {
-      uniqeid = Symbol('render frame');
-    }
+    let uniqeid: string | Symbol = identifier || Symbol('render frame');
     this.renderLoopList.push({
-      type: uniqeid,
-      fn
+      uuid: uniqeid,
+      fn,
+      interval
     });
     if (!this.isRenderLoop) {
       this.render();
@@ -59,7 +67,7 @@ export default class SSThreeLoop {
   };
 
   /**
-   * delete event
+   * @description delete event
    * @param {string | Symbol} identifier 标识符
    */
   static removeId = (identifier) => {
@@ -70,10 +78,10 @@ export default class SSThreeLoop {
    * delete identifer
    * @param {Array<string | Symbol>} identifier string 标识符
    */
-  static removeIds = (identifiers = []) => {
+  static removeIds = (identifiers: (string | Symbol)[]) => {
     if (this.renderLoopList) {
       identifiers.forEach((e) => {
-        const findIndex = this.renderLoopList.findIndex((item) => item.type === e);
+        const findIndex = this.renderLoopList.findIndex((item) => item.uuid === e);
         if (findIndex !== -1) {
           this.renderLoopList.splice(findIndex, 1);
         }
@@ -91,13 +99,25 @@ export default class SSThreeLoop {
       if (this.renderLoopList.length === 0) {
         return false;
       }
-      this.renderLoopList.forEach((item) => {
-        item.fn?.();
-      });
+      for (let index = 0; index < this.renderLoopList.length; index++) {
+        const element = this.renderLoopList[index];
+        if (element.interval) {
+          if (element.lastTime) {
+            if ((performance.now() - element.lastTime) >= element.interval) {
+              element.fn?.();
+              element.lastTime = performance.now();
+            }
+          } else {
+            element.fn?.();
+            element.lastTime = performance.now();
+          }
+          continue;
+        }
+        element.fn?.();
+      }
       return true;
     };
 
-    //
     const animateFrame = () => {
       if (this.isLoopDestory) {
         return;
@@ -110,7 +130,6 @@ export default class SSThreeLoop {
         window.cancelAnimationFrame(this.animateRenderRef);
       }
     };
-
     this.animateRenderRef = window.requestAnimationFrame(animateFrame);
   };
 }
