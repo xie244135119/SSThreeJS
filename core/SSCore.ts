@@ -108,6 +108,8 @@ export default class SSThreeJs {
     this.threeEvent.destory();
     this.threeEvent = null;
 
+    SSLoader.disposeLoader();
+
     if (this.threeScene !== null) {
       SSDispose.dispose(this.threeScene);
       if (this.threeRenderer.info.programs.length !== 0) {

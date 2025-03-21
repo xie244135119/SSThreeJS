@@ -41,17 +41,26 @@ to: "static/three/basis",
 3、vite：同理
 
 ## Update Versions log
-    v1.4.18
-    1、修复缓存偶尔崩溃数据销毁的问题
-    2、增加动画定时渲染机制
 
-    v1.4.15
-    v1.4.16
+    v1.4.20
+    1.增加VolumetricClouds体积云效果
+    2.修复draco模型加载以及dracoLoader未释放内存溢出问题
+    3.SSPostProcessPlugin内存释放优化
+    4.修复window平台鼠标拖拽限制问题
+
+    v1.4.19
+    v1.4.18
+    1.修复缓存偶尔崩溃数据销毁的问题
+    2.增加动画定时渲染机制
+
     v1.4.17
     修复缓存偶尔崩溃的问题
     修复视角转场偶尔崩溃的问题
 
-	v1.4.14
+    v1.4.16
+    v1.4.15
+
+    v1.4.14
     修复SSCore addSky的问题
     增加星空效果Stars组件
     增加反射地面Reflector组件
@@ -88,7 +97,6 @@ to: "static/three/basis",
     v1.0.1
     v1.0.2
     更新日志
-
 
 ## three 版本对应关系
 

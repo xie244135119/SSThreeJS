@@ -1,16 +1,14 @@
 /*
  * Author  Kayson.Wan
  * Date  2022-09-08 23:20:28
- * LastEditors  xie244135119
- * LastEditTime  2023-06-08 13:55:25
+ * LastEditors  Kayson.Wan
+ * LastEditTime  2025-03-21 15:45:15
  * Description
  */
 import * as THREE from 'three';
 
 export default class SSDispose {
-
-  operationQueue: Set<(e?:any)=>void> = null;
-
+  operationQueue: Set<(e?: any) => void> = null;
 
   constructor() {
     this.operationQueue = new Set();
@@ -52,46 +50,46 @@ export default class SSDispose {
       if (!(texture instanceof THREE.Texture)) {
         return;
       }
-        texture.dispose();
+      texture.dispose();
     };
     const disposeGeometry = (geo: THREE.BufferGeometry) => {
       if (!(geo instanceof THREE.BufferGeometry)) {
         return;
       }
-        geo.dispose();
+      geo.dispose();
     };
     const disposeMaterial = (material: THREE.Material) => {
       if (!(material instanceof THREE.Material)) {
-        return
+        return;
       }
       if (material instanceof THREE.ShaderMaterial) {
         const { uniforms = {} } = material;
         this.disposeUniforms(uniforms);
       }
-        const materialKeys = Object.keys(material);
-        materialKeys.forEach((e) => {
-          if (material[e] instanceof THREE.Texture) {
-            material[e].dispose();
-            material[e] = null;
-          }
-        });
-        material.dispose();
+      const materialKeys = Object.keys(material);
+      materialKeys.forEach((e) => {
+        if (material[e] instanceof THREE.Texture) {
+          material[e].dispose();
+          material[e] = null;
+        }
+      });
+      material.dispose();
     };
     const disposeObject3D = (aObj3D: THREE.Object3D) => {
-        if (!(aObj3D instanceof THREE.Object3D)) {
-          return;
-        }
-        // user data
-        if (aObj3D.userData) {
-          const allKeys = Object.getOwnPropertyNames(aObj3D.userData);
-          allKeys.forEach((key) => {
-            const value = aObj3D.userData[key];
-            disposeGeometry(value);
-            disposeMaterial(value);
-          });
-        }
-        // mesh 
-        if (aObj3D instanceof THREE.Mesh) {
+      if (!(aObj3D instanceof THREE.Object3D)) {
+        return;
+      }
+      // user data
+      if (aObj3D.userData) {
+        const allKeys = Object.getOwnPropertyNames(aObj3D.userData);
+        allKeys.forEach((key) => {
+          const value = aObj3D.userData[key];
+          disposeMaterial(value);
+          disposeGeometry(value);
+        });
+      }
+      // mesh
+      if (aObj3D instanceof THREE.Mesh) {
         disposeGeometry(aObj3D.geometry);
         if (aObj3D.material instanceof Array) {
           aObj3D.material.forEach((e) => {
@@ -101,20 +99,20 @@ export default class SSDispose {
           disposeMaterial(aObj3D.material);
         }
       }
-      // 
-        aObj3D.children.forEach((e) => {
-          disposeObject3D(e);
-        });
-        // remove children
-        aObj3D.clear();
-        // extends object3D 的 dispose
-        if (aObj3D.dispose && !(aObj3D instanceof THREE.Scene)) {
-            aObj3D.dispose();
-        }
-        // remove from parent 不能加
-        // aObj3D.removeFromParent();
-        // 不能加
-        // aObj3D = null;
+      //
+      aObj3D.children.forEach((e) => {
+        disposeObject3D(e);
+      });
+      // remove children
+      aObj3D.clear();
+      // extends object3D 的 dispose
+      if (aObj3D.dispose && !(aObj3D instanceof THREE.Scene)) {
+        aObj3D.dispose();
+      }
+      // remove from parent 不能加
+      // aObj3D.removeFromParent();
+      // 不能加
+      // aObj3D = null;
     };
     const disposeArray = (aList) => {
       if (Array.isArray(aList)) {

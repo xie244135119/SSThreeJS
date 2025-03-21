@@ -1,7 +1,6 @@
 /**
  * @description 后处理插件
  */
-import * as THREE from 'three';
 import GUI from 'lil-gui';
 import {
   BlendFunction,
@@ -177,22 +176,30 @@ export default class SSPostProcessPlugin {
   destroy = () => {
     this.gui?.destroy();
     this.gui = null;
-
-    this.outlineEffect.selection.clear();
-    SSDispose.dispose(this.outlineEffect.patternTexture);
-    SSDispose.dispose(this.outlineEffect.blurPass.blurMaterial);
-    SSDispose.dispose(this.outlineEffect.blurPass.fullscreenMaterial);
-    this.bloomEffect.selection.clear();
-    SSDispose.dispose(this.bloomEffect.luminanceMaterial);
-    SSDispose.dispose(this.smaaEffect.weightsMaterial);
-    SSDispose.dispose(this.smaaEffect.edgeDetectionMaterial);
-    SSDispose.dispose(this.lutEffect.lut);
-
-    SSDispose.dispose(this.bloomEffect);
-    SSDispose.dispose(this.smaaEffect);
-    SSDispose.dispose(this.outlineEffect);
-    SSDispose.dispose(this.vignetteEffect);
-    SSDispose.dispose(this.lutEffect);
+    if (this.outlineEffect) {
+      this.outlineEffect?.selection?.clear();
+      SSDispose.dispose(this.outlineEffect.patternTexture);
+      SSDispose.dispose(this.outlineEffect.blurPass.blurMaterial);
+      SSDispose.dispose(this.outlineEffect.blurPass.fullscreenMaterial);
+      SSDispose.dispose(this.outlineEffect);
+    }
+    if (this.bloomEffect) {
+      this.bloomEffect.selection.clear();
+      SSDispose.dispose(this.bloomEffect.luminanceMaterial);
+      SSDispose.dispose(this.bloomEffect);
+    }
+    if (this.smaaEffect) {
+      SSDispose.dispose(this.smaaEffect.weightsMaterial);
+      SSDispose.dispose(this.smaaEffect.edgeDetectionMaterial);
+      SSDispose.dispose(this.smaaEffect);
+    }
+    if (this.lutEffect) {
+      SSDispose.dispose(this.lutEffect.lut);
+      SSDispose.dispose(this.lutEffect);
+    }
+    if (this.vignetteEffect) {
+      SSDispose.dispose(this.vignetteEffect);
+    }
 
     SSDispose.dispose(this.effectComposer);
 
@@ -211,7 +218,8 @@ export default class SSPostProcessPlugin {
       const { threeScene, threeCamera, threeRenderer } = this.ssThreeObject;
       this.effectComposer = new EffectComposer(threeRenderer, options);
       // 抗锯齿强度
-      this.effectComposer.multisampling = 3;
+      // this.effectComposer.multisampling = 3;
+      this.effectComposer.multisampling = 1;
       //
       this.ssThreeObject.threeEffectComposer = this.effectComposer;
     }
@@ -226,16 +234,26 @@ export default class SSPostProcessPlugin {
       const { threeScene, threeCamera, threeRenderer } = this.ssThreeObject;
 
       this.bloomEffect = new SelectiveBloomEffect(threeScene, threeCamera, {
+        resolutionScale: 0.1,
         blendFunction: options.blendFunction,
         luminanceThreshold: options.threshold,
         luminanceSmoothing: options.smoothing,
         mipmapBlur: true,
         intensity: options.intensity
       });
+      this.bloomEffect.setSize(128, 128);
       this.bloomEffect.inverted = options.inverted;
       this.bloomEffect.ignoreBackground = options.ignoreBackground;
     }
     return this.bloomEffect;
+  };
+
+  /**
+   * 添加自发光物体
+   * @param object
+   */
+  addBloomSelectObject = (object) => {
+    this.bloomEffect.selection.add(object);
   };
 
   /**
@@ -483,18 +501,29 @@ export default class SSPostProcessPlugin {
       // 添加基础渲染通道
       this.effectComposer.addPass(new RenderPass(threeScene, threeCamera));
       // 合并所有的后处理效果 Merge all effects into one pass.
-      const effects = [
-        this.addOutlineEffect(this.postProcessOptions.outlineEffect),
-        this.addBloomEffect(this.postProcessOptions.bloomEffect),
-        this.addVignetteEffect(this.postProcessOptions.vignetteEffect),
-        this.addSMAAEffect(this.postProcessOptions.smaaEffect),
-        lutEffect
-      ];
+      // let effects = [
+      //   // this.addOutlineEffect(this.postProcessOptions.outlineEffect),
+      //   // this.addVignetteEffect(this.postProcessOptions.vignetteEffect),
+      //   // this.addBloomEffect(this.postProcessOptions.bloomEffect),
+      //   // this.addSMAAEffect(this.postProcessOptions.smaaEffect),
+      //   // lutEffect
+      // ];
+
+      const effects = [];
+      effects.push(this.addOutlineEffect(this.postProcessOptions.outlineEffect));
+      effects.push(this.addSMAAEffect(this.postProcessOptions.smaaEffect));
+      effects.push(lutEffect);
+      if (this.postProcessOptions.bloomEffect) {
+        effects.push(this.addBloomEffect(this.postProcessOptions.bloomEffect));
+      }
+
       const effectPass = new EffectPass(threeCamera, ...effects);
       effectPass.renderToScreen = true;
       effectComposer.addPass(effectPass);
-      // 开始渲染
+      // 开始渲染 ss-three
       this.ssThreeObject.cancelRenderLoop();
+      // old
+      // this.ssThreeObject.cancelRender();
       SSThreeLoop.add(() => {
         this.effectComposer.render();
       }, 'SSPostProcessPlugin Render');
@@ -533,7 +562,7 @@ export default class SSPostProcessPlugin {
       this.gui.domElement.style.position = 'absolute';
       this.gui.domElement.style.top = '0';
       this.gui.domElement.style.left = 'unset';
-      this.gui.domElement.style.right = '0';
+      this.gui.domElement.style.right = '30px';
       this.gui.domElement.style.zIndex = '100';
       this.gui.title('SSPostProcessPlugin');
       this.gui.open();
@@ -560,18 +589,27 @@ export default class SSPostProcessPlugin {
 
       Object.keys(options).forEach((key) => {
         if (specialKeyMap[key]) {
-          folder.add(options, key, specialKeyMap[key]).onChange((e) => {
-            this.updateEffectOptions(folderKey as any, key, e);
-          });
+          folder
+            .add(options, key, specialKeyMap[key])
+            .onChange((e) => {
+              this.updateEffectOptions(folderKey as any, key, e);
+            })
+            .listen();
         } else if (colorKeys.includes(key)) {
-          folder.addColor(options, key).onChange((e) => {
-            console.log(' 颜色变化的时候 ', e);
-            this.updateEffectOptions(folderKey as any, key, e);
-          });
+          folder
+            .addColor(options, key)
+            .onChange((e) => {
+              console.log(' 颜色变化的时候 ', e);
+              this.updateEffectOptions(folderKey as any, key, e);
+            })
+            .listen();
         } else {
-          folder.add(options, key).onChange((e) => {
-            this.updateEffectOptions(folderKey as any, key, e);
-          });
+          folder
+            .add(options, key)
+            .onChange((e) => {
+              this.updateEffectOptions(folderKey as any, key, e);
+            })
+            .listen();
         }
       });
     });

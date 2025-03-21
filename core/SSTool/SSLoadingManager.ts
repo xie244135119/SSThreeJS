@@ -96,19 +96,22 @@ export default class SSLoadingManager {
     this._progressTextElement = textDiv;
 
     this.threeLoadingManager.onStart = (url, loaded, total) => {
-      bgDiv.style.opacity = '1';
+      // bgDiv.style.opacity = '1';
+      bgDiv.style.display = 'block';
       textDiv.innerText = '模型渲染中...';
     };
 
     this.threeLoadingManager.onLoad = () => {
-      bgDiv.style.opacity = '0';
+      // bgDiv.style.opacity = '0';
+      bgDiv.style.display = 'none';
     };
 
     this.threeLoadingManager.onProgress = (url, loaded, total) => {
       progress.style.width = `${(loaded / total) * 100}%`;
     };
     this.threeLoadingManager.onError = (url) => {
-      bgDiv.style.opacity = '0';
+      // bgDiv.style.opacity = '0';
+      bgDiv.style.display = 'none';
     };
   };
 
@@ -195,7 +198,7 @@ export default class SSLoadingManager {
         return reader.read().then(progressHandle);
       };
       return reader.read().then(progressHandle);
-    })
+    });
 
   /**
    * query model local path

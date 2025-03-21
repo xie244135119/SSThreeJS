@@ -799,4 +799,25 @@ export default class SSThreeTool {
     }
     return false;
   };
+
+  /**
+   * 判断该物体是否隐藏
+   * @param {THREE.Object3D[]} objects
+   * @returns {THREE.Material[]}
+   */
+  static isObjectVisible = (object) => {
+    if (!object.visible) {
+      return false;
+    }
+
+    let { parent } = object;
+    while (parent) {
+      if (!parent.visible) {
+        return false;
+      }
+      parent = parent.parent;
+    }
+
+    return true;
+  };
 }
