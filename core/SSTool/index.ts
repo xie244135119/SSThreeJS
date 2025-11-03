@@ -527,21 +527,32 @@ export default class SSThreeTool {
     object: THREE.Object3D,
     materialParams: THREE.MeshBasicMaterialParameters
   ) => {
+    // 获取包围盒
     const box = new THREE.Box3().setFromObject(object);
-    const v = {
-      x: Math.abs(box.max.x - box.min.x),
-      y: Math.abs(box.max.y - box.min.y),
-      z: Math.abs(box.max.z - box.min.z)
-    };
-    const geometry = new THREE.BoxGeometry(v.x + 0.01, v.y + 0.01, v.z + 0.01);
+
+    // 计算长宽高
+    const size = new THREE.Vector3();
+    box.getSize(size);
+
+    // 创建略大一点的 BoxGeometry
+    const geometry = new THREE.BoxGeometry(size.x + 0.01, size.y + 0.01, size.z + 0.01);
+
+    // 材质
     const material = new THREE.MeshBasicMaterial({
       color: new THREE.Color(0, 1, 1),
       transparent: true,
       opacity: 0.2,
       ...materialParams
     });
+
+    // 创建包围盒 mesh
     const cube = new THREE.Mesh(geometry, material);
-    cube.position.copy(SSThreeTool.getObjectCenter(object));
+
+    // 设置位置为中心点
+    const center = new THREE.Vector3();
+    box.getCenter(center);
+    cube.position.copy(center);
+
     return cube;
   };
 

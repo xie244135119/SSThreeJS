@@ -42,6 +42,11 @@ to: "static/three/basis",
 
 ## Update Versions log
 
+    v1.4.21
+    1.增加动画控制器 AnimationController
+    2.SSPostProcessPlugin新增效果，默认开启frameBufferType
+    3.修复已知问题
+
     v1.4.20
     1.增加VolumetricClouds体积云效果
     2.修复draco模型加载以及dracoLoader未释放内存溢出问题

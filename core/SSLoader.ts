@@ -161,7 +161,7 @@ export default class SSLoader {
   ) => {
     const gltfLoader = new GLTFLoader(manager);
     const dracoLoader = new DRACOLoader(manager);
-    dracoLoader.setDecoderPath('/static/three/draco/');
+    dracoLoader.setDecoderPath('/public/threeDecoder/draco/');
     dracoLoader.preload();
     gltfLoader.setDRACOLoader(dracoLoader);
     const baseDirectory = path.split('/');
@@ -192,7 +192,7 @@ export default class SSLoader {
     directory: string,
     manager?: THREE.LoadingManager
   ) => Promise<GLTF> = (buffer, directory, manager) => {
-    const ktx2Loader = new KTX2Loader(manager).setTranscoderPath('/static/three/basis/');
+    const ktx2Loader = new KTX2Loader(manager).setTranscoderPath('/public/threeDecoder/basis/');
     // .detectSupport(this.ssThreeObject.threeRenderer);
     const gltfLoader = new GLTFLoader(manager);
     gltfLoader.setKTX2Loader(ktx2Loader);
@@ -221,7 +221,7 @@ export default class SSLoader {
     path,
     manager
   ) => {
-    const ktx2Loader = new KTX2Loader(manager).setTranscoderPath('/static/three/basis/');
+    const ktx2Loader = new KTX2Loader(manager).setTranscoderPath('/public/threeDecoder/basis/');
     // .detectSupport(this.ssThreeObject.threeRenderer);
     const gltfLoader = new GLTFLoader(manager);
     gltfLoader.setKTX2Loader(ktx2Loader);
@@ -307,7 +307,7 @@ export default class SSLoader {
     new Promise((reslove, reject) => {
       const loader = new FontLoader();
       loader.load(
-        '/static/three/examples/fonts/optimer_regular.typeface.json',
+        '/public/threeDecoder/examples/fonts/optimer_regular.typeface.json',
         (font) => {
           const materials = new THREE.MeshPhongMaterial({
             color: 'white',

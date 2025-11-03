@@ -61,6 +61,11 @@ export default class SSThreeJs {
   threeAmbientLight: THREE.AmbientLight = null;
 
   /**
+   * @description 平行光
+   */
+  threeDirectionalLight: THREE.DirectionalLight = null;
+
+  /**
    * @description webgl渲染器
    */
   threeRenderer: THREE.WebGLRenderer = null;
@@ -130,6 +135,7 @@ export default class SSThreeJs {
   /**
    * 场景初始化
    * @param aCanvasElement canvasid 或 element
+   * @param renderOptions THREE.WebGLRenderer 的渲染器参数
    */
   setup = (aCanvasElement: string | HTMLElement, renderOptions?: WebGLRendererParameters) => {
     let container = null;
@@ -165,6 +171,13 @@ export default class SSThreeJs {
     const ambientlight = new THREE.AmbientLight(new THREE.Color(0xffffff), 1);
     scene.add(ambientlight);
     this.threeAmbientLight = ambientlight;
+
+    // directional light
+    const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
+    directionalLight.position.set(10, 10, 0);
+    directionalLight.castShadow = true;
+    scene.add(directionalLight);
+    this.threeDirectionalLight = directionalLight;
 
     // keyboard orbitcontrol
     const control = this._addOrbitControl(camera, container);
