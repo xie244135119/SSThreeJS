@@ -2,12 +2,12 @@
 /*
  * Author  Kayson.Wan
  * Date  2022-09-26 22:15:20
- * LastEditors  xie244135119
- * LastEditTime  2022-10-19 16:11:14
+ * LastEditors  Kayson.Wan
+ * LastEditTime  2025-11-04 15:04:07
  * Description
  */
 import * as THREE from 'three';
-import ThreeLoop from '../../SSThreeLoop';
+import ThreeLoop from '../../../SSThreeLoop.ts';
 
 // 定义Point类
 class Point {

@@ -42,6 +42,11 @@ to: "static/three/basis",
 
 ## Update Versions log
 
+    v1.5.0
+    1.threejs版本升级至^0.161.0
+    2.postprocessing.js版本升级至^6.37.8
+    2.修复路径引用问题
+
     v1.4.21
     1.增加动画控制器 AnimationController
     2.SSPostProcessPlugin新增效果，默认开启frameBufferType
@@ -105,4 +110,5 @@ to: "static/three/basis",
 
 ## three 版本对应关系
 
-    1.4.7 - threejs 0.152.1
+    v1.5.0 threejs版本 0.161.0
+    v1.4.7-v1.4.21 threejs版本 0.152.1

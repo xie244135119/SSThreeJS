@@ -1,8 +1,8 @@
 /*
  * @Author: Kayson.Wan
  * @Date: 2022-11-18 10:12:48
- * @LastEditors: Kayson.Wan
- * @LastEditTime: 2022-11-18 10:12:49
+ * LastEditors  Kayson.Wan
+ * LastEditTime  2025-11-04 09:37:11
  * @Description:
  */
 import * as THREE from 'three';
@@ -67,8 +67,8 @@ class BlendRender extends RenderStep {
     this.shaderPass.renderToScreen = true;
 
     this.composer = new EffectComposer(this.renderer);
-    this.composer.renderTarget1.texture.encoding = THREE.sRGBEncoding;
-    this.composer.renderTarget2.texture.encoding = THREE.sRGBEncoding;
+    this.composer.renderTarget1.texture.colorSpace = THREE.SRGBColorSpace;
+    this.composer.renderTarget2.texture.colorSpace = THREE.SRGBColorSpace;
 
     this.composer.addPass(this.renderPass);
     this.composer.addPass(this.shaderPass);

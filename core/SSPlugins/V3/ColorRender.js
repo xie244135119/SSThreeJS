@@ -1,8 +1,8 @@
 /*
  * @Author: Kayson.Wan
  * @Date: 2022-11-18 10:02:10
- * @LastEditors: Kayson.Wan
- * @LastEditTime: 2022-11-18 10:02:11
+ * LastEditors  Kayson.Wan
+ * LastEditTime  2025-11-04 09:36:59
  * @Description:
  */
 import * as THREE from 'three';
@@ -23,32 +23,32 @@ import { RenderStep } from './RenderStep';
  */
 class ColorRender extends RenderStep {
   /**
-     * @constructor
-     * @param {WebGLRenderer} renderer
-     * @param {Camera} camera
-     * @param {Scene} scene
-     */
+   * @constructor
+   * @param {WebGLRenderer} renderer
+   * @param {Camera} camera
+   * @param {Scene} scene
+   */
   constructor(renderer, camera, scene) {
     super(renderer, camera, scene);
 
     /**
-         * @type {Matrix4[] 投影矩阵*视图矩阵}
-         */
+     * @type {Matrix4[] 投影矩阵*视图矩阵}
+     */
     this.projScreenMatrixArray = [];
 
     /**
-         * @type {Texture[]}
-         */
+     * @type {Texture[]}
+     */
     this.depthTextureArray = [];
 
     /**
-         * @type {Texture[]}
-         */
+     * @type {Texture[]}
+     */
     this.videoTextureArray = [];
 
     /**
-         * @type {Texture[]}
-         */
+     * @type {Texture[]}
+     */
     this.bgTexture = null;
   }
 
@@ -65,7 +65,7 @@ class ColorRender extends RenderStep {
     });
 
     // this.renderTarget.viewport = new Vector4(0, 0, screen.width, screen.height);
-    this.renderTarget.encoding = THREE.sRGBEncoding;
+    this.renderTarget.colorSpace = THREE.SRGBColorSpace;
   }
 
   update() {
@@ -86,8 +86,8 @@ class ColorRender extends RenderStep {
   }
 
   /**
-     * @returns {RawShaderMaterial}
-     */
+   * @returns {RawShaderMaterial}
+   */
   material() {
     return new RawShaderMaterial({
       uniforms: {
@@ -190,8 +190,8 @@ class ColorRender extends RenderStep {
   }
 
   /**
-     * @returns {Texture}
-     */
+   * @returns {Texture}
+   */
   texture() {
     return this.renderTarget.texture;
   }

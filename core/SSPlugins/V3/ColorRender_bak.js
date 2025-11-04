@@ -1,5 +1,12 @@
 import * as THREE from 'three';
-import { LinearFilter, RawShaderMaterial, RGBAFormat, Vector2, Vector4, WebGLRenderTarget } from 'three';
+import {
+  LinearFilter,
+  RawShaderMaterial,
+  RGBAFormat,
+  Vector2,
+  Vector4,
+  WebGLRenderTarget
+} from 'three';
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass';
 import { RenderStep } from './RenderStep';
 
@@ -46,7 +53,7 @@ class ColorRender extends RenderStep {
     });
 
     this.renderTarget.viewport = new Vector4(0, 0, screen.width, screen.height);
-    this.renderTarget.encoding = THREE.sRGBEncoding;
+    this.renderTarget.colorSpace = THREE.SRGBColorSpace;
   }
 
   update() {
@@ -144,7 +151,12 @@ class ColorRender extends RenderStep {
             )
           );
         }
-        src.push('  if (color.a > 0.0) {', '     gl_FragColor = vec4(color.rgb / color.a, 1.0);', '  }', '}');
+        src.push(
+          '  if (color.a > 0.0) {',
+          '     gl_FragColor = vec4(color.rgb / color.a, 1.0);',
+          '  }',
+          '}'
+        );
         // console.log("ColorRender.fragment-shader:", src.join("\n"));
         return src.join('\n');
       })(this.depthTextureArray.length)

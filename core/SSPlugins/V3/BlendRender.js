@@ -1,8 +1,8 @@
 /*
  * @Author: Kayson.Wan
  * @Date: 2022-11-18 10:12:48
- * @LastEditors: Kayson.Wan
- * @LastEditTime: 2022-11-18 10:12:49
+ * LastEditors  Kayson.Wan
+ * LastEditTime  2025-11-04 09:36:27
  * @Description:
  */
 import * as THREE from 'three';
@@ -19,42 +19,42 @@ import { RenderStep } from './RenderStep';
  */
 class BlendRender extends RenderStep {
   /**
-     * @constructor
-     * @param {WebGLRenderer} renderer
-     * @param {Camera} camera
-     * @param {Scene} scene
-     */
+   * @constructor
+   * @param {WebGLRenderer} renderer
+   * @param {Camera} camera
+   * @param {Scene} scene
+   */
   constructor(renderer, camera, scene) {
     super(renderer, camera, scene);
 
     /**
-         * @type {Texture}
-         */
+     * @type {Texture}
+     */
     this.shadow = null;
 
     /**
-         * @type {Texture}
-         */
+     * @type {Texture}
+     */
     this.diffuse = null;
 
     /**
-         * @type {number}
-         */
+     * @type {number}
+     */
     this.mixing = 0.85;
 
     /**
-         * @type {EffectComposer}
-         */
+     * @type {EffectComposer}
+     */
     this.composer = null;
 
     /**
-         * @type {RenderPass}
-         */
+     * @type {RenderPass}
+     */
     this.renderPass = null;
 
     /**
-         * @type {ShaderPass}
-         */
+     * @type {ShaderPass}
+     */
     this.shaderPass = null;
   }
 
@@ -67,8 +67,8 @@ class BlendRender extends RenderStep {
     this.shaderPass.renderToScreen = true;
 
     this.composer = new EffectComposer(this.renderer);
-    this.composer.renderTarget1.texture.encoding = THREE.sRGBEncoding;
-    this.composer.renderTarget2.texture.encoding = THREE.sRGBEncoding;
+    this.composer.renderTarget1.texture.colorSpace = THREE.SRGBColorSpace;
+    this.composer.renderTarget2.texture.colorSpace = THREE.SRGBColorSpace;
 
     this.composer.addPass(this.renderPass);
     this.composer.addPass(this.shaderPass);
@@ -90,8 +90,8 @@ class BlendRender extends RenderStep {
   }
 
   /**
-     * @returns {RawShaderMaterial}
-     */
+   * @returns {RawShaderMaterial}
+   */
   material() {
     return new RawShaderMaterial({
       uniforms: {

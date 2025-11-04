@@ -1,8 +1,8 @@
 /*
  * @Author: Kayson.Wan
  * @Date: 2022-11-18 10:02:10
- * @LastEditors: Kayson.Wan
- * @LastEditTime: 2022-11-18 10:02:11
+ * LastEditors  Kayson.Wan
+ * LastEditTime  2025-11-04 09:37:30
  * @Description:
  */
 import * as THREE from 'three';
@@ -65,7 +65,7 @@ class ColorRender extends RenderStep {
     });
 
     // this.renderTarget.viewport = new Vector4(0, 0, screen.width, screen.height);
-    this.renderTarget.encoding = THREE.sRGBEncoding;
+    this.renderTarget.colorSpace = THREE.SRGBColorSpace;
   }
 
   update() {

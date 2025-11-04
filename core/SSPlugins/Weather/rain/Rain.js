@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import ThreeLoop from '../../SSThreeLoop';
+import ThreeLoop from '../../../SSThreeLoop.ts';
 
 export default class Rain {
   threeJs = null;

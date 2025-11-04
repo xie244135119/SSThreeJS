@@ -263,8 +263,6 @@ export default class SSPostProcessModule {
     effectComposer.setSize(canvas.clientWidth, canvas.clientHeight);
     this.effectComposer = effectComposer;
     this.openRender();
-    // this.effectComposer.renderTarget1.texture.encoding = THREE.sRGBEncoding;
-    // this.effectComposer.renderTarget2.texture.encoding = THREE.sRGBEncoding;
     return effectComposer;
   };
 

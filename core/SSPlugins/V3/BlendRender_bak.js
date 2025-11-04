@@ -55,8 +55,8 @@ class BlendRender extends RenderStep {
     this.shaderPass.renderToScreen = true;
 
     this.composer = new EffectComposer(this.renderer);
-    this.composer.renderTarget1.texture.encoding = THREE.sRGBEncoding;
-    this.composer.renderTarget2.texture.encoding = THREE.sRGBEncoding;
+    this.composer.renderTarget1.texture.colorSpace = THREE.SRGBColorSpace;
+    this.composer.renderTarget2.texture.colorSpace = THREE.SRGBColorSpace;
 
     this.composer.addPass(this.renderPass);
     this.composer.addPass(this.shaderPass);

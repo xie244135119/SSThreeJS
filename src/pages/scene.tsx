@@ -8,13 +8,15 @@ import SSThreeJs, { THREE, SSCssRenderer, SSThreeLoop, SSThreeTool } from '../..
 // import SceneSetting from './ssthreejs.setting.json';
 import SSPickPointMode from '../../core/SSModule/pickpoint.module';
 import SSLightModule from '../../core/SSModule/light.module';
-// import VideoSceneViewerManager from '../../core/VideoSceneViewer/VideoSceneViewerManager';
-// import videoBlendImg from '../../core/assets/default_ground1.png';
+import VideoSceneViewerManager from '../../core/SSPlugins/VideoSceneViewer/VideoSceneViewerManager';
+import videoBlendImg from '../../core/assets/default_ground1.png';
 // import SSEvent from '../../core/SSEvent';
-// import SSPostProcessManagerModule from '../../core/SSPostProcess/PostProcessManager';
-// import SSPostProcessModule from '../../core/SSModule/basepostprocess.module';
+import PostProcessPlugin from '../../core/SSPlugins/PostProcessPlugin';
 import SSWatchLookModule from '../../core/SSModule/watchlook.module';
 import { SSMesh } from '../../core/index';
+
+import GUI from 'lil-gui';
+import { BlendFunction } from 'postprocessing';
 
 export default function ParentIndex(props) {
   // eslint-disable-next-line react/prop-types
@@ -138,7 +140,43 @@ export default function ParentIndex(props) {
     mesh.name = 'TestBox';
     jsRef.current.ssThreeObject.threeScene.add(mesh);
 
-    //
+    jsRef.current.addSun();
+
+    //  后处理
+    const postSetting = {
+      bloomEffect: {
+        blendFunction: 28,
+        inverted: false,
+        ignoreBackground: true,
+        opacity: 1,
+        threshold: 0.2,
+        smoothing: 0.9,
+        // intensity: 10
+        intensity: 10
+      },
+      outlineEffect: {
+        blendFunction: 28,
+        visibleEdgeColor: '#00ffff',
+        hiddenEdgeColor: '#00ffff',
+        pulseSpeed: 0.7,
+        edgeStrength: 2,
+        blur: false
+      },
+      lut3DEffect: { blendFunction: BlendFunction.SOFT_LIGHT, tetrahedralInterpolation: false },
+      vignetteEffect: {
+        blendFunction: 23,
+        technique: 0,
+        offset: 0.5,
+        darkness: 0.5
+      },
+      smaaEffect: { preset: 1, edgeDetectionMode: 2, predicationMode: 0 },
+      hueSaturationEffect: { blendFunction: 9, hue: 0, saturation: 0.25 },
+      brightnessContrastEffect: { blendFunction: 23, brightness: 0, contrast: 0 }
+    };
+    const postProcessPlugin = new PostProcessPlugin(jsRef.current.ssThreeObject);
+    postProcessPlugin.fromJson(postSetting);
+    // postProcessPlugin.addDebug();
+
     // testcssrender();
 
     reflectorTest();

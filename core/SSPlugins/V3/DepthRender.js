@@ -1,11 +1,18 @@
 /*
  * @Date: 2022-03-24 19:35:53
- * @LastEditors: Kayson.Wan
- * @LastEditTime: 2022-03-25 19:23:11
+ * LastEditors  Kayson.Wan
+ * LastEditTime  2025-11-04 09:37:03
  * @FilePath: /isop-portal/src/js/ThreeJs/v3/DepthRender.js
  */
 import * as THREE from 'three';
-import { LinearFilter, RawShaderMaterial, RGBAFormat, Vector2, Vector4, WebGLRenderTarget } from 'three';
+import {
+  LinearFilter,
+  RawShaderMaterial,
+  RGBAFormat,
+  Vector2,
+  Vector4,
+  WebGLRenderTarget
+} from 'three';
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass';
 import { RenderStep } from './RenderStep';
 
@@ -46,7 +53,7 @@ class DepthRender extends RenderStep {
       format: RGBAFormat
     });
     this.renderTarget.viewport = new Vector4(0, 0, screen.width, screen.height);
-    this.renderTarget.encoding = THREE.sRGBEncoding;
+    this.renderTarget.colorSpace = THREE.SRGBColorSpace;
   }
 
   render() {

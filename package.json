@@ -1,6 +1,6 @@
 {
   "name": "ss-threejs",
-  "version": "1.4.21",
+  "version": "1.5.0",
   "description": "a 3d tool base threejs",
   "main": "./core/index.ts",
   "module": "./core/index.ts",
@@ -15,9 +15,9 @@
   "dependencies": {
     "@tweenjs/tween.js": "20.0.3",
     "lil-gui": "0.18.2",
-    "postprocessing": "6.32.2",
+    "postprocessing": "^6.37.8",
     "stats.js": "0.17.0",
-    "three": "0.152.1"
+    "three": "^0.161.0"
   },
   "devDependencies": {
     "@types/react": "18.2.0",
