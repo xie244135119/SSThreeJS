@@ -42,8 +42,11 @@ to: "static/three/basis",
 
 ## Update Versions log
 
+    v1.5.1
+    1.更新three版本至^0.172.0
+
     v1.5.0
-    1.threejs版本升级至^0.161.0
+    1.更新three版本至^0.161.0
     2.postprocessing.js版本升级至^6.37.8
     2.修复路径引用问题
 
@@ -110,5 +113,6 @@ to: "static/three/basis",
 
 ## three 版本对应关系
 
+    v1.5.1 threejs版本 0.172.0
     v1.5.0 threejs版本 0.161.0
     v1.4.7-v1.4.21 threejs版本 0.152.1
