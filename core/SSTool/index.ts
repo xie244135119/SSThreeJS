@@ -6,6 +6,7 @@ import { LineGeometry } from 'three/examples/jsm/lines/LineGeometry';
 import { LineMaterial, LineMaterialParameters } from 'three/examples/jsm/lines/LineMaterial';
 import { SSThreeLoop, SSLoader } from '../index';
 import LineStartPng from '../assets/line_start.png';
+import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 
 export default class SSThreeTool {
   /**
@@ -831,4 +832,86 @@ export default class SSThreeTool {
 
     return true;
   };
+
+  /**
+   * 将对象设置为静态对象，通过合并几何体和冻结变换来优化性能
+   * @param root
+   * @param options {
+   *  merge: true, // 合并几何体
+   *  freeze: true, // 冻结变换
+   *  keepShadow: true, // 保留阴影
+   *  disposeSource: true, // 释放源对象
+   * }
+   * @returns
+   */
+  static setStaticObject(root: THREE.Object3D, options = {} as any) {
+    const { merge = true, freeze = true, keepShadow = true, disposeSource = true } = options;
+
+    const meshes: THREE.Mesh[] = [];
+    const geometries: THREE.BufferGeometry[] = [];
+    let material: THREE.Material | null = null;
+
+    // 1️⃣ 收集 Mesh
+    root.traverse((obj: any) => {
+      if (obj.isMesh && obj.geometry && obj.material) {
+        meshes.push(obj);
+
+        // 统一材质（合并前提）
+        if (!material) material = obj.material;
+        if (material !== obj.material) {
+          console.warn('⚠️ 不同材质，跳过合并');
+        }
+
+        // 应用世界矩阵
+        obj.updateWorldMatrix(true, false);
+        const geo = obj.geometry.clone();
+        geo.applyMatrix4(obj.matrixWorld);
+        geometries.push(geo);
+      }
+    });
+
+    if (!meshes.length) return null;
+
+    // 2️⃣ 合并几何体（可选）
+    let mergedMesh: THREE.Mesh | null = null;
+
+    if (merge && geometries.length > 1 && material) {
+      const mergedGeometry = mergeGeometries(geometries, false);
+
+      mergedMesh = new THREE.Mesh(mergedGeometry, material);
+      mergedMesh.frustumCulled = true;
+      mergedMesh.castShadow = keepShadow;
+      mergedMesh.receiveShadow = keepShadow;
+      mergedMesh.matrixAutoUpdate = false;
+      mergedMesh.userData.static = true;
+
+      root.parent?.add(mergedMesh);
+    }
+
+    // 3️⃣ 冻结原始 mesh
+    meshes.forEach((m) => {
+      if (freeze) {
+        m.matrixAutoUpdate = false;
+        m.userData.static = true;
+      }
+
+      if (disposeSource && mergedMesh) {
+        m.geometry.dispose();
+        if (Array.isArray(m.material)) {
+          m.material.forEach((mat) => mat.dispose());
+        } else {
+          // ⚠️ 若材质被共享，请自行控制
+          // m.material.dispose();
+        }
+        m.parent?.remove(m);
+      }
+    });
+
+    // 4️⃣ 清理 root
+    if (mergedMesh) {
+      root.parent?.remove(root);
+    }
+
+    return mergedMesh;
+  }
 }

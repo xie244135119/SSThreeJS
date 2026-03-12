@@ -582,7 +582,9 @@ class VideoSceneViewer {
       this.orbitControl.enabled = !event.value;
       this._changeGUIMsg();
     });
-    this.scene.add(this.transformControl);
+    // this.scene.add(this.transformControl);
+    const gizmo = this.transformControl.getHelper();
+    this.scene.add(gizmo);
 
     window.addEventListener('keydown', (event) => {
       // eslint-disable-next-line default-case

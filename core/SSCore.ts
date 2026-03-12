@@ -252,7 +252,7 @@ export default class SSThreeJs {
     const sun = new THREE.Vector3();
     const sky = new Sky();
     sky.name = 'Sky';
-    sky.scale.setScalar(10000);
+    sky.scale.setScalar(450000);
     this.threeScene.add(sky);
 
     const skyUniforms = sky.material.uniforms;
@@ -341,8 +341,6 @@ export default class SSThreeJs {
     render.shadowMap.enabled = true;
     render.shadowMap.type = THREE.PCFSoftShadowMap;
     render.setPixelRatio(window.devicePixelRatio);
-    render.setClearColor('white', 0);
-    render.autoClear = true;
     // 模拟、逼近高动态范围（HDR）效果 LinearToneMapping 为默认值，线性色调映射。
     // render.toneMapping = THREE.ACESFilmicToneMapping;
     // render.toneMappingExposure = 1;

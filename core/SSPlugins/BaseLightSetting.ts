@@ -2,12 +2,12 @@
  * Author  Kayson.Wan
  * Date  2023-03-30 16:41:16
  * LastEditors  Kayson.Wan
- * LastEditTime  2024-03-28 16:16:40
+ * LastEditTime  2026-03-12 17:43:07
  * Description  基础光照调试
  */
 import * as THREE from 'three';
 import GUI from 'lil-gui';
-// import SSThreeJs from '../SSCore';
+import ThreeJs, { SSDispose } from '..';
 
 /**
  * 光照设调整工具
@@ -24,13 +24,22 @@ export default class BaseLightSetting {
   //
   cubeMap = null;
 
+  // 辅助框
+  cameraHelper = null;
+
   // GUI 属性配置文件
   guiSetting = null;
+
+  // 跟踪几何体
+  geometries = [];
 
   defaultSetting = {
     controllers: { 输出设置: '' },
     folders: {
-      环境: { controllers: { tone曝光度: 1, toneMaping: 1 }, folders: {} },
+      环境: {
+        controllers: { tone曝光度: 1, toneMaping: THREE.ACESFilmicToneMapping },
+        folders: {}
+      },
       灯光: {
         controllers: {
           环境光强度: 0.2,
@@ -47,7 +56,7 @@ export default class BaseLightSetting {
       阴影: {
         controllers: {
           接收阴影: true,
-          阴影分辨率: [1024, 2048, 4096],
+          阴影分辨率: 2048,
           阴影范围上下宽度: 100,
           阴影范围左右宽度: 148,
           阴影贴图偏差: -0.0013000000000000002,
@@ -81,8 +90,8 @@ export default class BaseLightSetting {
     const ambientLight = this.threeJs.threeAmbientLight;
     const directionalLight = this.threeJs.threeDirectionalLight;
     directionalLight.castShadow = true;
-    directionalLight.shadow.mapSize.width = 4096;
-    directionalLight.shadow.mapSize.height = 4096;
+    directionalLight.shadow.mapSize.width = 2048;
+    directionalLight.shadow.mapSize.height = 2048;
     directionalLight.shadow.camera.near = 0.1;
     directionalLight.shadow.camera.far = 1000;
     directionalLight.shadow.camera.top = 500;
@@ -91,13 +100,8 @@ export default class BaseLightSetting {
     directionalLight.shadow.camera.right = 500;
     directionalLight.shadow.bias = 0.001;
 
-    // directionalLight.shadow.radius = 8;
-    // directionalLight.shadow.normalBias = 1;
-    // directionalLight.shadow.color = new THREE.Color('red');
-    // 测试
     this.threeJs.threeScene.add(this.lightTarget);
     directionalLight.target = this.lightTarget;
-    // this.lightTarget.position.set(-455, 0, -54);
     this.lightTarget.position.set(0, 0, 0);
 
     this.initGui(ambientLight, directionalLight, openGui);
@@ -105,44 +109,19 @@ export default class BaseLightSetting {
 
   // 光照gui
   initGui = (ambientLight, directionalLight, openGui) => {
-    // const params = {
-    //   savePreset() {
-    //     // save current values to an object
-    //     this.guiSetting = gui.save();
-    //     console.log("this.guiSetting:", JSON.stringify(this.guiSetting));
-    //     // loadButton.enable();
-    //   },
-    //   loadPreset() {
-    //     gui.load(this.guiSetting);
-    //   },
-    //   ambientIntensity: 0.2,
-    //   ambientLightColor: "#ababab",
-    //   visible: true,
-    //   directionalIntensity: 1,
-    //   directionalLightColor: "#f2e1be", // '#FFFFE0',
-    //   far: 500,
-    //   near: 0,
-    //   toneMappingExposure: 1,
-    //   toneMapping: 1,
-    //   castShadow: true,
-    //   shadowPosition_x: 12,
-    //   shadowPosition_y: 55,
-    //   shadowPosition_z: -47,
-    //   topBottom: 100,
-    //   leftRight: 148,
-    //   bias: -0.0013000000000000002,
-    //   radius: 1,
+    const render = () => {
+      if (this.cameraHelper) {
+        this.threeJs.threeScene.remove(this.cameraHelper);
+        this.cameraHelper.geometry.dispose();
+        this.cameraHelper.material.dispose();
+        this.cameraHelper = null;
+      }
+      this.cameraHelper = new THREE.CameraHelper(directionalLight.shadow.camera);
+      this.geometries.push(this.cameraHelper.geometry); // 跟踪几何体
+      this.threeJs.threeScene.add(this.cameraHelper);
+    };
 
-    //   fog_visible: true,
-    //   fog_color: "#c5e7ff",
-    //   fog_near: 0,
-    //   fog_far: 10000,
-
-    //   background: true,
-    //   environment: { none: "none", blueSky: "blueSky" },
-    // };
     const setting = this.guiSetting.folders;
-    console.log('setting', setting);
     const gui = new GUI();
     const params = {
       savePreset() {
@@ -151,17 +130,8 @@ export default class BaseLightSetting {
         params.outPutSetting = JSON.stringify(this.guiSetting);
       },
       outPutSetting: '',
-      // loadPreset() {
-      //   gui.load(this.guiSetting);
-      // },
       toneMappingExposure: setting.环境.controllers.tone曝光度,
-      toneMapping: [
-        {
-          ACES: THREE.ACESFilmicToneMapping,
-          Reinhard: THREE.ReinhardToneMapping,
-          Linear: THREE.LinearToneMapping
-        }
-      ],
+      toneMapping: setting.环境.controllers.toneMapping,
       ambientLightColor: setting.灯光.controllers.环境光颜色,
       ambientIntensity: setting.灯光.controllers.环境光强度,
       directionalLightColor: setting.灯光.controllers.平行光颜色,
@@ -170,42 +140,31 @@ export default class BaseLightSetting {
       shadowPosition_x: setting.灯光.controllers.平行光位置x,
       shadowPosition_y: setting.灯光.controllers.平行光位置y,
       shadowPosition_z: setting.灯光.controllers.平行光位置z,
-      //
       castShadow: setting.阴影.controllers.接收阴影,
-      mapSize: [1024, 2048, 4096],
-      // exponent: setting.exponent,
-      // target: setting.target,
-
+      mapSize: setting.阴影.controllers.阴影分辨率,
       near: setting.阴影.controllers.shadowCamera最近距离,
       far: setting.阴影.controllers.shadowCamera最远距离,
       topBottom: setting.阴影.controllers.阴影范围上下宽度,
       leftRight: setting.阴影.controllers.阴影范围左右宽度,
       bias: setting.阴影.controllers.阴影贴图偏差,
-      // radius: setting.radius,
-      // 雾
       fog_visible: setting.雾.controllers.启用雾,
       fog_color: setting.雾.controllers.雾颜色,
       fog_near: setting.雾.controllers.雾最近距离,
       fog_far: setting.雾.controllers.雾最远距离,
-
       background: setting.天空盒.controllers.启用背景,
       environment: { none: 'none', blueSky: 'blueSky' }
     };
 
     gui.domElement.style.position = 'absolute';
-    // gui.domElement.style.top = '30.5rem';
     gui.domElement.style.right = '0rem';
     gui.domElement.style.zIndex = 100;
     gui.name = '灯光阴影效果调试配置';
     gui.width = 300;
-    gui.closed = true;
     gui.load(this.guiSetting);
 
-    // gui.remember(params);
     gui.add(params, 'savePreset').name('保存设置');
     gui.add(params, 'outPutSetting').name('输出设置').listen();
-    // gui.add(params, "loadPreset").name("加载设置");
-    // -------环境光-------
+
     const envfolder = gui.addFolder('环境');
     this.threeJs.threeRenderer.toneMappingExposure = params.toneMappingExposure;
     envfolder
@@ -214,28 +173,29 @@ export default class BaseLightSetting {
       .onChange((e) => {
         this.threeJs.threeRenderer.toneMappingExposure = e;
       });
+
     this.threeJs.threeRenderer.toneMapping = params.toneMapping;
+
     envfolder
-      .add(params, 'toneMappingExposure', {
-        NoTone: THREE.NoToneMapping,
-        Cineon: THREE.CineonToneMapping,
-        ACES: THREE.ACESFilmicToneMapping,
-        Reinhard: THREE.ReinhardToneMapping,
-        Linear: THREE.LinearToneMapping
+      .add(params, 'toneMapping', {
+        NoTone: 0, // THREE.NoToneMapping,
+        Cineon: 3, //THREE.CineonToneMapping,
+        ACES: 4, //THREE.ACESFilmicToneMapping,
+        Reinhard: 2, // THREE.ReinhardToneMapping,
+        Linear: 1 // THREE.LinearToneMapping
       })
-      .name('toneMaping')
+      .name('toneMapping')
       .onChange((e) => {
         console.log('e', e);
         this.threeJs.threeRenderer.toneMapping = e;
       });
-    // -------平行光-------
+
     const dirfolder = gui.addFolder('灯光');
     ambientLight.intensity = params.ambientIntensity;
     dirfolder
-      .add(params, 'ambientIntensity', 0, 5)
+      .add(params, 'ambientIntensity', 0, 15)
       .name('环境光强度')
       .onChange((e) => {
-        console.log('ambientLight e', ambientLight, e);
         ambientLight.intensity = e;
       });
     ambientLight.color = new THREE.Color(params.ambientLightColor);
@@ -243,7 +203,6 @@ export default class BaseLightSetting {
       .addColor(params, 'ambientLightColor')
       .name('环境光颜色')
       .onChange((e) => {
-        // console.log("e", e);
         ambientLight.color = new THREE.Color(e);
       });
 
@@ -255,7 +214,7 @@ export default class BaseLightSetting {
       });
     directionalLight.intensity = params.directionalIntensity;
     dirfolder
-      .add(params, 'directionalIntensity', 0, 5)
+      .add(params, 'directionalIntensity', 0, 15)
       .name('平行光强度')
       .onChange((e) => {
         directionalLight.intensity = e;
@@ -270,19 +229,19 @@ export default class BaseLightSetting {
     directionalLight.shadow.camera.far = params.far;
 
     dirfolder
-      .add(params, 'shadowPosition_x')
+      .add(params, 'shadowPosition_x', -2000, 2000, 0.1)
       .name('平行光位置x')
       .onChange((e) => {
         directionalLight.position.x = e;
       });
     dirfolder
-      .add(params, 'shadowPosition_y')
+      .add(params, 'shadowPosition_y', -2000, 2000, 0.1)
       .name('平行光位置y')
       .onChange((e) => {
         directionalLight.position.y = e;
       });
     dirfolder
-      .add(params, 'shadowPosition_z')
+      .add(params, 'shadowPosition_z', -2000, 2000, 0.1)
       .name('平行光位置z')
       .onChange((e) => {
         directionalLight.position.z = e;
@@ -303,38 +262,50 @@ export default class BaseLightSetting {
       .onChange((e) => {
         directionalLight.castShadow = e;
       });
+
+    directionalLight.shadow.mapSize.width = params.mapSize;
+    directionalLight.shadow.mapSize.height = params.mapSize;
     shadowfolder
-      .add(params, 'mapSize', { low: 512, height: 1024, moreHeight: 2048 })
+      .add(params, 'mapSize', {
+        size_512: 512,
+        size_1024: 1024,
+        size_2048: 2048,
+        size_4096: 4096,
+        size_8192: 8192
+      })
       .name('阴影分辨率')
       .onChange((e) => {
         console.log('e', e);
         directionalLight.shadow.mapSize.width = e;
         directionalLight.shadow.mapSize.height = e;
         directionalLight.shadow.needsUpdate = true; // 标记阴影为需要更新
-        this.threeJs.threeRenderer.render(this.threeJs.threeScene, this.threeJs.threeCamera);
+        directionalLight.shadow.map.dispose(); // 释放旧的贴图
+        directionalLight.shadow.map = null; // 强制Three.js重新生成新的贴图
       });
 
     directionalLight.shadow.camera.top = params.topBottom;
     directionalLight.shadow.camera.bottom = -params.topBottom;
     shadowfolder
-      .add(params, 'topBottom', 10, 2000, 1)
+      .add(params, 'topBottom', 10, 20000, 1)
       .name('阴影范围上下宽度')
       .onChange((e) => {
         directionalLight.shadow.camera.top = e;
         directionalLight.shadow.camera.bottom = -e;
         directionalLight.shadow.camera.updateWorldMatrix();
         directionalLight.shadow.camera.updateProjectionMatrix();
+        render();
       });
     directionalLight.shadow.camera.left = params.leftRight;
     directionalLight.shadow.camera.right = -params.leftRight;
     shadowfolder
-      .add(params, 'leftRight', 10, 2000, 1)
+      .add(params, 'leftRight', 10, 20000, 1)
       .name('阴影范围左右宽度')
       .onChange((e) => {
         directionalLight.shadow.camera.left = e;
         directionalLight.shadow.camera.right = -e;
         directionalLight.shadow.camera.updateWorldMatrix();
         directionalLight.shadow.camera.updateProjectionMatrix();
+        render();
       });
     directionalLight.shadow.bias = params.bias;
     shadowfolder
@@ -347,12 +318,13 @@ export default class BaseLightSetting {
       });
 
     shadowfolder
-      .add(params, 'far', 0, 3000, 1)
+      .add(params, 'far', 0, 30000, 1)
       .name('shadowCamera最远距离')
       .onChange((e) => {
         directionalLight.shadow.camera.far = e;
         directionalLight.shadow.camera.updateWorldMatrix();
         directionalLight.shadow.camera.updateProjectionMatrix();
+        render();
       });
     directionalLight.shadow.camera.near = params.near;
     shadowfolder
@@ -362,6 +334,7 @@ export default class BaseLightSetting {
         directionalLight.shadow.camera.near = e;
         directionalLight.shadow.camera.updateWorldMatrix();
         directionalLight.shadow.camera.updateProjectionMatrix();
+        render();
       });
     // directionalLight.shadow.radius = params.radius;
     // shadowfolder.add(params, "radius", -0.1, 3, 0.0001).name('').onChange((e) => {
@@ -421,13 +394,39 @@ export default class BaseLightSetting {
       }
     });
 
+    if (openGui) {
+      this.cameraHelper = new THREE.CameraHelper(directionalLight.shadow.camera);
+      this.threeJs.threeScene.add(this.cameraHelper);
+    }
+
     if (!openGui) {
       gui.destroy();
     }
   };
 
-  destory = () => {
-    //
-  };
+  /**
+   * 释放资源
+   */
+  dispose() {
+    if (this.cameraHelper) {
+      this.threeJs.threeScene.remove(this.cameraHelper);
+      this.cameraHelper.geometry.dispose();
+      this.cameraHelper.material.dispose();
+      this.cameraHelper = null;
+    }
 
+    this.geometries.forEach((geometry) => {
+      geometry.dispose();
+    });
+    this.geometries = [];
+
+    if (this.lightTarget) {
+      this.threeJs.threeScene.remove(this.lightTarget);
+    }
+
+    if (this.cubeMap) {
+      this.cubeMap.dispose();
+      this.cubeMap = null;
+    }
+  }
 }

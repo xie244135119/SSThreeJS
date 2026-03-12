@@ -42,6 +42,10 @@ to: "static/three/basis",
 
 ## Update Versions log
 
+    v1.5.12
+    1.SSTransformControl更新
+    2.BaseLightSetting更新
+
     v1.5.1
     1.更新three版本至^0.172.0
 
