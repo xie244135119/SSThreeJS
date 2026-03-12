@@ -94,7 +94,7 @@ export default class SSThreeJs {
    * 销毁机制
    */
   destroy(loop: boolean = true) {
-    this.ssTransformControl?.destory();
+    this.ssTransformControl?.destroy();
     this.ssTransformControl = null;
     this.ssThreeObject?.destory();
     this.ssMessageQueue?.destory();

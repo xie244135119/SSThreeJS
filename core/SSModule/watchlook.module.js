@@ -49,7 +49,7 @@ export default class SSWatchLookModule extends SSModuleInterface {
   };
 
   destory() {
-    this._sstransformControl?.destory();
+    this._sstransformControl?.destroy();
     this._sstransformControl = null;
     this._defaultConfig = null;
     this._allCameraMeshs = null;
@@ -654,7 +654,7 @@ export default class SSWatchLookModule extends SSModuleInterface {
 
   moduleCloseDebug() {
     this._event.removeEventListener(SSEvent.SSEventType.CLICK, this._eventAddMeshHandle);
-    this._sstransformControl?.destory();
+    this._sstransformControl?.destroy();
     this._sstransformControl = null;
   }
 }

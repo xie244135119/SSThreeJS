@@ -34,6 +34,11 @@ export default class SSTransformControl {
   _control: TransformControls = null;
 
   /**
+   * @description 控制器的Gizmo
+   */
+  _gizmo: THREE.Object3D = null;
+
+  /**
    * @description 交互事件
    */
   _event: SSEvent = null;
@@ -53,11 +58,13 @@ export default class SSTransformControl {
     this.onControlChange = onChange;
   }
 
-  destory() {
+  destroy() {
     this._event?.destory();
     this._event = null;
     this._ssThreeObject = null;
-    this._control?.removeFromParent();
+    this._gizmo?.removeFromParent();
+    this._gizmo = null;
+    // this._control?.removeFromParent();
     this._control?.dispose();
     this.onControlChange = null;
     this._control = null;
@@ -74,8 +81,8 @@ export default class SSTransformControl {
         this._ssThreeObject.threeContainer
       );
       // (this._ssThreeObject.sceneHelper || this._ssThreeObject.threeScene).add(this._control); // 弃用
-      const gizmo = this._control.getHelper();
-      (this._ssThreeObject.sceneHelper || this._ssThreeObject.threeScene).add(gizmo);
+      this._gizmo = this._control.getHelper();
+      (this._ssThreeObject.sceneHelper || this._ssThreeObject.threeScene).add(this._gizmo);
 
       this._control.addEventListener('change', (e) => {
         // 禁用轨道控制器的旋转功能
