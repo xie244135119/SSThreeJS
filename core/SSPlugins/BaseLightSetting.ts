@@ -30,6 +30,8 @@ export default class BaseLightSetting {
   // GUI 属性配置文件
   guiSetting = null;
 
+  gui: GUI = null;
+
   // 跟踪几何体
   geometries = [];
 
@@ -123,6 +125,7 @@ export default class BaseLightSetting {
 
     const setting = this.guiSetting.folders;
     const gui = new GUI();
+    this.gui = gui;
     const params = {
       savePreset() {
         this.guiSetting = gui.save();
@@ -401,6 +404,9 @@ export default class BaseLightSetting {
 
     if (!openGui) {
       gui.destroy();
+      if (this.gui === gui) {
+        this.gui = null;
+      }
     }
   };
 
@@ -408,6 +414,9 @@ export default class BaseLightSetting {
    * 释放资源
    */
   dispose() {
+    this.gui?.destroy();
+    this.gui = null;
+
     if (this.cameraHelper) {
       this.threeJs.threeScene.remove(this.cameraHelper);
       this.cameraHelper.geometry.dispose();

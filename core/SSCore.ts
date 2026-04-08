@@ -108,9 +108,11 @@ export default class SSThreeJs {
     this.ssModuleCenter?.destroy();
     this.ssModuleCenter = null;
 
+    this._removeStatAnalyse();
+    this._removeAxisControl();
     this._removeOrbitControl();
 
-    this.threeEvent.destory();
+    this.threeEvent?.destory();
     this.threeEvent = null;
 
     SSLoader.disposeLoader();
@@ -126,10 +128,17 @@ export default class SSThreeJs {
       }
     }
     if (this.threeRenderer !== null) {
+      this.threeRenderer.setAnimationLoop(null);
       this.threeRenderer.dispose();
       this.threeRenderer.forceContextLoss();
-      this.ssThreeObject.threeContainer.removeChild(this.threeRenderer.domElement);
+      this.threeRenderer.domElement?.remove();
     }
+    this.threeScene = null;
+    this.threeCamera = null;
+    this.threeAmbientLight = null;
+    this.threeDirectionalLight = null;
+    this.threeRenderer = null;
+    this.ssThreeObject = null;
   }
 
   /**

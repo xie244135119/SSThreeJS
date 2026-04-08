@@ -75,10 +75,13 @@ export default class SSThreeObject {
       TWEEN.remove(this._animatingTween);
       this._animatingTween = null;
     }
-    
+
     this._resizeObserver?.disconnect();
     this._resizeObserver = null;
     this.cancelRenderLoop();
+    this.threeOrbitControl?.dispose();
+    this.threeOrbitControl = null;
+    this.threeEffectComposer = null;
     this.removeCameraHelper();
   }
 

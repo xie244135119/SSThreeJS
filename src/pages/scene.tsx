@@ -14,6 +14,7 @@ import videoBlendImg from '../../core/assets/default_ground1.png';
 import PostProcessPlugin from '../../core/SSPlugins/PostProcessPlugin';
 import SSWatchLookModule from '../../core/SSModule/watchlook.module';
 import { SSMesh } from '../../core/index';
+import BaseLightSetting from '../../core/SSPlugins/BaseLightSetting';
 
 import GUI from 'lil-gui';
 import { BlendFunction } from 'postprocessing';
@@ -123,6 +124,8 @@ export default function ParentIndex(props) {
     jsRef.current.setup('threecontainer');
     jsRef.current.ssThreeObject.threeScene.background = new THREE.Color(0, 0, 0);
     jsRef.current.addDymaicDebug();
+
+    const lightSetting = new BaseLightSetting(jsRef.current, null, false);
 
     const plane = new THREE.PlaneGeometry(5, 5);
     const planeMaterial = new THREE.MeshBasicMaterial({});

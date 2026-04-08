@@ -1,8 +1,16 @@
+/*
+ * Author  Kayson.Wan
+ * Date  2023-06-08 17:53:40
+ * LastEditors  Kayson.Wan
+ * LastEditTime  2026-04-08 18:23:38
+ * Description
+ */
 window.ENV = (() => ({
   // runtime config
   WEB_VERSION: 'v1.0.0',
   // runtime console
-  console: true
+  console: true,
+  DEBUG: false
   //
 }))();
 

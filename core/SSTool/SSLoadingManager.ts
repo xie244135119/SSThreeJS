@@ -83,7 +83,7 @@ export default class SSLoadingManager {
     this._progressElement = progress;
 
     const textDiv = document.createElement('div');
-    textDiv.innerText = '模型渲染中...';
+    textDiv.innerText = 'Loading...';
     textDiv.style.position = 'absolute';
     textDiv.style.bottom = '100%';
     textDiv.style.color = '#2fa1d6';
@@ -98,7 +98,7 @@ export default class SSLoadingManager {
     this.threeLoadingManager.onStart = (url, loaded, total) => {
       // bgDiv.style.opacity = '1';
       bgDiv.style.display = 'block';
-      textDiv.innerText = '模型渲染中...';
+      textDiv.innerText = 'Loading...';
     };
 
     this.threeLoadingManager.onLoad = () => {
@@ -211,8 +211,7 @@ export default class SSLoadingManager {
     }
     return this.db.getModel(aUrl).then((res) => {
       if (res) {
-        const blobUrl = URL.createObjectURL(new Blob([res?.data]));
-        return blobUrl;
+        return URL.createObjectURL(new Blob([res?.data]));
       }
       return aUrl;
     });
