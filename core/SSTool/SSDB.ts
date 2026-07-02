@@ -42,7 +42,12 @@ export default class SSDB {
   /**
    * database
    */
-  targetDataBase: IDBDatabase = null;
+  targetDataBase: IDBDatabase | null = null;
+
+  /**
+   * 进行中的打开请求，复用以避免并发 open 触发 version change 事务冲突
+   */
+  _openPromise: Promise<IDBDatabase> | null = null;
 
   /**
    * @description db options
@@ -115,6 +120,7 @@ export default class SSDB {
   destory() {
     this.targetDataBase?.close();
     this.targetDataBase = null;
+    this._openPromise = null;
   }
 
   constructor(options?: SSDBOptions) {
@@ -134,7 +140,13 @@ export default class SSDB {
     if (this.targetDataBase) {
       return Promise.resolve(this.targetDataBase);
     }
-    return new Promise((reslove, reject) => {
+    // 复用进行中的打开请求：并发场景（多模型/StrictMode 双挂载/HMR）下若多次调用
+    // indexedDB.open(name, version)，后一次会与前一次的 version change 事务冲突，
+    // 抛出 "A version change transaction is running"。
+    if (this._openPromise) {
+      return this._openPromise;
+    }
+    this._openPromise = new Promise((reslove, reject) => {
       const dbRequest = window.indexedDB.open(DATABASE_NAME, DATABASE_VERSION);
       dbRequest.onsuccess = () => {
         const dataBase = dbRequest.result;
@@ -143,22 +155,24 @@ export default class SSDB {
         reslove(this.targetDataBase);
       };
       dbRequest.onerror = (event) => {
-        // console.log(`${LOG_PREFIX}db open error`, event);
         this.targetDataBase = null;
+        this._openPromise = null;
         reject(event);
       };
-      dbRequest.onupgradeneeded = (event) => {
-        // console.log(`${LOG_PREFIX}db upgradeneeded`, event);
+      dbRequest.onupgradeneeded = () => {
         const db: IDBDatabase = dbRequest.result;
         this.createDataTables(db, this.DATABASE_TABLES);
-        this.targetDataBase = db;
-        reslove(db);
+        // 不要在此处 reslove(db) 或赋值 this.targetDataBase：
+        // onupgradeneeded 触发时 version change 事务仍在运行，此时暴露 db 会导致
+        // 调用方随后执行 db.transaction(...) 抛出 "A version change transaction is running"。
+        // onsuccess 会在该事务完成之后才触发，统一在 onsuccess 中暴露 db。
       };
       dbRequest.onblocked = (e) => {
-        // console.log(`${LOG_PREFIX}db blocked`, e);
+        this._openPromise = null;
         reject(e);
       };
     });
+    return this._openPromise;
   }
 
   /**
