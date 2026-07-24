@@ -65,7 +65,10 @@ class ColorRender extends RenderStep {
     });
 
     // this.renderTarget.viewport = new Vector4(0, 0, screen.width, screen.height);
-    this.renderTarget.colorSpace = THREE.SRGBColorSpace;
+    // 0.172 颜色管理：ColorRender 的 RawShaderMaterial 直接写出原始 rgba（含 (0,0,0,0) 的"无投影"标记）。
+    // 若标为 sRGB，three 会对纹素做 linear->sRGB 传输转换，使 (0,0,0,0) 透传后被污染，
+    // BlendRender 中 color.a>0 误判，把未投影的 Sky 区域 mix 成黑色。故保持线性透传。
+    this.renderTarget.colorSpace = THREE.LinearSRGBColorSpace;
   }
 
   update() {
@@ -76,13 +79,20 @@ class ColorRender extends RenderStep {
     // console.log("ColorRender.render...");
     const state = {
       background: this.scene.background,
-      shadowMapEnabled: this.renderer.shadowMap.enabled
+      shadowMapEnabled: this.renderer.shadowMap.enabled,
+      clearAlpha: this.renderer.getClearAlpha()
     };
     this.scene.background = null;
     this.renderer.shadowMap.enabled = false;
+    // 0.172：渲染到 RT 时默认按 clearAlpha=1 清屏，导致 ColorRender 输出的 (0,0,0,0)（无投影）
+    // 被不透明黑色覆盖，uShadow 在非投影区 alpha=1，BlendRender 中 color.a>0 误判，
+    // 把未投影的 Sky 等背景区域 mix 成黑色。故清屏 alpha 设为 0（透明清屏），
+    // 让无投影区保持 alpha=0，BlendRender 才不会误覆盖背景。
+    this.renderer.setClearAlpha(0);
     this.renderPass.render(this.renderer, null, this.renderTarget);
     this.scene.background = state.background;
     this.renderer.shadowMap.enabled = state.shadowMapEnabled;
+    this.renderer.setClearAlpha(state.clearAlpha);
   }
 
   /**
@@ -150,8 +160,6 @@ class ColorRender extends RenderStep {
           '          vec4 vc = texture2D(img, fragCoord.xy);',
           '          vec4 bg = texture2D(bgimg, fragCoord.xy);',
           '          return vec4( vc.rgb , bg.a);',
-          // '          return vec4( vc.rgba* bg.rgba);',
-          // '          return vec4(vc.rgb, 1.0);',
           '        }',
           '    }',
           '    return vec4(0.0, 0.0, 0.0, 0.0);',
@@ -175,9 +183,6 @@ class ColorRender extends RenderStep {
           '  if (color.a > 0.0) {',
           `  float count = float(${n});`,
           '     gl_FragColor = vec4(color.rgba );',
-          // '     gl_FragColor = vec4(color.rgb / count, color.a );',
-          // '     gl_FragColor = vec4(color.rgb / count, color.a / count );',
-          // '     gl_FragColor = vec4(color.rgb / color.a, 1.0 );',
           '  }',
           '  else{ gl_FragColor = vec4(0.,0.,0.,0.);}',
           '}'

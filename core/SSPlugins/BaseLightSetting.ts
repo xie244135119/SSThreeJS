@@ -2,7 +2,7 @@
  * Author  Kayson.Wan
  * Date  2023-03-30 16:41:16
  * LastEditors  Kayson.Wan
- * LastEditTime  2026-03-12 17:43:07
+ * LastEditTime  2026-07-24 10:31:13
  * Description  基础光照调试
  */
 import * as THREE from 'three';
@@ -44,11 +44,11 @@ export default class BaseLightSetting {
       },
       灯光: {
         controllers: {
-          环境光强度: 0.2,
+          环境光强度: 1,
           环境光颜色: '#ababab',
           启用平行光: true,
           平行光强度: 2,
-          平行光颜色: '#f2e1be',
+          平行光颜色: '#fff8eb',
           平行光位置x: -89,
           平行光位置y: 160,
           平行光位置z: 27

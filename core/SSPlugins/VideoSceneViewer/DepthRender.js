@@ -53,7 +53,10 @@ class DepthRender extends RenderStep {
       format: RGBAFormat
     });
     this.renderTarget.viewport = new Vector4(0, 0, screen.width, screen.height);
-    this.renderTarget.colorSpace = THREE.SRGBColorSpace;
+    // 0.172 颜色管理：DepthRender 输出的是打包的深度数据（encode(gl_FragCoord.z)），
+    // 不是颜色，不应做 linear->sRGB 传输转换。标为 sRGB 会被 three 按 SRGB 内部格式处理，
+    // 扭曲深度值，导致 ColorRender decode(depth) 读回偏差、投影边界误判。故保持线性。
+    this.renderTarget.colorSpace = THREE.LinearSRGBColorSpace;
   }
 
   render() {

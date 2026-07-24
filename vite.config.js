@@ -14,6 +14,7 @@ export default defineConfig({
   },
   publicDir: 'public',
   server: {
+    port: 5176,
     open: true,
     hmr: true,
 

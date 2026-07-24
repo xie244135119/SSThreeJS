@@ -17,7 +17,8 @@ import { SSMesh } from '../../core/index';
 import BaseLightSetting from '../../core/SSPlugins/BaseLightSetting';
 
 import GUI from 'lil-gui';
-import { BlendFunction } from 'postprocessing';
+import { BlendFunction, ToneMappingMode } from 'postprocessing';
+import sceneConfig from './scene.config';
 
 export default function ParentIndex(props) {
   // eslint-disable-next-line react/prop-types
@@ -145,8 +146,36 @@ export default function ParentIndex(props) {
 
     jsRef.current.addSun();
 
+    // // 加载场景配置中的模型队列
+    // const modelQueue = sceneConfig?.modelQueue || [];
+    // jsRef.current.loadModelQueue(
+    //   modelQueue,
+    //   (objs) => {
+    //     // 全部加载完成
+    //     // eslint-disable-next-line no-console
+    //     console.log('【scene】modelQueue 加载完成', objs?.length);
+    //   },
+    //   null,
+    //   (option, obj) => {
+    //     // 单个模型加载完成，加入场景
+    //     if (obj instanceof THREE.Object3D) {
+    //       jsRef.current.ssThreeObject.threeScene.add(obj);
+    //     } else if (obj?.scene instanceof THREE.Object3D) {
+    //       jsRef.current.ssThreeObject.threeScene.add(obj.scene);
+    //     }
+    //   }
+    // );
+
     //  后处理
     const postSetting = {
+      // 0.172 起 three 的 renderer.toneMapping 只在直接渲染到屏幕时生效，
+      // 渲染到 EffectComposer 的 render target 时不再应用（见 three.module.js
+      // getParameters：toneMapping 仅 currentRenderTarget===null 时取 renderer.toneMapping）。
+      // 因此必须由 ToneMappingEffect 负责色调映射，否则 Sky/HDR 场景因无 tone map 被压暗变黑。
+      toneMappingEffect: {
+        blendFunction: BlendFunction.NORMAL,
+        mode: ToneMappingMode.ACES_FILMIC
+      },
       bloomEffect: {
         blendFunction: 28,
         inverted: false,
@@ -154,8 +183,7 @@ export default function ParentIndex(props) {
         opacity: 1,
         threshold: 0.2,
         smoothing: 0.9,
-        // intensity: 10
-        intensity: 10
+        intensity: 2
       },
       outlineEffect: {
         blendFunction: 28,
@@ -186,7 +214,7 @@ export default function ParentIndex(props) {
 
     // js.closeWebglRender();
 
-    // // 视频融合Data
+    // 视频融合Data
     // const videoFusionData = [
     //   {
     //     camera: {

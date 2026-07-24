@@ -7,7 +7,7 @@
  */
 import * as THREE from 'three';
 
-import { RawShaderMaterial } from 'three';
+import { ShaderMaterial } from 'three';
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass';
 import { ShaderPass } from 'three/examples/jsm/postprocessing/ShaderPass';
 import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer';
@@ -67,8 +67,12 @@ class BlendRender extends RenderStep {
     this.shaderPass.renderToScreen = true;
 
     this.composer = new EffectComposer(this.renderer);
-    this.composer.renderTarget1.texture.colorSpace = THREE.SRGBColorSpace;
-    this.composer.renderTarget2.texture.colorSpace = THREE.SRGBColorSpace;
+    // 0.172 颜色管理默认开启：EffectComposer 默认 HalfFloat 中间缓冲，
+    // RenderPass 渲染时 three 不对 RT 做 toneMapping（仅直接渲染到屏幕才生效），
+    // 故 composer 内部全程按 linear 流转，由 BlendRender 片元着色器统一做
+    // toneMapping + linear->sRGB 编码后上屏。中间缓冲保持线性。
+    this.composer.renderTarget1.texture.colorSpace = THREE.LinearSRGBColorSpace;
+    this.composer.renderTarget2.texture.colorSpace = THREE.LinearSRGBColorSpace;
 
     this.composer.addPass(this.renderPass);
     this.composer.addPass(this.shaderPass);
@@ -90,50 +94,46 @@ class BlendRender extends RenderStep {
   }
 
   /**
-   * @returns {RawShaderMaterial}
+   * @returns {ShaderMaterial}
    */
   material() {
-    return new RawShaderMaterial({
+    // 0.172 颜色管理默认开启后，原 RawShaderMaterial 不注入 colorspace chunk，
+    // 导致上屏缺 linear->sRGB 编码，画面发暗发黑。改用 ShaderMaterial：
+    // 末尾由内置 chunk 自动做 linear->sRGB 颜色编码。
+    // 注意 toneMapped=false：不在 BlendRender 内做 tone mapping。
+    // 0.172 渲染到 RT 时 renderer.toneMapping 本就不生效（仅直接渲染到屏幕才生效），
+    // 场景材质写入 tDiffuse 时是 linear（未 tone map）。tone mapping 统一由外层
+    // PostProcessPlugin 的 ToneMappingEffect 在更外层完成（见 scene.tsx postSetting）。
+    // 此处若加 tonemapping_fragment 会对已 tone map 的 Sky 二次压暗。
+    return new ShaderMaterial({
+      toneMapped: false,
       uniforms: {
-        tDiffuse: {
-          // value: this.diffuse
-          value: null
-        },
-        uShadow: {
-          value: this.shadow
-        },
-        uMixing: {
-          value: this.mixing
-        }
+        tDiffuse: { value: null },
+        uShadow: { value: this.shadow },
+        uMixing: { value: this.mixing }
       },
       vertexShader: [
-        'attribute vec3 position;',
-        'attribute vec2 uv;',
-        'uniform   mat4 modelViewMatrix;',
-        'uniform   mat4 projectionMatrix;',
-        'varying   vec2 vUv;',
+        'varying vec2 vUv;',
         'void main() {',
         '  vUv = uv;',
         '  gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);',
         '}'
       ].join('\n'),
       fragmentShader: [
-        'precision mediump float;',
         'uniform sampler2D tDiffuse;',
         'uniform sampler2D uShadow;',
         'uniform float     uMixing;',
         'varying vec2      vUv;',
-        ' float      _mix;',
         'void main() {',
         '  gl_FragColor = texture2D(tDiffuse, vUv);',
-        '  vec4 color   = texture2D(uShadow, vUv);',
+        '  float _mix;',
+        '  vec4 color = texture2D(uShadow, vUv);',
         '  if (color.a > 0.0) {',
-        '  _mix = color.a;',
-        '     gl_FragColor = vec4(mix(gl_FragColor.rgb, color.rgb, _mix * uMixing), gl_FragColor.a);',
-        // '     gl_FragColor = vec4(mix(gl_FragColor.rgb, color.rgb, _mix * 0.8), gl_FragColor.a);',
-        // '     gl_FragColor = vec4(mix(gl_FragColor.rgb, color.rgb, _mix), gl_FragColor.a);',
-        // '     gl_FragColor = vec4(mix(gl_FragColor.rgb, color.rgb, uMixing), gl_FragColor.a);',
+        '    _mix = color.a;',
+        '    gl_FragColor = vec4(mix(gl_FragColor.rgb, color.rgb, _mix * uMixing), gl_FragColor.a);',
         '  }',
+        // 0.172：composer 内部全程 linear，上屏统一做 linear->sRGB 编码。
+        '  #include <colorspace_fragment>',
         '}'
       ].join('\n')
       // depthWrite: false
