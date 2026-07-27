@@ -639,6 +639,11 @@ class VideoSceneViewer {
       this.orbitControl.enabled = !event.value;
       this._changeGUIMsg();
     });
+    // 拖拽过程中每帧对象变化时触发(平移/旋转/缩放进行中)，实时更新投影矩阵，
+    // 让视频融合投影跟随 transform 拖拽实时生效(否则只在拖拽结束 dragging-changed 才更新)。
+    this.transformControl.addEventListener('objectChange', () => {
+      this.updateCameraData();
+    });
     // this.scene.add(this.transformControl);
     const gizmo = this.transformControl.getHelper();
     this.scene.add(gizmo);

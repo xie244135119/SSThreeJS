@@ -195,18 +195,25 @@ class ColorRender extends RenderStep {
         for (let i = 0; i < n; i++) {
           src.push(
             '  '.concat(
-              'color += visible(',
+              'vec4 layer',
+              `${i}`,
+              ' = visible(',
               `uDepthTexture[${i}], `,
               `uVideoTexture[${i}], `,
               `uProjScreenPosition[${i}],`,
-              'uBgTexture);'
+              'uBgTexture);',
+              // 多路视频重叠：用 Porter-Duff over 算子按 alpha 加权合成，而非 RGB 直接相加。
+              // 直接相加会让重叠区 RGB 相加 >1 过曝变亮；over 合成 = 前景*前景a + 背景*(1-前景a)，
+              // 重叠区取最上层视频色，alpha 不会超过 1，亮度正常。
+              `  float a${i} = clamp(layer${i}.a, 0.0, 1.0);`,
+              `  color.rgb = layer${i}.rgb * a${i} + color.rgb * (1.0 - a${i});`,
+              `  color.a = a${i} + color.a * (1.0 - a${i});`
             )
           );
         }
         src.push(
           '  if (color.a > 0.0) {',
-          `  float count = float(${n});`,
-          '     gl_FragColor = vec4(color.rgba );',
+          '     gl_FragColor = vec4(color.rgba);',
           '  }',
           '  else{ gl_FragColor = vec4(0.,0.,0.,0.);}',
           '}'
