@@ -83,6 +83,8 @@ class VideoCamera extends EventDispatcher {
       'canplaythrough',
       () => {
         // console.log('canplaythrough...', event);
+        // 释放上一份 poster 静态纹理，避免反复开关融合累积泄漏
+        this.texture?.dispose?.();
         this.texture = new VideoTexture(this.video);
         this.texture.wrapS = ClampToEdgeWrapping;
         this.texture.wrapT = ClampToEdgeWrapping;
@@ -98,6 +100,32 @@ class VideoCamera extends EventDispatcher {
       },
       false
     );
+  }
+
+  /**
+   * 释放资源：texture(含 poster 与 canplaythrough 后的 VideoTexture)、helper、video 元素。
+   * 反复开关融合时，每个 VideoCamera 不 dispose 会累积 video 元素、纹理、CameraHelper 资源。
+   */
+  dispose() {
+    // 释放纹理（poster 或 VideoTexture，两者都通过 this.texture 引用）
+    this.texture?.dispose?.();
+    this.texture = null;
+    // 释放 CameraHelper（LineSegments：geometry + material）
+    this.helper?.dispose?.();
+    // PerspectiveCamera 无显式 dispose，置空即可
+    this.camera = null;
+    // 停止并清理 video 元素：removeAttribute('src') + load() 中断解码释放网络/解码资源，
+    // DOM 事件监听随 video 置空失去引用而被 GC 回收
+    if (this.video) {
+      try {
+        this.video.pause();
+      } catch (e) {}
+      try {
+        this.video.removeAttribute('src');
+        this.video.load();
+      } catch (e) {}
+      this.video = null;
+    }
   }
 
   /**

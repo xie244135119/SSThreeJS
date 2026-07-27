@@ -78,15 +78,77 @@ class VideoSceneViewer {
     }
   }
 
+  /**
+   * 取消融合自身的 requestAnimationFrame 循环
+   * 修复【重复开启融合卡死】：原库每次 new VideoSceneViewer 都会 animate() 启动一个 rAF，
+   * 且从不取消；反复 openVideoFusion 会叠加多个无限 rAF，帧数指数级增长导致卡死。
+   */
+  stopAnimate = () => {
+    if (this.animation != null && this.animation !== -1) {
+      cancelAnimationFrame(this.animation);
+      this.animation = -1;
+    }
+  };
+
+  /**
+   * 销毁融合渲染资源：停止动画、释放 render step（composer/RT/material）、清相机、暂停视频、移除 helper。
+   * 修复【重复开启卡死 + 内存泄漏】：closeVideoFusion 只 clear() 且不取消 rAF，
+   * 反复开关会泄漏 EffectComposer 与 WebGLRenderTarget。
+   */
+  destroy = () => {
+    this.stopAnimate();
+    // 先清相机（内部访问 colorStep/depthSteps，需在 _disposeRenderSteps 置空之前完成）
+    this.clear();
+    // 释放 render step（composer/RT/material）
+    this._disposeRenderSteps();
+    this.scene.remove(this.helpers);
+    // 销毁调试 GUI
+    this.hideGui();
+    // 释放背景遮罩纹理
+    if (this.bgTexture) {
+      this.bgTexture.dispose?.();
+      this.bgTexture = null;
+    }
+  };
+
+  /**
+   * 释放当前一套 render step 的 WebGL 资源（供 initialize 重建前 / destroy 调用，避免泄漏叠加）。
+   */
+  _disposeRenderSteps = () => {
+    if (this.depthSteps?.length) {
+      this.depthSteps.forEach((step) => step.dispose?.());
+      this.depthSteps = [];
+    }
+    this.colorStep?.dispose?.();
+    this.colorStep = null;
+    if (this.blendStep) {
+      // 关闭融合渲染前恢复主渲染器的 toneMapping（BlendRender.initialize 曾临时改成 NoToneMapping）。
+      if (this.blendStep._savedToneMapping !== undefined && this.renderer) {
+        try {
+          this.renderer.toneMapping = this.blendStep._savedToneMapping;
+        } catch (e) {}
+      }
+      this.blendStep.dispose?.();
+      this.blendStep = null;
+    }
+  };
+
   // 初始化视频融合
   initialize(cameraList) {
     console.log('VideoSceneViewer.initialize...', cameraList);
+    // 修复【重复开启融合卡死/泄漏】：每次 initialize 会新建一整套 DepthRender/ColorRender/
+    // BlendRender（含 EffectComposer + 多个 WebGLRenderTarget）。原库仅清空 cameras，
+    // 上一套 render step 全部泄漏，反复开启会让 GPU/WebGL 资源打满直至卡死。
+    // 这里在重建前释放上一套 render step 的资源。
+    this._disposeRenderSteps();
     // 清空
     if (this.cameras.length > 0) {
       for (let i = 0; i < this.cameras.length; i++) {
         const camera = this.cameras[i];
         this.helpers.remove(camera.helper);
         this.scene.remove(camera.camera);
+        // 释放旧 VideoCamera 资源，避免反复 initialize 累积泄漏
+        camera?.dispose?.();
       }
     }
     this.helpers = new THREE.Group();
@@ -127,7 +189,14 @@ class VideoSceneViewer {
       camera.camera.updateProjectionMatrix();
       // HTMLVideoElement
       camera.texture = new THREE.TextureLoader().load(item.video.poster);
+      // 修复【视频不投射】：只设 video.src 不会触发加载流程，
+      // 浏览器不会为已存在的 src 自动 fetch；必须显式调用 load() 才会触发
+      // canplay/canplaythrough 事件链（VideoCamera 在此事件里才会建 VideoTexture 并派发
+      // TEXTURE_UPDATED，否则融合用的始终是 poster 静态纹理，视频永远投不上去）。
       camera.video.src = item.video.stream;
+      camera.video.load();
+      // 部分浏览器要求在用户交互上下文里 play，这里兜底尝试播放。
+      camera.video.play?.().catch?.(() => {});
 
       this.cameras.push(camera);
       this.scene.add(camera.camera);
@@ -191,7 +260,12 @@ class VideoSceneViewer {
   }
 
   animate() {
-    this.animation = requestAnimationFrame(() => this.animate());
+    // 守卫：已在排程则不再叠加新的 rAF，避免反复 openVideoFusion 累积多个无限 rAF 卡死
+    if (this.animation != null && this.animation !== -1) return;
+    this.animation = requestAnimationFrame(() => {
+      this.animation = -1;
+      this.animate();
+    });
     if (this._mode === VideoSceneViewer.FUSION) {
       this.render();
     }
@@ -300,63 +374,46 @@ class VideoSceneViewer {
    * 移除相机
    */
   removeCamera(cameraName) {
-    // const i = 0;
-    /**
-     * @type {VideoCamera}
-     */
-
-    for (let i = 0; i < this.cameras.length; i++) {
+    // 倒序遍历：避免 splice 后 i++ 跳过下一元素（原正序实现的漏删 bug）
+    for (let i = this.cameras.length - 1; i >= 0; i--) {
       const camera = this.cameras[i];
       if (camera.camera.name === cameraName) {
-        // console.log('this.cameras', camera.camera);
-
-        camera.video.pause();
+        camera.video?.pause();
         this.cameras.splice(i, 1);
         // CameraHelper
         this.helpers.remove(camera.helper);
+        // 释放被移除 VideoCamera 的资源
+        camera?.dispose?.();
         // ColorRender
         this.colorStep.projScreenMatrixArray.splice(i, 1);
         this.colorStep.depthTextureArray.splice(i, 1);
         this.colorStep.videoTextureArray.splice(i, 1);
         this.colorStep.update();
         // DepthRender
-        this.depthSteps.splice(i, 1);
-        // console.log('this.cameras', this.cameras);
+        const depthStep = this.depthSteps.splice(i, 1)[0];
+        depthStep?.dispose?.();
       }
     }
-
-    // // let camera = this.cameras[i];
-    // camera.video.pause();
-
-    // this.cameras.splice(i, 1);
-
-    // // CameraHelper
-    // this.helpers.remove(camera.helper);
-
-    // // ColorRender
-    // this.colorStep.projScreenMatrixArray.splice(i, 1);
-    // this.colorStep.depthTextureArray.splice(i, 1);
-    // this.colorStep.videoTextureArray.splice(i, 1);
-    // this.colorStep.update();
-
-    // // DepthRender
-    // this.depthSteps.splice(i, 1);
-    // console.log('this.cameras', this.cameras);
   }
 
   clear = () => {
-    for (let i = 0; i < this.cameras.length; i++) {
+    // 修复【clear 漏删 bug】：原实现 for 循环里对同一数组 splice(i,1) 后 i++，
+    // 会跳过下一个元素导致漏删/越界。改为倒序遍历或一次性置空。
+    for (let i = this.cameras.length - 1; i >= 0; i--) {
       const camera = this.cameras[i];
       // CameraHelper
       this.helpers.remove(camera.helper);
+      this.scene.remove(camera.camera);
+      // 释放 VideoCamera 资源（texture/helper/video）
+      camera?.dispose?.();
       // ColorRender
       this.colorStep.projScreenMatrixArray.splice(i, 1);
       this.colorStep.depthTextureArray.splice(i, 1);
       this.colorStep.videoTextureArray.splice(i, 1);
-      this.colorStep.update();
       // DepthRender
       this.depthSteps.splice(i, 1);
     }
+    this.colorStep?.update();
     this.cameras = [];
   };
 

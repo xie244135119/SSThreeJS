@@ -73,6 +73,20 @@ class DepthRender extends RenderStep {
   }
 
   /**
+   * 释放资源：renderTarget + overrideMaterial(RawShaderMaterial)。
+   * 反复开关融合时，每次 initialize 都新建，旧的若不 dispose 会泄漏 GPU 程序与显存。
+   */
+  dispose() {
+    if (this.renderPass?.overrideMaterial) {
+      this.renderPass.overrideMaterial.dispose?.();
+      this.renderPass.overrideMaterial = null;
+    }
+    this.renderTarget?.dispose?.();
+    this.renderTarget = null;
+    this.renderPass = null;
+  }
+
+  /**
    * @returns {RawShaderMaterial}
    */
   material() {

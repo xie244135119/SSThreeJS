@@ -94,6 +94,26 @@ class BlendRender extends RenderStep {
   }
 
   /**
+   * 释放资源：EffectComposer（含两个中间 RenderTarget）、ShaderPass 材质。
+   * 反复开关融合时，每次 initialize 都会新建一整套，旧的若不 dispose 会泄漏 GPU 程序与显存。
+   */
+  dispose() {
+    if (this.shaderPass?.material) {
+      this.shaderPass.material.dispose?.();
+    }
+    if (this.composer) {
+      // EffectComposer.dispose 释放内部 renderTarget1/renderTarget2/copyPass
+      this.composer.dispose?.();
+      // 兜底显式释放（部分 three 版本 composer.dispose 不释放 pass material）
+      this.composer.renderTarget1?.dispose?.();
+      this.composer.renderTarget2?.dispose?.();
+    }
+    this.renderPass = null;
+    this.shaderPass = null;
+    this.composer = null;
+  }
+
+  /**
    * @returns {ShaderMaterial}
    */
   material() {

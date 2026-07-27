@@ -2,12 +2,13 @@
  * Author  Kayson.Wan
  * Date  2023-06-01 14:35:19
  * LastEditors  Kayson.Wan
- * LastEditTime  2025-11-04 15:53:06
+ * LastEditTime  2026-07-27 18:24:58
  * Description
  */
 import SSThreeJs from '../../SSCore';
 import SSLoader from '../../SSLoader';
 import SSDispose from '../../SSDispose';
+import SSThreeLoop from '../../SSThreeLoop.ts';
 import { VideoSceneViewer } from './VideoSceneViewer';
 
 export default class VideoSceneViewerManager {
@@ -102,21 +103,53 @@ export default class VideoSceneViewerManager {
    * @param {*} videoDataList [] 视频融合数据
    */
   openVideoFusion = (videoDataList = []) => {
+    // 先做轻量关闭（停动画、清相机、复位渲染器），再重建。
+    // 不在此释放 render step——initialize() 内部会先 _disposeRenderSteps 再重建，避免与 animate 的排程冲突。
     this.closeVideoFusion();
     this.#initVideoSceneViewer();
     this.videoSceneView.initialize(videoDataList); // 打开视频融合
+    // 修复【开启后画面不动 / 无视频投射】：closeVideoFusion 里 stopAnimate 取消了融合的 rAF，
+    // 这里重建后必须重新启动 animate()，否则融合渲染循环已停，画面不刷新、鼠标拖动也无响应。
+    this.videoSceneView.animate();
   };
 
   /**
    * 2.0关闭视频融合
    */
   closeVideoFusion = () => {
-    this.videoSceneView.clear();
-    if (this.videoSceneView) {
-      this.videoSceneView._mode = VideoSceneViewer.NORMAL;
+    if (!this.videoSceneView) return;
+    const vsv = this.videoSceneView;
+    // 先停动画，确保没有 rAF 排程在访问 render step，之后才能安全 dispose
+    vsv.clear();
+    vsv.stopAnimate?.();
+    vsv._mode = VideoSceneViewer.NORMAL;
+    // 释放当前一套 render step（composer/RT/material）：close 时停了 rAF，可安全 dispose，
+    // 不再等到下次 open 的 initialize 才释放——避免关闭后 render step 仍占显存直至再次开启。
+    vsv._disposeRenderSteps?.();
 
-      if (this.ssThreeJs?.ssThreeObject) {
+    if (this.ssThreeJs?.ssThreeObject) {
+      // 复位渲染器：融合期间 EffectComposer 把当前 render target / 状态改到了离屏缓冲，
+      // 关闭后若不 setRenderTarget(null) + resetState()，恢复渲染时可能残留在
+      // 已释放/错误的 target 上，表现为关闭后画面卡住不刷新。
+      try {
+        const renderer = this.ssThreeJs.ssThreeObject.threeRenderer;
+        renderer.setRenderTarget(null);
+        renderer.resetState();
+      } catch (e) {}
+      // 恢复渲染循环：openVideoFusion/#initVideoSceneViewer 里 cancelRenderLoop() 停掉了
+      // 'webglrender update'，关闭后须恢复一个驱动画面的循环，否则画面定格、鼠标拖拽
+      // (OrbitControl.update 在循环里)无响应 -> 表现为卡死。
+      // 但若已启用 PostProcessPlugin，它用 'SSPostProcessPlugin Render'(effectComposer.render)
+      // 接管上屏，此时不能再 renderLoop()(renderer.render 直渲屏幕)，否则两个 render 抢屏闪烁。
+      const hasPostProcessLoop = SSThreeLoop.renderLoopList?.some(
+        (item) => item.uuid === 'SSPostProcessPlugin Render'
+      );
+      if (hasPostProcessLoop) {
+        // PostProcess 在用：它的循环本就在跑，无需另起主循环，只渲染一帧立即生效
         this.ssThreeJs.ssThreeObject.renderOnce();
+      } else {
+        // 无 PostProcess：恢复主渲染循环 renderer.render
+        this.ssThreeJs.ssThreeObject.renderLoop();
       }
     }
     // 关闭按钮
@@ -127,6 +160,15 @@ export default class VideoSceneViewerManager {
       });
       this._videoViewerCameraIconList = [];
     }
+  };
+
+  /**
+   * 销毁管理器：随 OverViewModel.destroy 调用，彻底释放融合渲染资源。
+   */
+  destroy = () => {
+    this.closeVideoFusion();
+    this.videoSceneView?.destroy?.();
+    this.videoSceneView = null;
   };
 
   /**
