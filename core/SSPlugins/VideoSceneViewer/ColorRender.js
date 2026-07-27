@@ -65,10 +65,11 @@ class ColorRender extends RenderStep {
     });
 
     // this.renderTarget.viewport = new Vector4(0, 0, screen.width, screen.height);
-    // 0.172 颜色管理：ColorRender 的 RawShaderMaterial 直接写出原始 rgba（含 (0,0,0,0) 的"无投影"标记）。
-    // 若标为 sRGB，three 会对纹素做 linear->sRGB 传输转换，使 (0,0,0,0) 透传后被污染，
-    // BlendRender 中 color.a>0 误判，把未投影的 Sky 区域 mix 成黑色。故保持线性透传。
-    this.renderTarget.colorSpace = THREE.LinearSRGBColorSpace;
+    // ColorRender 用 RawShaderMaterial 写入视频的 sRGB 字节（不注入编码转换）。
+    // RT 标为 sRGB：纹理内部格式 SRGB8_ALPHA8，BlendRender(ShaderMaterial) 采样时
+    // 由硬件自动做 sRGB->linear 解码，得到正确的 linear 视频色参与混合。
+    // 若标 Linear 会跳过解码，sRGB 字节被当 linear -> 视频偏亮、投影边缘出现白边。
+    this.renderTarget.colorSpace = THREE.SRGBColorSpace;
   }
 
   update() {
@@ -159,7 +160,14 @@ class ColorRender extends RenderStep {
           '        if (fragCoord.z < depth + 0.0015) {',
           '          vec4 vc = texture2D(img, fragCoord.xy);',
           '          vec4 bg = texture2D(bgimg, fragCoord.xy);',
-          '          return vec4( vc.rgb , bg.a);',
+          // 白边根因：投影区是视频相机视锥的矩形投影，边界处 alpha 从 VideoMask 高值
+          // 突变到 0(矩形外不命中)，形成锐角矩形描边(视频边缘色)。
+          // 在矩形边界 0~0.04 内对 bg.a 做 smoothstep 衰减，让边界 alpha 平滑淡出，
+          // 消除锐角白边；内圈 VideoMask 圆形虚化保留。edge = 距 [0,1] 四边的最近距离。
+          '          vec2 ed = min(fragCoord.xy, 1.0 - fragCoord.xy);',
+          '          float edge = min(ed.x, ed.y);',
+          '          float fade = smoothstep(0.0, 0.04, edge);',
+          '          return vec4( vc.rgb , bg.a * fade);',
           '        }',
           '    }',
           '    return vec4(0.0, 0.0, 0.0, 0.0);',

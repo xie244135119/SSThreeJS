@@ -97,14 +97,13 @@ class BlendRender extends RenderStep {
    * @returns {ShaderMaterial}
    */
   material() {
-    // 0.172 颜色管理默认开启后，原 RawShaderMaterial 不注入 colorspace chunk，
-    // 导致上屏缺 linear->sRGB 编码，画面发暗发黑。改用 ShaderMaterial：
-    // 末尾由内置 chunk 自动做 linear->sRGB 颜色编码。
-    // 注意 toneMapped=false：不在 BlendRender 内做 tone mapping。
-    // 0.172 渲染到 RT 时 renderer.toneMapping 本就不生效（仅直接渲染到屏幕才生效），
-    // 场景材质写入 tDiffuse 时是 linear（未 tone map）。tone mapping 统一由外层
-    // PostProcessPlugin 的 ToneMappingEffect 在更外层完成（见 scene.tsx postSetting）。
-    // 此处若加 tonemapping_fragment 会对已 tone map 的 Sky 二次压暗。
+    // 0.172 颜色管理下 BlendRender 上屏颜色处理：
+    // 视频融合开启后，VideoSceneViewerManager.cancelRenderLoop() 停掉主渲染循环，
+    // 画面完全由 BlendRender 的 EffectComposer 渲染。composer RT 为 Linear，
+    // RenderPass 渲染场景到 RT 时 renderer.toneMapping 不生效（仅直接渲染到屏幕才生效），
+    // 故场景是 linear 未 tone map 的 HDR 值。末尾须补 tonemapping_fragment(ACES)
+    // + colorspace_fragment(linear->sRGB)，否则场景偏暗、HDR 高光区发白。
+    // Sky 等场景材质在 RT 路径下未做 tone map，此处做一次是正确的（非双重压暗）。
     return new ShaderMaterial({
       toneMapped: false,
       uniforms: {
@@ -126,13 +125,12 @@ class BlendRender extends RenderStep {
         'varying vec2      vUv;',
         'void main() {',
         '  gl_FragColor = texture2D(tDiffuse, vUv);',
-        '  float _mix;',
         '  vec4 color = texture2D(uShadow, vUv);',
         '  if (color.a > 0.0) {',
-        '    _mix = color.a;',
+        '    float _mix = color.a;',
         '    gl_FragColor = vec4(mix(gl_FragColor.rgb, color.rgb, _mix * uMixing), gl_FragColor.a);',
         '  }',
-        // 0.172：composer 内部全程 linear，上屏统一做 linear->sRGB 编码。
+        '  #include <tonemapping_fragment>',
         '  #include <colorspace_fragment>',
         '}'
       ].join('\n')
