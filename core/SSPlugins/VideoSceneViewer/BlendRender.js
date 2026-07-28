@@ -28,14 +28,10 @@ class BlendRender extends RenderStep {
     super(renderer, camera, scene);
 
     /**
-     * @type {Texture}
+     * @type {Texture[]} 各批 ColorRender 的输出 RT（视频投影层），按 Porter-Duff over 合成。
+     * 单批时长度 1，行为与改造前一致。
      */
-    this.shadow = null;
-
-    /**
-     * @type {Texture}
-     */
-    this.diffuse = null;
+    this.shadowTextures = [];
 
     /**
      * @type {number}
@@ -58,6 +54,16 @@ class BlendRender extends RenderStep {
     this.shaderPass = null;
   }
 
+  /**
+   * 兼容旧接口：单个 shadow 设置时转为 shadowTextures[0]。
+   */
+  set shadow(tex) {
+    this.shadowTextures = tex ? [tex] : [];
+  }
+  get shadow() {
+    return this.shadowTextures[0] || null;
+  }
+
   initialize() {
     // console.log("BlendRender.initialize...");
     this.renderPass = new RenderPass(this.scene, this.camera);
@@ -76,16 +82,8 @@ class BlendRender extends RenderStep {
 
     this.composer.addPass(this.renderPass);
     this.composer.addPass(this.shaderPass);
+    this._lastK = this.shadowTextures.length; // initialize 已建 shader，同步 K 避免首次 update 误判
     this.composer.render();
-  }
-
-  update() {
-    this.composer.removePass(this.shaderPass);
-
-    this.shaderPass = new ShaderPass(this.material());
-    this.shaderPass.renderToScreen = true;
-
-    this.composer.addPass(this.shaderPass);
   }
 
   render() {
@@ -111,6 +109,20 @@ class BlendRender extends RenderStep {
     this.renderPass = null;
     this.shaderPass = null;
     this.composer = null;
+    this._lastK = undefined;
+  }
+
+  update() {
+    // 性能优化：只有批数 K 变化（shader 里 uShadows[K] 数组长度变）才重建 ShaderPass，
+    // 否则只更新 uniform 引用（shadowTextures 数组引用不变，three 自动上传新内容）。
+    const k = this.shadowTextures.length;
+    if (this._lastK !== k) {
+      this.composer.removePass(this.shaderPass);
+      this.shaderPass = new ShaderPass(this.material());
+      this.shaderPass.renderToScreen = true;
+      this.composer.addPass(this.shaderPass);
+      this._lastK = k;
+    }
   }
 
   /**
@@ -128,7 +140,7 @@ class BlendRender extends RenderStep {
       toneMapped: false,
       uniforms: {
         tDiffuse: { value: null },
-        uShadow: { value: this.shadow },
+        uShadows: { value: this.shadowTextures },
         uMixing: { value: this.mixing }
       },
       vertexShader: [
@@ -138,22 +150,41 @@ class BlendRender extends RenderStep {
         '  gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);',
         '}'
       ].join('\n'),
-      fragmentShader: [
-        'uniform sampler2D tDiffuse;',
-        'uniform sampler2D uShadow;',
-        'uniform float     uMixing;',
-        'varying vec2      vUv;',
-        'void main() {',
-        '  gl_FragColor = texture2D(tDiffuse, vUv);',
-        '  vec4 color = texture2D(uShadow, vUv);',
-        '  if (color.a > 0.0) {',
-        '    float _mix = color.a;',
-        '    gl_FragColor = vec4(mix(gl_FragColor.rgb, color.rgb, _mix * uMixing), gl_FragColor.a);',
-        '  }',
-        '  #include <tonemapping_fragment>',
-        '  #include <colorspace_fragment>',
-        '}'
-      ].join('\n')
+      // 多批 ColorRender 输出（shadowTextures）按 Porter-Duff over 算子合成后再叠到场景：
+      // 各批内已在 ColorRender 片元里 over 合成好了，这里只把 K 批结果再 over 一次。
+      // over 结合律保证：分批合成 ≡ 单批全 N 路 over 合成，画面零差异。
+      // 合成后的视频层用 alpha 作 mix 权重叠到场景色（uMixing 控制融合强度）。
+      fragmentShader: ((k) => {
+        const src = [
+          'uniform sampler2D tDiffuse;',
+          `uniform sampler2D uShadows[${k}];`,
+          'uniform float     uMixing;',
+          'varying vec2      vUv;',
+          'void main() {',
+          '  gl_FragColor = texture2D(tDiffuse, vUv);',
+          '  vec4 color = vec4(0.0, 0.0, 0.0, 0.0);'
+        ];
+        for (let i = 0; i < k; i++) {
+          src.push(
+            '  '.concat(
+              `vec4 layer${i} = texture2D(uShadows[${i}], vUv);`,
+              `  float a${i} = clamp(layer${i}.a, 0.0, 1.0);`,
+              `  color.rgb = layer${i}.rgb * a${i} + color.rgb * (1.0 - a${i});`,
+              `  color.a = a${i} + color.a * (1.0 - a${i});`
+            )
+          );
+        }
+        src.push(
+          '  if (color.a > 0.0) {',
+          '    float _mix = color.a;',
+          '    gl_FragColor = vec4(mix(gl_FragColor.rgb, color.rgb, _mix * uMixing), gl_FragColor.a);',
+          '  }',
+          '  #include <tonemapping_fragment>',
+          '  #include <colorspace_fragment>',
+          '}'
+        );
+        return src.join('\n');
+      })(Math.max(1, this.shadowTextures.length))
       // depthWrite: false
     });
   }

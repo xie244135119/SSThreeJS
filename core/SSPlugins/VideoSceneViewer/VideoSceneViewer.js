@@ -43,11 +43,17 @@ class VideoSceneViewer {
     this.animation = -1;
 
     this.depthSteps = [];
-    this.colorStep = null;
+    this.colorStep = null; // 兼容旧引用：指向 colorSteps[0]（单批时即唯一）
+    this.colorSteps = []; // 分批 ColorRender，每批 ≤ maxBatchSize 路
     this.blendStep = null;
     this.cameras = [];
     this.helpers = new THREE.Group();
     this._mode = VideoSceneViewer.FUSION;
+    // 每批最大视频路数：运行时按 GPU 纹理单元上限自动算。
+    // 每路占 2 个纹理单元（uDepthTexture + uVideoTexture），再加共享 uBgTexture 1 个 + 1 个余量。
+    // maxBatchSize = floor((units - 2) / 2)，下限 4。桌面独显 units=32 -> 15；集显 units=16 -> 7。
+    // 自动适配各设备，批数最少 = draw call 最少 = 性能最优。可用 setMaxBatchSize() 覆盖。
+    this.maxBatchSize = this._detectMaxBatchSize();
     // this.bgTexture = new THREE.TextureLoader().load('./VideoMask.png'); // 注意⚠️：加载不出来会导致视频融合画面没有反应
     // this.bgTexture = new THREE.TextureLoader().load('./public/threeTextures/VideoMask.png');
     this.bgTexture = new THREE.TextureLoader().load(
@@ -78,6 +84,28 @@ class VideoSceneViewer {
   get mode() {
     return this._mode;
   }
+
+  // 运行时探测 GPU 最大纹理单元数，算每批最多视频路数。
+  // 每路占 2 个纹理单元（深度 + 视频），再加共享 uBgTexture 1 个 + 1 个余量。
+  // maxBatchSize = floor((units - 2) / 2)，下限 4。无法探测时回退 7（兼容 MAX_TEXTURE_IMAGE_UNITS=16）。
+  _detectMaxBatchSize() {
+    if (this._maxBatchSize != null) return this._maxBatchSize; // 用户用 setMaxBatchSize 覆盖过
+    try {
+      const gl = this.renderer?.getContext?.();
+      const units = gl?.getParameter?.(gl.MAX_TEXTURE_IMAGE_UNITS) || 16;
+      return Math.max(4, Math.floor((units - 2) / 2));
+    } catch (e) {
+      return 7;
+    }
+  }
+
+  // 手动覆盖每批最大路数（传 null 恢复自动探测）。应用层如确知设备能力可调。
+  setMaxBatchSize = (n) => {
+    this._maxBatchSize = n == null ? null : Math.max(1, Math.floor(n));
+    this.maxBatchSize = this._detectMaxBatchSize();
+    // 已有相机时整批重建以应用新批次划分
+    if (this.cameras?.length) this._rebuildColorSteps();
+  };
 
   set mode(mode) {
     if (this._mode !== mode) {
@@ -132,7 +160,11 @@ class VideoSceneViewer {
       this.depthSteps.forEach((step) => step.dispose?.());
       this.depthSteps = [];
     }
-    this.colorStep?.dispose?.();
+    // 释放所有分批 ColorRender
+    if (this.colorSteps?.length) {
+      this.colorSteps.forEach((step) => step.dispose?.());
+      this.colorSteps = [];
+    }
     this.colorStep = null;
     if (this.blendStep) {
       // 关闭融合渲染前恢复主渲染器的 toneMapping（BlendRender.initialize 曾临时改成 NoToneMapping）。
@@ -254,15 +286,29 @@ class VideoSceneViewer {
       this.scene.add(this.helpers);
     }
 
-    // ColorRender
-    this.colorStep = new ColorRender(this.renderer, this.camera, this.scene);
-    this.colorStep.projScreenMatrixArray = projScreenMatrixArray;
-    this.colorStep.depthTextureArray = depthTextureArray;
-    this.colorStep.videoTextureArray = videoTextureArray;
-    this.colorStep.quadHomographyArray = quadHomographyArray;
-    this.colorStep.bgTexture = this.bgTexture;
-    this.colorStep.initialize();
-    // }
+    // ColorRender 分批：按 maxBatchSize 把相机分组，每批一个 ColorRender 实例。
+    // 突破单 shader 纹理单元上限（每路占 2 个纹理单元），支持任意路数。
+    // 每批内单 draw call 渲染整场景 + 该批所有路投影，K 批结果由 BlendRender over 合成。
+    this.colorSteps = [];
+    const batchSize = Math.max(1, this.maxBatchSize || 8);
+    const batchCount = Math.ceil(n / batchSize) || (n > 0 ? 1 : 0);
+    for (let b = 0; b < batchCount; b++) {
+      const start = b * batchSize;
+      const end = Math.min(start + batchSize, n);
+      // 该批的 uniform 数组（切片引用，批内 push/splice 不影响其它批）
+      const step = new ColorRender(this.renderer, this.camera, this.scene);
+      step.projScreenMatrixArray = projScreenMatrixArray.slice(start, end);
+      step.depthTextureArray = depthTextureArray.slice(start, end);
+      step.videoTextureArray = videoTextureArray.slice(start, end);
+      step.quadHomographyArray = quadHomographyArray.slice(start, end);
+      step.bgTexture = this.bgTexture;
+      step.initialize();
+      // 记录批的 [start,end) 便于 updateCameraData 跨批更新
+      step._range = [start, end];
+      this.colorSteps.push(step);
+    }
+    // colorStep 指向第一批，兼容旧引用（GUI/updateMixing 等仍用 this.colorStep）
+    this.colorStep = this.colorSteps[0] || null;
 
     for (let i = 0; i < n; i++) {
       const camera = this.cameras[i];
@@ -271,20 +317,73 @@ class VideoSceneViewer {
       // indexOf O(N)，N=1~6，微秒级，无性能影响。
       camera.addEventListener(VideoCamera.TEXTURE_UPDATED, (data) => {
         const idx = this.cameras.indexOf(camera);
-        if (idx >= 0) this.colorStep.videoTextureArray[idx] = data.texture;
+        if (idx < 0) return;
+        // 定位到该相机所属批 + 批内索引，更新对应批 ColorRender 的 videoTextureArray
+        const stepInfo = this._colorStepForCamera(idx);
+        if (stepInfo) {
+          stepInfo.step.videoTextureArray[stepInfo.inBatch] = data.texture;
+        }
       });
     }
 
-    // BlendRender
+    // BlendRender：接收所有批的 ColorRender 输出 RT，按 Porter-Duff over 合成上屏。
     this.blendStep = new BlendRender(this.renderer, this.camera, this.scene);
-    // console.log('11', this.renderer, this.camera, this.scene);
-    this.blendStep.shadow = this.colorStep.texture();
+    this.blendStep.shadowTextures = this.colorSteps.map((s) => s.texture());
     this.blendStep.mixing = data.mixing;
     this.blendStep.initialize();
     // 重建后首帧必须渲一次深度（新实例缓存为空）
     this.invalidateDepth();
     // }
   }
+
+  // 由相机全局索引定位到所属 ColorRender 批 + 批内索引。
+  // _range = [start, end) 在建批时记录。
+  _colorStepForCamera(globalIdx) {
+    for (let i = 0; i < this.colorSteps.length; i++) {
+      const step = this.colorSteps[i];
+      const [start, end] = step._range || [0, 0];
+      if (globalIdx >= start && globalIdx < end) {
+        return { step, inBatch: globalIdx - start };
+      }
+    }
+    return null;
+  }
+
+  // 整批重建 ColorRender + BlendRender（相机数变化时调用，shader 重编译一次，低频可接受）。
+  // DepthRender 不重建（各自独立，add 加新 depthStep、remove 删对应）。
+  _rebuildColorSteps = () => {
+    const n = this.cameras.length;
+    // 释放旧 ColorRender
+    this.colorSteps.forEach((s) => s.dispose?.());
+    this.colorSteps = [];
+    if (n === 0) {
+      this.colorStep = null;
+      return;
+    }
+    const batchSize = Math.max(1, this.maxBatchSize || 8);
+    const batchCount = Math.ceil(n / batchSize);
+    for (let b = 0; b < batchCount; b++) {
+      const start = b * batchSize;
+      const end = Math.min(start + batchSize, n);
+      const step = new ColorRender(this.renderer, this.camera, this.scene);
+      step.projScreenMatrixArray = this.depthSteps
+        .slice(start, end)
+        .map((_, i) => this.cameras[start + i].calcProjScreenMatrix());
+      step.depthTextureArray = this.depthSteps.slice(start, end).map((d) => d.texture());
+      step.videoTextureArray = this.cameras.slice(start, end).map((c) => c.texture);
+      step.quadHomographyArray = this.cameras.slice(start, end).map((c) => c.calcQuadHomography());
+      step.bgTexture = this.bgTexture;
+      step.initialize();
+      step._range = [start, end];
+      this.colorSteps.push(step);
+    }
+    this.colorStep = this.colorSteps[0] || null;
+    // 重建 BlendRender shader（uShadows[K] 长度变）
+    if (this.blendStep) {
+      this.blendStep.shadowTextures = this.colorSteps.map((s) => s.texture());
+      this.blendStep.update();
+    }
+  };
 
   /**
    * 强制所有投影相机的深度图下次重渲。
@@ -333,7 +432,10 @@ class VideoSceneViewer {
       }
 
       // console.log("VideoSceneViewer.render...color");
-      this.colorStep.render();
+      // 分批渲染：每个 ColorRender 渲整场景 + 该批所有路投影，输出各自 RT
+      for (let i = 0; i < this.colorSteps.length; i++) {
+        this.colorSteps[i].render();
+      }
 
       // console.log("VideoSceneViewer.render...blend");
       this.helpers.visible = true;
@@ -406,18 +508,15 @@ class VideoSceneViewer {
     depthStep.initialize();
     this.depthSteps.push(depthStep);
 
-    // ColorRender
-    this.colorStep.projScreenMatrixArray.push(_camera.calcProjScreenMatrix());
-    this.colorStep.depthTextureArray.push(depthStep.texture());
-    this.colorStep.videoTextureArray.push(_camera.texture);
-    this.colorStep.quadHomographyArray.push(_camera.calcQuadHomography());
-    this.colorStep.update();
-
+    // ColorRender 整批重建（addCamera 低频操作，shader 重编译一次可接受）
     _camera.addEventListener(VideoCamera.TEXTURE_UPDATED, (data) => {
-      // 按引用查索引，避免 removeCamera 倒序 splice 后索引错位写错位置
+      // 按引用查索引，定位到所属批 + 批内索引，更新对应批 ColorRender
       const idx = this.cameras.indexOf(_camera);
-      if (idx >= 0) this.colorStep.videoTextureArray[idx] = data.texture;
+      if (idx < 0) return;
+      const info = this._colorStepForCamera(idx);
+      if (info) info.step.videoTextureArray[info.inBatch] = data.texture;
     });
+    this._rebuildColorSteps();
 
     // console.log('this.cameras', this.cameras);
   }
@@ -427,6 +526,7 @@ class VideoSceneViewer {
    */
   removeCamera(cameraName) {
     // 倒序遍历：避免 splice 后 i++ 跳过下一元素（原正序实现的漏删 bug）
+    let removed = false;
     for (let i = this.cameras.length - 1; i >= 0; i--) {
       const camera = this.cameras[i];
       if (camera.camera.name === cameraName) {
@@ -436,17 +536,14 @@ class VideoSceneViewer {
         this.helpers.remove(camera.helper);
         // 释放被移除 VideoCamera 的资源
         camera?.dispose?.();
-        // ColorRender
-        this.colorStep.projScreenMatrixArray.splice(i, 1);
-        this.colorStep.depthTextureArray.splice(i, 1);
-        this.colorStep.videoTextureArray.splice(i, 1);
-        this.colorStep.quadHomographyArray.splice(i, 1);
-        this.colorStep.update();
         // DepthRender
         const depthStep = this.depthSteps.splice(i, 1)[0];
         depthStep?.dispose?.();
+        removed = true;
       }
     }
+    // ColorRender 整批重建（相机数变化，批划分可能变）
+    if (removed) this._rebuildColorSteps();
   }
 
   clear = () => {
@@ -459,15 +556,17 @@ class VideoSceneViewer {
       this.scene.remove(camera.camera);
       // 释放 VideoCamera 资源（texture/helper/video）
       camera?.dispose?.();
-      // ColorRender
-      this.colorStep.projScreenMatrixArray.splice(i, 1);
-      this.colorStep.depthTextureArray.splice(i, 1);
-      this.colorStep.videoTextureArray.splice(i, 1);
-      this.colorStep.quadHomographyArray.splice(i, 1);
       // DepthRender
       this.depthSteps.splice(i, 1);
     }
-    this.colorStep?.update();
+    // 释放并清空 ColorRender（无相机时无需批）
+    this.colorSteps.forEach((s) => s.dispose?.());
+    this.colorSteps = [];
+    this.colorStep = null;
+    if (this.blendStep) {
+      this.blendStep.shadowTextures = [];
+      this.blendStep.update?.();
+    }
     this.cameras = [];
   };
 
@@ -489,9 +588,12 @@ class VideoSceneViewer {
     // CameraHelper
     camera.helper.update();
 
-    // ColorRender
-    this.colorStep.projScreenMatrixArray[i] = camera.calcProjScreenMatrix();
-    this.colorStep.update();
+    // ColorRender：跨批更新第 0 路相机的投影矩阵
+    const info = this._colorStepForCamera(i);
+    if (info) {
+      info.step.projScreenMatrixArray[info.inBatch] = camera.calcProjScreenMatrix();
+      info.step.update();
+    }
   }
 
   /**
@@ -893,22 +995,21 @@ class VideoSceneViewer {
 
   // 更新场景相机
   updateCameraData = () => {
-    // 更新场景相机内容
-    // eslint-disable-next-line array-callback-return
-    this.cameras.map((item, index) => {
-      /**
-       * @type {VideoCamera}
-       */
+    // 更新场景相机内容：遍历每个相机，按全局索引定位到所属批 ColorRender，
+    // 更新该批的 projScreenMatrix / quadHomography（批内索引赋值，引用不变，three 自动上传）。
+    for (let index = 0; index < this.cameras.length; index++) {
       const cameraData = this.cameras[index];
       cameraData.camera.updateProjectionMatrix();
       // CameraHelper
       cameraData.helper.update();
-      // ColorRender
-      this.colorStep.projScreenMatrixArray[index] = cameraData.calcProjScreenMatrix();
-      // quadCorners 变化时重算 Homography（拖拽/外部修改后跟随生效）
-      this.colorStep.quadHomographyArray[index] = cameraData.calcQuadHomography();
-      this.colorStep.update();
-    });
+      const info = this._colorStepForCamera(index);
+      if (info) {
+        info.step.projScreenMatrixArray[info.inBatch] = cameraData.calcProjScreenMatrix();
+        // quadCorners 变化时重算 Homography（拖拽/外部修改后跟随生效）
+        info.step.quadHomographyArray[info.inBatch] = cameraData.calcQuadHomography();
+        info.step.update();
+      }
+    }
 
     // 生成可直接复制使用的配置：选中相机的完整 camera + video 参数。
     // position/rotation 从 currSelectObj（被 TransformControls 操控的投影相机）读真实值；
