@@ -266,8 +266,12 @@ class VideoSceneViewer {
 
     for (let i = 0; i < n; i++) {
       const camera = this.cameras[i];
+      // 按引用查索引而非闭包捕获 i：removeCamera 倒序 splice 会让中间相机的索引前移，
+      // 若回调仍写旧索引 i 会写到错的 videoTextureArray 位置 -> 视频投到错的投影区。
+      // indexOf O(N)，N=1~6，微秒级，无性能影响。
       camera.addEventListener(VideoCamera.TEXTURE_UPDATED, (data) => {
-        this.colorStep.videoTextureArray[i] = data.texture;
+        const idx = this.cameras.indexOf(camera);
+        if (idx >= 0) this.colorStep.videoTextureArray[idx] = data.texture;
       });
     }
 
@@ -277,8 +281,21 @@ class VideoSceneViewer {
     this.blendStep.shadow = this.colorStep.texture();
     this.blendStep.mixing = data.mixing;
     this.blendStep.initialize();
+    // 重建后首帧必须渲一次深度（新实例缓存为空）
+    this.invalidateDepth();
     // }
   }
+
+  /**
+   * 强制所有投影相机的深度图下次重渲。
+   * 大场景脏检测策略（depthDirtyStrategy='camera-only'，默认）只比对投影相机矩阵，
+   * 不遍历场景；当应用层向场景新加载/替换模型、移动静态建筑、改变投影区遮挡关系后，
+   * 必须调用此方法，否则深度图过期会导致视频投影遮挡关系错误。
+   * 拖动投影相机（GUI/TransformControls）会自动 dirty，无需调用。
+   */
+  invalidateDepth = () => {
+    this.depthSteps?.forEach((step) => step.invalidate?.());
+  };
 
   animate() {
     // 守卫：已在排程则不再叠加新的 rAF，避免反复 openVideoFusion 累积多个无限 rAF 卡死
@@ -312,7 +329,7 @@ class VideoSceneViewer {
 
       const n = this.cameras.length;
       for (let i = 0; i < n; i++) {
-        this.depthSteps[i].render();
+        this.depthSteps[i].render(this.ignoreObjectList);
       }
 
       // console.log("VideoSceneViewer.render...color");
@@ -348,7 +365,6 @@ class VideoSceneViewer {
    */
   addCamera(data) {
     // ------------------------------------
-    const i = this.cameras.length;
     // VideoCamera
     const _camera = new VideoCamera();
     // PerspectiveCamera
@@ -398,7 +414,9 @@ class VideoSceneViewer {
     this.colorStep.update();
 
     _camera.addEventListener(VideoCamera.TEXTURE_UPDATED, (data) => {
-      this.colorStep.videoTextureArray[i] = data.texture;
+      // 按引用查索引，避免 removeCamera 倒序 splice 后索引错位写错位置
+      const idx = this.cameras.indexOf(_camera);
+      if (idx >= 0) this.colorStep.videoTextureArray[idx] = data.texture;
     });
 
     // console.log('this.cameras', this.cameras);

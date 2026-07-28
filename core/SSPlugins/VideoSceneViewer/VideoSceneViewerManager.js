@@ -173,6 +173,29 @@ export default class VideoSceneViewerManager {
   };
 
   /**
+   * 强制所有投影相机下次重渲深度图。大场景默认 'camera-only' 策略只比对投影相机矩阵，
+   * 不感知场景变化；应用层向场景新加载/移动/替换模型后必须调用，否则遮挡关系过期。
+   */
+  invalidateDepth = () => {
+    this.videoSceneView?.invalidateDepth?.();
+  };
+
+  /**
+   * 设置深度脏检测策略：
+   *   'camera-only'（默认，大场景推荐）：只比对投影相机，O(1)。
+   *   'off'：每帧重渲（投影区有动画遮挡物时用）。
+   *   'full'：全量遍历场景 mesh 比对（最安全但贵，大场景慎用）。
+   */
+  setDepthDirtyStrategy = (strategy) => {
+    const vsv = this.videoSceneView;
+    if (!vsv) return;
+    vsv.depthSteps?.forEach((step) => {
+      step.depthDirtyStrategy = strategy;
+      step.invalidate?.();
+    });
+  };
+
+  /**
    * 根据数据创建icons
    * @param {*} cameraData []视频融合数据
    * @param {*} imgPath icon图片跟径

@@ -76,12 +76,24 @@ class ColorRender extends RenderStep {
     // 由硬件自动做 sRGB->linear 解码，得到正确的 linear 视频色参与混合。
     // 若标 Linear 会跳过解码，sRGB 字节被当 linear -> 视频偏亮、投影边缘出现白边。
     this.renderTarget.colorSpace = THREE.SRGBColorSpace;
+    // initialize 已建 material，同步 _lastN，避免首次 update 误判 N 变化重建
+    this._lastN = this.depthTextureArray.length;
   }
 
   update() {
-    // 释放上一份 overrideMaterial，避免反复 update 累积 RawShaderMaterial(GPU program)
-    this.renderPass.overrideMaterial?.dispose?.();
-    this.renderPass.overrideMaterial = this.material();
+    // 性能优化：只有投影相机数 N 变化（shader 里 uProjScreenMatrix[N] 等数组长度变了，
+    // 必须重写 shader 源码）时才重建 RawShaderMaterial，否则只更新 uniform 数组引用。
+    // uniforms 的 value 是数组引用（projScreenMatrixArray/depthTextureArray/
+    // videoTextureArray/quadHomographyArray），调用方对数组用 push/splice/索引赋值，
+    // 引用不变，three 自动上传新内容，无需重建 material，避免每帧 GPU 程序重编译。
+    const n = this.depthTextureArray.length;
+    if (this._lastN !== n) {
+      // N 变了：释放旧 material，重建（shader 源码含新数组长度）
+      this.renderPass.overrideMaterial?.dispose?.();
+      this.renderPass.overrideMaterial = this.material();
+      this._lastN = n;
+    }
+    // N 不变：uniform 数组引用未变，内容已由调用方更新，three 自动上传，无需重建
   }
 
   /**
@@ -96,6 +108,7 @@ class ColorRender extends RenderStep {
     this.renderTarget?.dispose?.();
     this.renderTarget = null;
     this.renderPass = null;
+    this._lastN = undefined;
   }
 
   render() {
