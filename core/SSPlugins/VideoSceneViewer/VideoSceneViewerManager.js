@@ -5,6 +5,7 @@
  * LastEditTime  2026-07-27 18:24:58
  * Description
  */
+import * as THREE from 'three';
 import SSThreeJs from '../../SSCore';
 import SSLoader from '../../SSLoader';
 import SSDispose from '../../SSDispose';
@@ -215,17 +216,60 @@ export default class VideoSceneViewerManager {
     if (clickIconData?.length > 0) {
       const icon = clickIconData[0].object;
       console.log('icon', icon);
+      const data = icon.userData.data;
       // todo
-      this.openVideoFusion([icon.userData.data]);
-      // this.videoSceneView.initialize([icon.userData.data]);//
-      // 镜头位置
-      const findConfig = this.cameraData.find(
-        (item) => `视频融合${item.camera.name}` === icon.name
-      );
-      console.log('findConfig', findConfig);
-      if (findConfig.eye) {
-        this.ssThreeJs.ssThreeObject.setEye(findConfig.eye.position, findConfig.eye.target);
+      this.openVideoFusion([data]);
+      // 镜头位置：根据相机 position+rotation 自动算正前方注视点，不再依赖配置里的 eye
+      if (data?.camera?.name) {
+        this.focusCamera(data.camera.name);
       }
     }
+  };
+
+  /**
+   * 根据融合相机的 position + rotation 计算其正前方注视点。
+   * 相机默认朝 -Z，用欧拉角把 (0,0,-1) 旋转到相机朝向，乘以距离加到 position 即得 target。
+   * 不再依赖配置里的 eye.target，避免占位/错误的 eye.target 把视角带偏。
+   * @param camItem { camera: { position, rotation } }
+   * @param distance 注视点距相机的距离，默认 20
+   * @returns {{position:THREE.Vector3, target:THREE.Vector3}}
+   */
+  _calcEyeFromCamera = (camItem, distance = 20) => {
+    const c = camItem.camera;
+    const pos = new THREE.Vector3(c.position.x, c.position.y, c.position.z);
+    const euler = new THREE.Euler(
+      c.rotation?.x || 0,
+      c.rotation?.y || 0,
+      c.rotation?.z || 0,
+      c.rotation?.order || 'XYZ'
+    );
+    const forward = new THREE.Vector3(0, 0, -1).applyEuler(euler);
+    const target = pos.clone().add(forward.multiplyScalar(distance));
+    return { position: pos, target };
+  };
+
+  /**
+   * 将视角飞到指定名称的融合相机观测视角。
+   * 始终根据 camera.position + camera.rotation 自动计算正前方注视点（不依赖配置里的 eye.target）。
+   * 若配置了 eye.position 则用它作起点覆盖相机位置，否则用相机自身 position。
+   * @param cameraName 融合相机名称（videoDataList[].camera.name）
+   * @param distance 自动计算 target 时距相机的距离，默认 20
+   */
+  focusCamera = (cameraName, distance = 20) => {
+    const ssObj = this.ssThreeJs?.ssThreeObject;
+    if (!ssObj) return;
+    const cam = this.cameraData.find((item) => item.camera?.name === cameraName);
+    if (!cam) {
+      console.warn(`【视角】未找到相机 ${cameraName}`);
+      return;
+    }
+    const calc = this._calcEyeFromCamera(cam, distance);
+    // eye.position 可选覆盖起点；target 一律由相机朝向自动算
+    const eyePos = cam.eye?.position;
+    const posVec =
+      eyePos && eyePos.x != null
+        ? new THREE.Vector3(eyePos.x, eyePos.y, eyePos.z)
+        : calc.position;
+    ssObj.setEye(posVec, calc.target, true, 0.8);
   };
 }

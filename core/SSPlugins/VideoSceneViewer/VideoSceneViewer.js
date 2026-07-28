@@ -6,6 +6,7 @@ import { ColorRender } from './ColorRender';
 import { BlendRender } from './BlendRender';
 import { VideoCamera } from './VideoCamera';
 import VideoMaskImg from './VideoMask.png';
+import { QuadPinOverlay } from './QuadPinOverlay';
 /**
  * 视频融合
  *
@@ -60,6 +61,15 @@ class VideoSceneViewer {
     if (this.openDebug) {
       this.setupGUI(camerasData);
       this.setupTransformControl();
+      // 四点透视校正画面拖拽 overlay（独立 OrthographicCamera + 透明 Scene），
+      // 在 BlendRender 上屏之后由 render() 末尾叠加。默认隐藏，select 相机时显示。
+      this.quadPinOverlay = new QuadPinOverlay(this.renderer, this.renderer.domElement);
+      this.quadPinOverlay.onChange = (corners) => {
+        if (!this.currCameraData) return;
+        this.currCameraData.quadCorners = corners;
+        this._syncQuadParamsFromCamera();
+        this.updateCameraData();
+      };
     } else {
       this.hideGui();
     }
@@ -104,6 +114,9 @@ class VideoSceneViewer {
     this.scene.remove(this.helpers);
     // 销毁调试 GUI
     this.hideGui();
+    // 销毁四点校正 overlay
+    this.quadPinOverlay?.dispose?.();
+    this.quadPinOverlay = null;
     // 释放背景遮罩纹理
     if (this.bgTexture) {
       this.bgTexture.dispose?.();
@@ -187,6 +200,10 @@ class VideoSceneViewer {
         camera.camera.lookAt(item.camera.target.x, item.camera.target.y, item.camera.target.z);
       }
       camera.camera.updateProjectionMatrix();
+      // 四点透视校正角点（可选，缺省走 VideoCamera 默认恒等映射，零行为变化）
+      if (item.camera.quadCorners) {
+        camera.quadCorners = item.camera.quadCorners;
+      }
       // HTMLVideoElement
       camera.texture = new THREE.TextureLoader().load(item.video.poster);
       // 修复【视频不投射】：只设 video.src 不会触发加载流程，
@@ -210,6 +227,8 @@ class VideoSceneViewer {
 
     const videoTextureArray = [];
 
+    const quadHomographyArray = [];
+
     for (let i = 0; i < n; i++) {
       /**
        * @type {VideoCamera}
@@ -228,6 +247,7 @@ class VideoSceneViewer {
       projScreenMatrixArray.push(camera.calcProjScreenMatrix());
       depthTextureArray.push(depthStep.texture());
       videoTextureArray.push(camera.texture);
+      quadHomographyArray.push(camera.calcQuadHomography());
     }
     // 不添加helper
     if (this.openDebug) {
@@ -239,6 +259,7 @@ class VideoSceneViewer {
     this.colorStep.projScreenMatrixArray = projScreenMatrixArray;
     this.colorStep.depthTextureArray = depthTextureArray;
     this.colorStep.videoTextureArray = videoTextureArray;
+    this.colorStep.quadHomographyArray = quadHomographyArray;
     this.colorStep.bgTexture = this.bgTexture;
     this.colorStep.initialize();
     // }
@@ -305,6 +326,14 @@ class VideoSceneViewer {
         obj.visible = true;
       }
       this.blendStep.render();
+      // 主相机转动后视锥四角的屏幕投影会变，每帧重算参考框让 overlay 圆点跟随画面。
+      // 仅重算参考矩形（_refScreenCorners），_quad（用户拖动值）不变，重新映射位置。
+      if (this.quadPinOverlay?._visible && this.currCameraData) {
+        this.quadPinOverlay.updateRefFromFrustum(this.currCameraData.camera, this.camera);
+      }
+      // BlendRender 已把融合画面上屏到默认 framebuffer，在其后叠加四点校正 overlay
+      // （拖拽圆点 + 连线框），直渲屏幕。
+      this.quadPinOverlay?.renderOverlay();
 
       // this.stats.update();
 
@@ -343,6 +372,10 @@ class VideoSceneViewer {
     _camera.camera.lookAt(data.camera.target.x, data.camera.target.y, data.camera.target.z);
     _camera.camera.updateWorldMatrix(true);
     _camera.camera.updateProjectionMatrix();
+    // 四点透视校正角点（可选）
+    if (data.camera.quadCorners) {
+      _camera.quadCorners = data.camera.quadCorners;
+    }
     // HTMLVideoElement
     _camera.texture = new THREE.TextureLoader().load(data.video.poster);
     //   camera.video.src = item.video.stream;
@@ -361,6 +394,7 @@ class VideoSceneViewer {
     this.colorStep.projScreenMatrixArray.push(_camera.calcProjScreenMatrix());
     this.colorStep.depthTextureArray.push(depthStep.texture());
     this.colorStep.videoTextureArray.push(_camera.texture);
+    this.colorStep.quadHomographyArray.push(_camera.calcQuadHomography());
     this.colorStep.update();
 
     _camera.addEventListener(VideoCamera.TEXTURE_UPDATED, (data) => {
@@ -388,6 +422,7 @@ class VideoSceneViewer {
         this.colorStep.projScreenMatrixArray.splice(i, 1);
         this.colorStep.depthTextureArray.splice(i, 1);
         this.colorStep.videoTextureArray.splice(i, 1);
+        this.colorStep.quadHomographyArray.splice(i, 1);
         this.colorStep.update();
         // DepthRender
         const depthStep = this.depthSteps.splice(i, 1)[0];
@@ -410,6 +445,7 @@ class VideoSceneViewer {
       this.colorStep.projScreenMatrixArray.splice(i, 1);
       this.colorStep.depthTextureArray.splice(i, 1);
       this.colorStep.videoTextureArray.splice(i, 1);
+      this.colorStep.quadHomographyArray.splice(i, 1);
       // DepthRender
       this.depthSteps.splice(i, 1);
     }
@@ -530,7 +566,17 @@ class VideoSceneViewer {
     far: 1000,
     mixing: 0.85,
     helperVisible: false,
-    info: ''
+    info: '',
+    // 四点透视校正角点 quadCorners（投影UV->视频UV），顺序：左下/右下/右上/左上。
+    // GUI 滑动时实时写回 currCameraData.quadCorners 并重算 Homography。
+    q0x: 0,
+    q0y: 0, // 左下
+    q1x: 1,
+    q1y: 0, // 右下
+    q2x: 1,
+    q2y: 1, // 右上
+    q3x: 0,
+    q3y: 1 // 左上
   };
 
   /**
@@ -547,6 +593,7 @@ class VideoSceneViewer {
           this.transformControl.detach(this.currSelectObj);
           this._changeGUIMsg();
           this.currSelectObj = null;
+          this.quadPinOverlay?.hide();
           this._mode = VideoSceneViewer.NORMAL;
           return;
         }
@@ -614,6 +661,31 @@ class VideoSceneViewer {
         this.updateCamera2({ helperVisible: value });
       })
       .listen();
+    // 四点透视校正（quadCorners）：实时拖动调整视频画面四角配准，
+    // 可把视频拉成平行四边形/梯形以贴合倾斜投影面。顺序：左下/右下/右上/左上。
+    const quadFolder = this.gui.addFolder('四点透视校正(quadCorners)');
+    const quadKeys = ['q0x', 'q0y', 'q1x', 'q1y', 'q2x', 'q2y', 'q3x', 'q3y'];
+    const quadLabels = {
+      q0x: '左下.x',
+      q0y: '左下.y',
+      q1x: '右下.x',
+      q1y: '右下.y',
+      q2x: '右上.x',
+      q2y: '右上.y',
+      q3x: '左上.x',
+      q3y: '左上.y'
+    };
+    quadKeys.forEach((key) => {
+      quadFolder
+        .add(this.params, key, -0.5, 1.5, 0.01)
+        .name(quadLabels[key])
+        .onChange(() => {
+          // updateQuadCornersFromParams 内部已刷新 overlay，无需重复调用
+          this.updateQuadCornersFromParams();
+        })
+        .listen();
+    });
+    quadFolder.open();
     foldergui
       .add(this.params, 'mixing', 0, 1, 0.01)
       .onChange((value) => {
@@ -730,6 +802,13 @@ class VideoSceneViewer {
     this.currSelectObj = obj;
     this.transformControl.attach(obj);
     this._changeGUIMsg();
+    // 显示四点透视校正 overlay：以选中投影相机的视锥四角在屏幕上的投影作参考框，
+    // 初始 quadCorners 取该相机当前值。拖拽角点实时改 quadCorners 并重算 Homography。
+    if (this.quadPinOverlay && this.currCameraData) {
+      this.quadPinOverlay.updateRefFromFrustum(this.currCameraData.camera, this.camera);
+      this.quadPinOverlay.setQuad(this.currCameraData.quadCorners);
+      this.quadPinOverlay.show();
+    }
     window.currSelectObj = obj;
   };
 
@@ -757,7 +836,41 @@ class VideoSceneViewer {
     this.params.fov = this.currCameraData.camera.fov;
     this.params.near = this.currCameraData.camera.near;
     this.params.far = this.currCameraData.camera.far;
+    // 把当前选中相机的 quadCorners 同步回 GUI 显示
+    this._syncQuadParamsFromCamera();
     this.updateCameraData();
+  };
+
+  // 把 GUI 的 8 个滑条值写回 currCameraData.quadCorners（actual）并重算 Homography 上传 GPU。
+  updateQuadCornersFromParams = () => {
+    if (!this.currCameraData) return;
+    const p = this.params;
+    // 顺序：左下/右下/右上/左上
+    this.currCameraData.quadCorners = [
+      [p.q0x, p.q0y],
+      [p.q1x, p.q1y],
+      [p.q2x, p.q2y],
+      [p.q3x, p.q3y]
+    ];
+    this.updateCameraData();
+    // 同步刷新 overlay 圆点位置（滑条改 -> overlay 跟随）
+    if (this.quadPinOverlay) {
+      this.quadPinOverlay.setQuad(this.currCameraData.quadCorners);
+    }
+  };
+
+  // 选中相机后把 quadCorners(actual)读进 params 显示。
+  _syncQuadParamsFromCamera = () => {
+    if (!this.currCameraData?.quadCorners) return;
+    const q = this.currCameraData.quadCorners;
+    this.params.q0x = q[0][0];
+    this.params.q0y = q[0][1];
+    this.params.q1x = q[1][0];
+    this.params.q1y = q[1][1];
+    this.params.q2x = q[2][0];
+    this.params.q2y = q[2][1];
+    this.params.q3x = q[3][0];
+    this.params.q3y = q[3][1];
   };
 
   // 更新场景相机
@@ -774,25 +887,53 @@ class VideoSceneViewer {
       cameraData.helper.update();
       // ColorRender
       this.colorStep.projScreenMatrixArray[index] = cameraData.calcProjScreenMatrix();
+      // quadCorners 变化时重算 Homography（拖拽/外部修改后跟随生效）
+      this.colorStep.quadHomographyArray[index] = cameraData.calcQuadHomography();
       this.colorStep.update();
     });
 
-    this.params.info = ` {camera: {
-      name: '视频融合_test',
-      fov: ${this.params.fov},
-      aspect: ${this.params.aspect},
-      near: ${this.params.near},
-      far: ${this.params.far},
-      position: ${this.params.position},
-      rotation: ${this.params.rotation},
-      // target: {x:0 ,y:0 ,z:0}
-    },
-    video: {
-      poster: '',
-      stream: ''
-    }}`;
-    console.log('this.params.rotation', this.params.rotation);
+    // 生成可直接复制使用的配置：选中相机的完整 camera + video 参数。
+    // position/rotation 从 currSelectObj（被 TransformControls 操控的投影相机）读真实值；
+    // quadCorners 从 currCameraData 读 actual 值。
+    this.params.info = this._buildExportConfig();
+    console.log('VideoSceneViewer export config:', this.params.info);
     // this.gui.updateDisplay();
+  };
+
+  // 生成可直接复制到 scene.tsx videoFusionData 使用的配置字符串。
+  // 只导出选中相机的参数；非选中相机保持原值（导出全量会与未在调试的相机混在一起，易错）。
+  // 生成可直接复制到 scene.tsx videoFusionData 使用的合法 JS 对象字符串。
+  // 用 JSON 生成（无注释、标准双引号、合法尾逗号），粘贴进代码后 Prettier 能直接格式化。
+  // 字段顺序固定：camera(name/fov/aspect/near/far/position/rotation/quadCorners) + video。
+  _buildExportConfig = () => {
+    if (!this.currCameraData) return '';
+    const cam = this.currCameraData.camera;
+    const pos = this.currSelectObj ? this.currSelectObj.position : cam.position;
+    const rot = this.currSelectObj ? this.currSelectObj.rotation : cam.rotation;
+    const fmt = (n) => Number(n.toFixed(6));
+    const q = this.currCameraData.quadCorners || [
+      [0, 0],
+      [1, 0],
+      [1, 1],
+      [0, 1]
+    ];
+    const obj = {
+      camera: {
+        name: cam.name || '视频融合_test',
+        fov: fmt(cam.fov),
+        aspect: fmt(cam.aspect),
+        near: fmt(cam.near),
+        far: fmt(cam.far),
+        position: { x: fmt(pos.x), y: fmt(pos.y), z: fmt(pos.z) },
+        rotation: { x: fmt(rot.x), y: fmt(rot.y), z: fmt(rot.z) },
+        quadCorners: q.map((c) => [fmt(c[0]), fmt(c[1])])
+      },
+      video: {
+        poster: '',
+        stream: ''
+      }
+    };
+    return JSON.stringify(obj, null, 2);
   };
 }
 

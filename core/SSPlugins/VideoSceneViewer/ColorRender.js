@@ -8,6 +8,7 @@
 import * as THREE from 'three';
 import {
   LinearFilter,
+  Matrix3,
   RawShaderMaterial,
   RGBAFormat,
   Vector2,
@@ -50,6 +51,11 @@ class ColorRender extends RenderStep {
      * @type {Texture[]}
      */
     this.bgTexture = null;
+
+    /**
+     * @type {Matrix3[]} 每路视频一个 Homography（投影 UV -> 视频 UV），用于四点透视校正。
+     */
+    this.quadHomographyArray = [];
   }
 
   initialize() {
@@ -129,6 +135,10 @@ class ColorRender extends RenderStep {
         },
         uBgTexture: {
           value: this.bgTexture
+        },
+        // 四点透视校正 Homography（投影 UV -> 视频 UV），每路视频一个 Matrix3。
+        uQuadHomography: {
+          value: this.quadHomographyArray
         }
       },
       vertexShader: ((n) => {
@@ -161,21 +171,30 @@ class ColorRender extends RenderStep {
           'uniform sampler2D uBgTexture;',
           `uniform sampler2D uDepthTexture[${n}];`,
           `uniform sampler2D uVideoTexture[${n}];`,
+          `uniform mat3      uQuadHomography[${n}];`,
           `varying vec4      uProjScreenPosition[${n}];`,
           'float decode(const in vec4 color) {',
           '    const vec4 a = vec4(1.0, 1.0 / 256.0, 1.0 / (256.0 * 256.0), 1.0 / (256.0 * 256.0 * 256.0));',
           '    float  value = dot(color, a);',
           '    return value;',
           '}',
-          'vec4 visible(const in sampler2D tex, const in sampler2D img, const in vec4 position , const in sampler2D bgimg) {',
+          'vec4 visible(const in sampler2D tex, const in sampler2D img, const in vec4 position , const in sampler2D bgimg, const in mat3 homog) {',
           '    vec3 fragCoord = (position.xyz / position.w) / 2.0 + 0.5;',
           '    if (fragCoord.x >= 0.0 && fragCoord.y >= 0.0 && fragCoord.z >= 0.0 &&',
           '        fragCoord.x <= 1.0 && fragCoord.y <= 1.0 && fragCoord.z <= 1.0) {',
           '        vec4  color = texture2D(tex, fragCoord.xy);',
           '        float depth = decode(color);',
           '        if (fragCoord.z < depth + 0.0015) {',
-          '          vec4 vc = texture2D(img, fragCoord.xy);',
-          '          vec4 bg = texture2D(bgimg, fragCoord.xy);',
+          // 四点透视校正：用 Homography 把投影 UV(fragCoord.xy) 变换到视频纹理 UV。
+          // 默认 quadCorners 为单位正方形时 H=I，warpedUV=fragCoord.xy，行为与改造前一致。
+          // bg(VideoMask) 同步用 warpedUV 采样，让圆形虚化遮罩跟随校正后的视频区域。
+          '          vec3 hw = homog * vec3(fragCoord.xy, 1.0);',
+          '          vec2 warpedUV = hw.xy / hw.z;',
+          '          if (warpedUV.x < 0.0 || warpedUV.x > 1.0 || warpedUV.y < 0.0 || warpedUV.y > 1.0) {',
+          '            return vec4(0.0, 0.0, 0.0, 0.0);',
+          '          }',
+          '          vec4 vc = texture2D(img, warpedUV);',
+          '          vec4 bg = texture2D(bgimg, warpedUV);',
           // 白边根因：投影区是视频相机视锥的矩形投影，边界处 alpha 从 VideoMask 高值
           // 突变到 0(矩形外不命中)，形成锐角矩形描边(视频边缘色)。
           // 在矩形边界 0~0.04 内对 bg.a 做 smoothstep 衰减，让边界 alpha 平滑淡出，
@@ -201,7 +220,8 @@ class ColorRender extends RenderStep {
               `uDepthTexture[${i}], `,
               `uVideoTexture[${i}], `,
               `uProjScreenPosition[${i}],`,
-              'uBgTexture);',
+              'uBgTexture,',
+              `uQuadHomography[${i}]);`,
               // 多路视频重叠：用 Porter-Duff over 算子按 alpha 加权合成，而非 RGB 直接相加。
               // 直接相加会让重叠区 RGB 相加 >1 过曝变亮；over 合成 = 前景*前景a + 背景*(1-前景a)，
               // 重叠区取最上层视频色，alpha 不会超过 1，亮度正常。

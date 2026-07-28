@@ -3,6 +3,7 @@ import {
   ClampToEdgeWrapping,
   EventDispatcher,
   LinearFilter,
+  Matrix3,
   Matrix4,
   PerspectiveCamera,
   RGBAFormat,
@@ -10,6 +11,7 @@ import {
   TextureLoader,
   VideoTexture
 } from 'three';
+import { computeQuadHomographyElements } from './computeQuadHomographyElements';
 
 /**
  * @class BlendRender
@@ -41,6 +43,21 @@ class VideoCamera extends EventDispatcher {
      * @type {HTMLVideoElement}
      */
     this.video = document.createElement('video');
+
+    /**
+     * 四点透视校正角点（quadCorners），移植自 vid3d-projection。
+     * 顺序：[左下, 右下, 右上, 左上]，每项 [x, y]，坐标域 [0,1]。
+     * 语义：目标点 = 视频纹理 UV，源点 = 投影 UV（片元 fragCoord.xy）。
+     * 默认单位正方形 => Homography 为单位矩阵，warpedUV = uv，行为与改造前一致。
+     * 配置示例：item.camera.quadCorners = [[0,0],[1,0],[1,1],[0,1]]
+     */
+    this.quadCorners = [
+      [0, 0],
+      [1, 0],
+      [1, 1],
+      [0, 1]
+    ];
+
     this.video.crossOrigin = 'anonymous'; // anonymous、use-credentials
     this.video.autoplay = true;
     this.video.preload = 'auto'; // none、metadata、auto
@@ -126,6 +143,20 @@ class VideoCamera extends EventDispatcher {
       } catch (e) {}
       this.video = null;
     }
+  }
+
+  /**
+   * 由当前 quadCorners 计算 3x3 Homography 矩阵，供 ColorRender 片元着色器采样。
+   * 模型由 window.__HOMO_DIR 控制（实机测试用）：
+   *   'sample'(默认)：H·fragCoord=采样位置，直接返回 H。
+   *   'pin'：视频角出现在投影角处，shader 用 H⁻¹，这里返回 H.invert()。
+   * @returns {Matrix3}
+   */
+  calcQuadHomography() {
+    const dir = (typeof window !== 'undefined' && window.__HOMO_DIR) || 'sample';
+    const elements = computeQuadHomographyElements(this.quadCorners);
+    const H = new Matrix3().fromArray(elements);
+    return dir === 'pin' ? H.invert() : H;
   }
 
   /**
