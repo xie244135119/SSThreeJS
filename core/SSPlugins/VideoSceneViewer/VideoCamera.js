@@ -9,6 +9,7 @@ import {
   RGBAFormat,
   Texture,
   TextureLoader,
+  Vector4,
   VideoTexture
 } from 'three';
 import { computeQuadHomographyElements } from './computeQuadHomographyElements';
@@ -40,6 +41,15 @@ class VideoCamera extends EventDispatcher {
     // this.texture = new TextureLoader().load(require('./icon2.png').default);
 
     /**
+     * 原始视频流地址（初始化时从配置 item.video.stream 存一份）。
+     * 导出配置时用，避免从 video.src 读（运行时可能被浏览器规范化成绝对 URL，且
+     * addCamera 路径会清空 video.src）。poster 同理。
+     * @type {string}
+     */
+    this.stream = '';
+    this.poster = '';
+
+    /**
      * 是否参与视频投影。false 时该路投影矩阵置零（不命中视锥=贡献0=隐藏），
      * 不重建 shader，实时切换可见性。
      * @type {boolean}
@@ -64,6 +74,17 @@ class VideoCamera extends EventDispatcher {
       [1, 1],
       [0, 1]
     ];
+
+    /**
+     * 鱼眼/广角畸变校正参数（Brown 径向多项式）。
+     * @type {{ enabled: boolean, k1: number, k2: number, cx: number, cy: number, scale: number }}
+     * - enabled：是否启用畸变校正。false 时返回全 0 uniform，shader 恒等映射，零行为变化。
+     * - k1/k2：径向畸变系数。枪机广角桶形畸变通常 k1>0（把弯曲采样点向中心拉，显示上拉直直线）。
+     * - cx/cy：畸变中心相对纹理中心的偏移，归一化 [-1,1]，纹理中心为 0。多数镜头 ≈0。
+     * - scale：整体缩放。>1 放大采样区把边缘拉进画面，<1 缩小。默认 1。
+     * 配置示例：distortion: { enabled: true, k1: 0.15, k2: 0, cx: 0, cy: 0, scale: 1 }
+     */
+    this.distortion = { enabled: false, k1: 0, k2: 0, cx: 0, cy: 0, scale: 1 };
 
     this.video.crossOrigin = 'anonymous'; // anonymous、use-credentials
     this.video.autoplay = true;
@@ -189,6 +210,25 @@ class VideoCamera extends EventDispatcher {
     const elements = computeQuadHomographyElements(this.quadCorners, 'sample');
     const H = new Matrix3().fromArray(elements);
     return H.invert();
+  }
+
+  /**
+   * 计算畸变校正 uniform，供 ColorRender 片元着色器 uDistortion[i] / uDistortion2[i] 使用。
+   * 返回 { vec4: Vector4(k1,k2,cx,cy), scaleVec: Vector4(scale,0,0,0) }。
+   * 用两个 vec4 数组承载，避开 GLSL ES 1.0 下独立 float 数组声明在某些驱动上的编译问题。
+   * enabled=false 或全 0 时返回零 Vector4 + scale 1，shader applyDistortion 恒等退化。
+   * 每帧调一次（updateCameraData 里），返回新对象避免 three 缓存旧引用。
+   * @returns {{ vec4: Vector4, scaleVec: Vector4 }}
+   */
+  calcDistortionUniforms() {
+    const d = this.distortion;
+    if (!d || !d.enabled) {
+      return { vec4: new Vector4(0, 0, 0, 0), scaleVec: new Vector4(1, 0, 0, 0) };
+    }
+    return {
+      vec4: new Vector4(d.k1 || 0, d.k2 || 0, d.cx || 0, d.cy || 0),
+      scaleVec: new Vector4(d.scale == null ? 1 : d.scale, 0, 0, 0)
+    };
   }
 
   /**

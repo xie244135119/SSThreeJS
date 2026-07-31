@@ -247,8 +247,22 @@ class VideoSceneViewer {
       if (item.camera.quadCorners) {
         camera.quadCorners = item.camera.quadCorners;
       }
+      // 鱼眼/广角畸变校正参数（可选，缺省 enabled=false 走恒等映射，零行为变化）
+      if (item.camera.distortion) {
+        camera.distortion = {
+          enabled: item.camera.distortion.enabled ?? false,
+          k1: item.camera.distortion.k1 ?? 0,
+          k2: item.camera.distortion.k2 ?? 0,
+          cx: item.camera.distortion.cx ?? 0,
+          cy: item.camera.distortion.cy ?? 0,
+          scale: item.camera.distortion.scale ?? 1
+        };
+      }
       // HTMLVideoElement
       camera.texture = new THREE.TextureLoader().load(item.video.poster);
+      // 存原始 stream/poster 供导出配置用（video.src 运行时会被规范化/清空，不可靠）
+      camera.stream = item.video.stream || '';
+      camera.poster = item.video.poster || '';
       // 修复【视频不投射】：只设 video.src 不会触发加载流程，
       // 浏览器不会为已存在的 src 自动 fetch；必须显式调用 load() 才会触发
       // canplay/canplaythrough 事件链（VideoCamera 在此事件里才会建 VideoTexture 并派发
@@ -272,6 +286,10 @@ class VideoSceneViewer {
 
     const quadHomographyArray = [];
 
+    const distortionArray = [];
+
+    const distortionScaleArray = [];
+
     for (let i = 0; i < n; i++) {
       /**
        * @type {VideoCamera}
@@ -291,6 +309,9 @@ class VideoSceneViewer {
       depthTextureArray.push(depthStep.texture());
       videoTextureArray.push(camera.texture);
       quadHomographyArray.push(camera.calcQuadHomography());
+      const du = camera.calcDistortionUniforms();
+      distortionArray.push(du.vec4);
+      distortionScaleArray.push(du.scaleVec);
     }
     // 不添加helper
     if (this.openDebug) {
@@ -312,6 +333,8 @@ class VideoSceneViewer {
       step.depthTextureArray = depthTextureArray.slice(start, end);
       step.videoTextureArray = videoTextureArray.slice(start, end);
       step.quadHomographyArray = quadHomographyArray.slice(start, end);
+      step.distortionArray = distortionArray.slice(start, end);
+      step.distortionScaleArray = distortionScaleArray.slice(start, end);
       step.bgTexture = this.bgTexture;
       step.initialize();
       // 记录批的 [start,end) 便于 updateCameraData 跨批更新
@@ -381,6 +404,8 @@ class VideoSceneViewer {
       step.depthTextureArray = this.depthSteps.slice(start, end).map((d) => d.texture());
       step.videoTextureArray = this.cameras.slice(start, end).map((c) => c.texture);
       step.quadHomographyArray = this.cameras.slice(start, end).map((c) => c.calcQuadHomography());
+      step.distortionArray = this.cameras.slice(start, end).map((c) => c.calcDistortionUniforms().vec4);
+      step.distortionScaleArray = this.cameras.slice(start, end).map((c) => c.calcDistortionUniforms().scaleVec);
       step.bgTexture = this.bgTexture;
       step.initialize();
       step._range = [start, end];
@@ -492,8 +517,22 @@ class VideoSceneViewer {
     if (data.camera.quadCorners) {
       _camera.quadCorners = data.camera.quadCorners;
     }
+    // 鱼眼/广角畸变校正参数（可选）
+    if (data.camera.distortion) {
+      _camera.distortion = {
+        enabled: data.camera.distortion.enabled ?? false,
+        k1: data.camera.distortion.k1 ?? 0,
+        k2: data.camera.distortion.k2 ?? 0,
+        cx: data.camera.distortion.cx ?? 0,
+        cy: data.camera.distortion.cy ?? 0,
+        scale: data.camera.distortion.scale ?? 1
+      };
+    }
     // HTMLVideoElement
     _camera.texture = new THREE.TextureLoader().load(data.video.poster);
+    // 存原始 stream/poster 供导出配置用
+    _camera.stream = data.video.stream || '';
+    _camera.poster = data.video.poster || '';
     //   camera.video.src = item.video.stream;
     _camera.video.src = '';
     this.cameras.push(_camera);
@@ -685,6 +724,29 @@ class VideoSceneViewer {
     mixing: 0.85,
     helperVisible: false,
     info: '',
+    // 复制配置到剪贴板按钮（lil-gui FunctionController：值为函数即渲染为按钮）
+    copyInfo: () => {
+      const text = this._buildExportConfig();
+      if (!text) return;
+      const done = () => {
+        // eslint-disable-next-line no-console
+        console.log('【视频融合】配置已复制到剪贴板:\n', text);
+      };
+      if (navigator.clipboard?.writeText) {
+        navigator.clipboard.writeText(text).then(done).catch(() => {
+          // 兜底：非安全上下文（http）无 clipboard API，退化到 textarea 选中复制
+          this._fallbackCopy(text);
+          done();
+        });
+      } else {
+        this._fallbackCopy(text);
+        done();
+      }
+    },
+    // 重新生成配置并刷新 info 显示（按钮：调一次重算 + 刷新 GUI）
+    refreshInfo: () => {
+      this.updateCameraData();
+    },
     // 四点透视校正角点 quadCorners（投影UV->视频UV），顺序：左下/右下/右上/左上。
     // GUI 滑动时实时写回 currCameraData.quadCorners 并重算 Homography。
     q0x: 0,
@@ -694,7 +756,15 @@ class VideoSceneViewer {
     q2x: 1,
     q2y: 1, // 右上
     q3x: 0,
-    q3y: 1 // 左上
+    q3y: 1, // 左上
+    // 鱼眼/广角畸变校正（Brown 径向多项式）。GUI 滑动时写回 currCameraData.distortion 并重算 uniform。
+    // k1>0 修正枪机广角桶形畸变（边缘外扩），把弯曲采样点向中心拉，显示上把弯曲直线拉直。
+    distEnabled: false,
+    distK1: 0,
+    distK2: 0,
+    distCx: 0,
+    distCy: 0,
+    distScale: 1
   };
 
   /**
@@ -804,6 +874,42 @@ class VideoSceneViewer {
         .listen();
     });
     quadFolder.open();
+    // 鱼眼/广角畸变校正：k1/k2 径向系数 + 畸变中心 + 整体缩放。
+    // 调试顺序：先四点透视把四角对齐，再畸变把中间弯曲直线拉直。
+    // 语义：视频纹理是【带畸变】画面（枪机广角桶形=边缘内容外扩），shader 对每个理想点
+    // 去纹理里找对应采样位置。k1>0 → r_d>r → 采样向外扩 → 抵消纹理弯曲 → 直线拉直。
+    // 调试：k1 从 0 往上调（典型 0.05~0.3），观察画面直线变直；过冲则减小或取负。
+    const distFolder = this.gui.addFolder('畸变校正(鱼眼/广角)');
+    distFolder
+      .add(this.params, 'distEnabled')
+      .name('启用')
+      .onChange(() => this.updateDistortionFromParams())
+      .listen();
+    distFolder
+      .add(this.params, 'distK1', -1, 1, 0.01)
+      .name('径向k1')
+      .onChange(() => this.updateDistortionFromParams())
+      .listen();
+    distFolder
+      .add(this.params, 'distK2', -1, 1, 0.01)
+      .name('径向k2')
+      .onChange(() => this.updateDistortionFromParams())
+      .listen();
+    distFolder
+      .add(this.params, 'distCx', -0.5, 0.5, 0.01)
+      .name('中心x')
+      .onChange(() => this.updateDistortionFromParams())
+      .listen();
+    distFolder
+      .add(this.params, 'distCy', -0.5, 0.5, 0.01)
+      .name('中心y')
+      .onChange(() => this.updateDistortionFromParams())
+      .listen();
+    distFolder
+      .add(this.params, 'distScale', 0.5, 2, 0.01)
+      .name('缩放')
+      .onChange(() => this.updateDistortionFromParams())
+      .listen();
     foldergui
       .add(this.params, 'mixing', 0, 1, 0.01)
       .onChange((value) => {
@@ -816,6 +922,9 @@ class VideoSceneViewer {
         // this.params.info = value;
       })
       .listen();
+    // 复制配置到剪贴板（一键复制当前选中相机的完整配置，省去手动选中 info 文本）
+    foldergui.add(this.params, 'copyInfo').name('📋 复制配置');
+    foldergui.add(this.params, 'refreshInfo').name('🔄 重新生成');
     // this.gui.open();
     foldergui.open();
 
@@ -956,6 +1065,7 @@ class VideoSceneViewer {
     this.params.far = this.currCameraData.camera.far;
     // 把当前选中相机的 quadCorners 同步回 GUI 显示
     this._syncQuadParamsFromCamera();
+    this._syncDistortionParamsFromCamera();
     this.updateCameraData();
   };
 
@@ -977,6 +1087,21 @@ class VideoSceneViewer {
     }
   };
 
+  // 把 GUI 的畸变滑条值写回 currCameraData.distortion 并重算 uniform 上传 GPU。
+  updateDistortionFromParams = () => {
+    if (!this.currCameraData) return;
+    const p = this.params;
+    this.currCameraData.distortion = {
+      enabled: p.distEnabled,
+      k1: p.distK1,
+      k2: p.distK2,
+      cx: p.distCx,
+      cy: p.distCy,
+      scale: p.distScale
+    };
+    this.updateCameraData();
+  };
+
   // 选中相机后把 quadCorners(actual)读进 params 显示。
   _syncQuadParamsFromCamera = () => {
     if (!this.currCameraData?.quadCorners) return;
@@ -989,6 +1114,26 @@ class VideoSceneViewer {
     this.params.q2y = q[2][1];
     this.params.q3x = q[3][0];
     this.params.q3y = q[3][1];
+  };
+
+  // 选中相机后把 distortion 读进 params 显示。
+  _syncDistortionParamsFromCamera = () => {
+    const d = this.currCameraData?.distortion;
+    if (!d) {
+      this.params.distEnabled = false;
+      this.params.distK1 = 0;
+      this.params.distK2 = 0;
+      this.params.distCx = 0;
+      this.params.distCy = 0;
+      this.params.distScale = 1;
+      return;
+    }
+    this.params.distEnabled = !!d.enabled;
+    this.params.distK1 = d.k1 || 0;
+    this.params.distK2 = d.k2 || 0;
+    this.params.distCx = d.cx || 0;
+    this.params.distCy = d.cy || 0;
+    this.params.distScale = d.scale == null ? 1 : d.scale;
   };
 
   // 更新场景相机
@@ -1010,6 +1155,10 @@ class VideoSceneViewer {
         info.step.projScreenMatrixArray[info.inBatch] = projMat;
         // quadCorners 变化时重算 Homography（拖拽/外部修改后跟随生效）
         info.step.quadHomographyArray[info.inBatch] = cameraData.calcQuadHomography();
+        // 畸变参数变化时重算 uniform（GUI 滑条调整 k1/k2/cx/cy/scale 实时生效）
+        const du = cameraData.calcDistortionUniforms();
+        info.step.distortionArray[info.inBatch] = du.vec4;
+        info.step.distortionScaleArray[info.inBatch] = du.scaleVec;
         info.step.update();
       }
     }
@@ -1022,11 +1171,28 @@ class VideoSceneViewer {
     // this.gui.updateDisplay();
   };
 
-  // 生成可直接复制到 scene.tsx videoFusionData 使用的配置字符串。
-  // 只导出选中相机的参数；非选中相机保持原值（导出全量会与未在调试的相机混在一起，易错）。
-  // 生成可直接复制到 scene.tsx videoFusionData 使用的合法 JS 对象字符串。
-  // 用 JSON 生成（无注释、标准双引号、合法尾逗号），粘贴进代码后 Prettier 能直接格式化。
-  // 字段顺序固定：camera(name/fov/aspect/near/far/position/rotation/quadCorners) + video。
+  // 非安全上下文（http）下 navigator.clipboard 不可用，用临时 textarea + execCommand 兜底复制。
+  _fallbackCopy = (text) => {
+    try {
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.position = 'fixed';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+    } catch (e) {
+      // eslint-disable-next-line no-console
+      console.warn('【视频融合】复制失败，请手动选中 info 文本复制', e);
+    }
+  };
+
+  // 生成可直接复制到 scene.config.js videoFusion.cameras[] 使用的配置字符串。  // 只导出选中相机的参数；非选中相机保持原值（导出全量会与未在调试的相机混在一起，易错）。
+  // 用 JSON 生成（合法语法），粘贴进代码后 Prettier 能直接格式化。
+  // 字段顺序固定：camera(name/fov/aspect/near/far/position/rotation/quadCorners/distortion?)
+  // + video(poster/stream)。stream/poster 从 VideoCamera 存的原始配置读，避免 video.src 被
+  // 浏览器规范化成绝对 URL 或运行时被清空。distortion 仅在启用且有非默认值时导出。
   _buildExportConfig = () => {
     if (!this.currCameraData) return '';
     const cam = this.currCameraData.camera;
@@ -1039,20 +1205,37 @@ class VideoSceneViewer {
       [1, 1],
       [0, 1]
     ];
+    const d = this.currCameraData.distortion;
+    // 仅在启用且有非默认值时导出畸变参数，避免配置冗余
+    const hasDistortion =
+      d &&
+      d.enabled &&
+      (d.k1 || d.k2 || d.cx || d.cy || (d.scale != null && d.scale !== 1));
+    const cameraObj = {
+      name: cam.name || '视频融合_test',
+      fov: fmt(cam.fov),
+      aspect: fmt(cam.aspect),
+      near: fmt(cam.near),
+      far: fmt(cam.far),
+      position: { x: fmt(pos.x), y: fmt(pos.y), z: fmt(pos.z) },
+      rotation: { x: fmt(rot.x), y: fmt(rot.y), z: fmt(rot.z) },
+      quadCorners: q.map((c) => [fmt(c[0]), fmt(c[1])])
+    };
+    if (hasDistortion) {
+      cameraObj.distortion = {
+        enabled: true,
+        k1: fmt(d.k1 || 0),
+        k2: fmt(d.k2 || 0),
+        cx: fmt(d.cx || 0),
+        cy: fmt(d.cy || 0),
+        scale: fmt(d.scale == null ? 1 : d.scale)
+      };
+    }
     const obj = {
-      camera: {
-        name: cam.name || '视频融合_test',
-        fov: fmt(cam.fov),
-        aspect: fmt(cam.aspect),
-        near: fmt(cam.near),
-        far: fmt(cam.far),
-        position: { x: fmt(pos.x), y: fmt(pos.y), z: fmt(pos.z) },
-        rotation: { x: fmt(rot.x), y: fmt(rot.y), z: fmt(rot.z) },
-        quadCorners: q.map((c) => [fmt(c[0]), fmt(c[1])])
-      },
+      camera: cameraObj,
       video: {
-        poster: '',
-        stream: ''
+        poster: this.currCameraData.poster || '',
+        stream: this.currCameraData.stream || ''
       }
     };
     return JSON.stringify(obj, null, 2);

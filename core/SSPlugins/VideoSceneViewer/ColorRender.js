@@ -56,6 +56,17 @@ class ColorRender extends RenderStep {
      * @type {Matrix3[]} 每路视频一个 Homography（投影 UV -> 视频 UV），用于四点透视校正。
      */
     this.quadHomographyArray = [];
+
+    /**
+     * @type {Vector4[]} 每路视频畸变参数 [k1, k2, cx, cy]，对应 uDistortion。
+     */
+    this.distortionArray = [];
+
+    /**
+     * @type {Vector4[]} 每路视频畸变缩放 [scale, 0, 0, 0]，对应 uDistortion2。
+     * 用 vec4 数组承载 scale，避开 GLSL ES 1.0 下独立 float 数组的驱动兼容问题。
+     */
+    this.distortionScaleArray = [];
   }
 
   initialize() {
@@ -161,6 +172,19 @@ class ColorRender extends RenderStep {
         // 四点透视校正 Homography（投影 UV -> 视频 UV），每路视频一个 Matrix3。
         uQuadHomography: {
           value: this.quadHomographyArray
+        },
+        // 鱼眼/广角畸变校正参数，每路视频一组 vec4(k1, k2, cx, cy) + scale。
+        // k1/k2：径向畸变系数（Brown 多项式 r_d = r*(1 + k1*r^2 + k2*r^4)）；
+        // cx/cy：畸变中心相对纹理中心偏移（归一化 [-1,1]，纹理中心为 0）；
+        // scale：整体缩放（>1 放大采样区把边缘拉进画面，<1 缩小），存 uDistortion2.x。
+        // enabled=0 时 calcDistortionUniforms 返回全 0 + scale1 -> 恒等映射，行为与无畸变一致。
+        // 用 vec4 数组承载 scale（uDistortion2）而非 float 数组：GLSL ES 1.0 下独立 float 数组
+        // 声明在某些 GPU 驱动上会编译失败导致白屏，vec4 数组通用稳定。
+        uDistortion: {
+          value: this.distortionArray
+        },
+        uDistortion2: {
+          value: this.distortionScaleArray
         }
       },
       vertexShader: ((n) => {
@@ -194,13 +218,35 @@ class ColorRender extends RenderStep {
           `uniform sampler2D uDepthTexture[${n}];`,
           `uniform sampler2D uVideoTexture[${n}];`,
           `uniform mat3      uQuadHomography[${n}];`,
+          `uniform vec4      uDistortion[${n}];`,     // (k1, k2, cx, cy)
+          `uniform vec4      uDistortion2[${n}];`,    // (scale, 0, 0, 0) — 复用 vec4 数组避开 float 数组声明
           `varying vec4      uProjScreenPosition[${n}];`,
           'float decode(const in vec4 color) {',
           '    const vec4 a = vec4(1.0, 1.0 / 256.0, 1.0 / (256.0 * 256.0), 1.0 / (256.0 * 256.0 * 256.0));',
           '    float  value = dot(color, a);',
           '    return value;',
           '}',
-          'vec4 visible(const in sampler2D tex, const in sampler2D img, const in vec4 position , const in sampler2D bgimg, const in mat3 homog) {',
+          // 鱼眼/广角径向畸变校正：理想 UV -> 畸变纹理采样 UV（正向闭式，无迭代）。
+          //   把 warpedUV 转到以畸变中心为原点的坐标 p = (uv*2-1 - center)，r = |p|，
+          //   r_d = r * (1 + k1*r^2 + k2*r^4)  （Brown 径向畸变多项式），
+          //   p_d = p / r * r_d * scale，再转回 [0,1] 纹理坐标。
+          //   k1<0 = 桶形畸变（广角/鱼眼常见，边缘外扩）的对采样修正：k1 取正把采样点向中心拉，
+          //   等效把纹理里弯曲的直线在显示上拉直。
+          //   性能：~10 mul + 1 sqrt + 1 div，逐片元，无纹理采样增加；k1=k2=0 + scale=1 时 r_d=r 恒等退化。
+          'vec2 applyDistortion(const in vec2 uv, const in vec4 dist, const in float scale) {',
+          '    vec2 p = uv * 2.0 - 1.0 - dist.zw;',
+          '    float r2 = dot(p, p);',
+          '    float r = sqrt(r2);',
+          '    float r_d = r * (1.0 + dist.x * r2 + dist.y * r2 * r2);',
+          // 注意：GLSL ES 1.0（RawShaderMaterial 默认版本）不支持对 vec2 等非标量用三元
+          // 运算符（?:），会导致 shader 编译失败 -> ColorRender 输出异常（白屏）。
+          // 故用 mix + step 做标量选择：r>1e-6 时取 (p/r*r_d)，否则取 p。
+          '    float k = step(1e-6, r);',
+          '    vec2 pd = mix(p, p / max(r, 1e-6) * r_d, k);',
+          '    pd *= scale;',
+          '    return pd * 0.5 + 0.5;',
+          '}',
+          'vec4 visible(const in sampler2D tex, const in sampler2D img, const in vec4 position , const in sampler2D bgimg, const in mat3 homog, const in vec4 dist, const in vec4 dist2) {',
           '    vec3 fragCoord = (position.xyz / position.w) / 2.0 + 0.5;',
           '    if (fragCoord.x >= 0.0 && fragCoord.y >= 0.0 && fragCoord.z >= 0.0 &&',
           '        fragCoord.x <= 1.0 && fragCoord.y <= 1.0 && fragCoord.z <= 1.0) {',
@@ -212,11 +258,15 @@ class ColorRender extends RenderStep {
           // bg(VideoMask) 同步用 warpedUV 采样，让圆形虚化遮罩跟随校正后的视频区域。
           '          vec3 hw = homog * vec3(fragCoord.xy, 1.0);',
           '          vec2 warpedUV = hw.xy / hw.z;',
+          // 鱼眼/广角畸变校正：把"理想无畸变 UV"映射到带畸变纹理里的实际采样 UV。
+          // 接在 Homography 之后：先 quad 把投影矩形定位到视频区域，再畸变在该区域内拉直直线。
+          // dist 全 0 + dscale=1 时 applyDistortion 恒等返回 warpedUV，行为与无畸变一致。
+          '          vec2 sampleUV = applyDistortion(warpedUV, dist, dist2.x);',
           '          if (warpedUV.x < 0.0 || warpedUV.x > 1.0 || warpedUV.y < 0.0 || warpedUV.y > 1.0) {',
           '            return vec4(0.0, 0.0, 0.0, 0.0);',
           '          }',
-          '          vec4 vc = texture2D(img, warpedUV);',
-          '          vec4 bg = texture2D(bgimg, warpedUV);',
+          '          vec4 vc = texture2D(img, sampleUV);',
+          '          vec4 bg = texture2D(bgimg, sampleUV);',
           // 锐边根因：视频区域（warpedUV 的 [0,1] 矩形）边界处 alpha 从 VideoMask 高值
           // 突变到 0（超界 return 透明），形成锐角矩形描边（视频边缘色）。
           // 在【视频区域边界】0~0.04 内对 bg.a 做 smoothstep 衰减，让边界 alpha 平滑淡出，
@@ -246,7 +296,9 @@ class ColorRender extends RenderStep {
               `uVideoTexture[${i}], `,
               `uProjScreenPosition[${i}],`,
               'uBgTexture,',
-              `uQuadHomography[${i}]);`,
+              `uQuadHomography[${i}],`,
+              `uDistortion[${i}],`,
+              `uDistortion2[${i}]);`,
               // 多路视频重叠：用 Porter-Duff over 算子按 alpha 加权合成，而非 RGB 直接相加。
               // 直接相加会让重叠区 RGB 相加 >1 过曝变亮；over 合成 = 前景*前景a + 背景*(1-前景a)，
               // 重叠区取最上层视频色，alpha 不会超过 1，亮度正常。
