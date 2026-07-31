@@ -159,22 +159,35 @@ class QuadPinOverlay {
     return bottom.lerp(top, y);
   }
 
-  // 屏幕 px -> quad 值：在参考四边形内反求 [0,1]
-  // 简单近似：按参考四边形为轴对齐矩形（视锥角点投影通常近似矩形）做归一化；
-  // 若拖出框则 clamp。够用于调试。
+  // 屏幕 px -> quad 值：双线性逆映射，与 _quadToScreen 严格互逆。
+  // 给定屏幕点 P，反求 使 _quadToScreen(x,y) = P。
+  // 双线性 P(x,y) = (1-y)*((1-x)*bl + x*br) + y*((1-x)*tl + x*tr)
+  // 参考框是任意四边形时正交近似会有误差（越远离原点越跳），故用牛顿迭代反求，
+  // 数值微分求雅可比，3~6 步收敛，任意四边形下圆点精准跟随鼠标不跳。
   _screenToQuad(px, py) {
-    const [bl, br, tr, tl] = this._refScreenCorners;
-    // 用左下为原点，右下方向为 x 轴，左上方向为 y 轴
-    const ex = br.clone().sub(bl); // x 轴向量
-    const ey = tl.clone().sub(bl); // y 轴向量
-    const v = new Vector2(px - bl.x, py - bl.y);
-    // 投影到 ex/ey（近似正交时的归一化）
-    const lenX = ex.length() || 1;
-    const lenY = ey.length() || 1;
-    let x = v.dot(ex.clone().normalize());
-    let y = v.dot(ey.clone().normalize());
-    x = x / lenX;
-    y = y / lenY;
+    const p = new Vector2(px, py);
+    let x = 0.5;
+    let y = 0.5;
+    const eps = 0.001;
+    for (let it = 0; it < 6; it++) {
+      const P = this._quadToScreen(x, y);
+      const dx = P.x - p.x;
+      const dy = P.y - p.y;
+      if (Math.abs(dx) < 0.01 && Math.abs(dy) < 0.01) break;
+      // 数值微分求双线性雅可比
+      const Px = this._quadToScreen(x + eps, y);
+      const Py = this._quadToScreen(x, y + eps);
+      const jxx = (Px.x - P.x) / eps;
+      const jxy = (Py.x - P.x) / eps;
+      const jyx = (Px.y - P.y) / eps;
+      const jyy = (Py.y - P.y) / eps;
+      const det = jxx * jyy - jxy * jyx;
+      if (Math.abs(det) < 1e-9) break;
+      const invX = (jyy * dx - jxy * dy) / det;
+      const invY = (-jyx * dx + jxx * dy) / det;
+      x -= invX;
+      y -= invY;
+    }
     return [x, y];
   }
 
@@ -299,6 +312,11 @@ class QuadPinOverlay {
     }
     if (best >= 0) {
       this._draggingIndex = best;
+      // 记录按下时鼠标相对该 pin 圆心的偏移，拖拽时保持这个偏移不变，
+      // 避免 pin 立即跳到鼠标位置（手感跳一下 + 圆点不在鼠标下）。
+      const pinScreen = this._quadToScreen(this._quad[best][0], this._quad[best][1]);
+      const p = this._getPointerScreen(e);
+      this._dragOffset = new Vector2(p.x - pinScreen.x, p.y - pinScreen.y);
       e.preventDefault();
       e.stopPropagation();
     }
@@ -307,7 +325,9 @@ class QuadPinOverlay {
   _onPointerMove(e) {
     if (this._draggingIndex < 0) return;
     const p = this._getPointerScreen(e);
-    const [x, y] = this._screenToQuad(p.x, p.y);
+    // 减去按下时的偏移，让 pin 跟随鼠标但保持初始抓取点相对位置（不跳）。
+    const offset = this._dragOffset || new Vector2(0, 0);
+    const [x, y] = this._screenToQuad(p.x - offset.x, p.y - offset.y);
     // 允许超界（-0.5~1.5），便于调平行四边形/梯形
     this._quad[this._draggingIndex] = [x, y];
     this._updateObjects();
@@ -318,6 +338,7 @@ class QuadPinOverlay {
 
   _onPointerUp() {
     this._draggingIndex = -1;
+    this._dragOffset = null;
   }
 
   /**

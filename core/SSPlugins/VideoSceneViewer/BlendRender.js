@@ -123,6 +123,13 @@ class BlendRender extends RenderStep {
       this.composer.addPass(this.shaderPass);
       this._lastK = k;
     }
+    // K 不变（未重建 material）时，手动同步 mixing 到现有 uniform：
+    // material 创建时 uMixing.value 绑定的是当时的 this.mixing，后续改 this.mixing 不会自动反映，
+    // 必须显式写入 uniform，否则 updateMixing 改值不生效。
+    const mat = this.shaderPass?.material;
+    if (mat?.uniforms?.uMixing) {
+      mat.uniforms.uMixing.value = this.mixing;
+    }
   }
 
   /**
@@ -150,10 +157,14 @@ class BlendRender extends RenderStep {
         '  gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);',
         '}'
       ].join('\n'),
-      // 多批 ColorRender 输出（shadowTextures）按 Porter-Duff over 算子合成后再叠到场景：
-      // 各批内已在 ColorRender 片元里 over 合成好了，这里只把 K 批结果再 over 一次。
-      // over 结合律保证：分批合成 ≡ 单批全 N 路 over 合成，画面零差异。
-      // 合成后的视频层用 alpha 作 mix 权重叠到场景色（uMixing 控制融合强度）。
+      // 多批 ColorRender 输出（shadowTextures）按 Porter-Duff over 算子合成后再叠到场景。
+      // 【关键】ColorRender 写入 RT 的 layer.rgb 已是【预乘 alpha】形态（其片元 over 合成时
+      // 做了 layer.rgb * a），所以本片元采样得到的 layer.rgb 里已经乘过一次 alpha。
+      // 故这里 over 累加直接用预乘分量：color.rgb += layer.rgb（不再 *a），color.a 按 over 累计。
+      // 最后叠到场景：color.rgb 已是预乘好的最终视频色，用 1-color.a 保留场景色 + color.rgb 叠加。
+      // 旧实现把 layer.rgb 又当非预乘乘了一次 a，再 mix(...,color.a) 又乘一次，导致视频边缘
+      // alpha 被平方衰减（vc*a*a 而非 vc*a），淡出途中夹一层灰底而非干净从 1 到 0。
+      // uMixing 控制融合强度：对已预乘的 color.rgb 按 color.a*mixing 做 over（alpha 不被平方）。
       fragmentShader: ((k) => {
         const src = [
           'uniform sampler2D tDiffuse;',
@@ -161,7 +172,7 @@ class BlendRender extends RenderStep {
           'uniform float     uMixing;',
           'varying vec2      vUv;',
           'void main() {',
-          '  gl_FragColor = texture2D(tDiffuse, vUv);',
+          '  vec4 scene = texture2D(tDiffuse, vUv);',
           '  vec4 color = vec4(0.0, 0.0, 0.0, 0.0);'
         ];
         for (let i = 0; i < k; i++) {
@@ -169,16 +180,17 @@ class BlendRender extends RenderStep {
             '  '.concat(
               `vec4 layer${i} = texture2D(uShadows[${i}], vUv);`,
               `  float a${i} = clamp(layer${i}.a, 0.0, 1.0);`,
-              `  color.rgb = layer${i}.rgb * a${i} + color.rgb * (1.0 - a${i});`,
+              // 预乘 over：layer.rgb 已含其 alpha，直接按覆盖权累加预乘分量
+              `  color.rgb = layer${i}.rgb + color.rgb * (1.0 - a${i});`,
               `  color.a = a${i} + color.a * (1.0 - a${i});`
             )
           );
         }
         src.push(
-          '  if (color.a > 0.0) {',
-          '    float _mix = color.a;',
-          '    gl_FragColor = vec4(mix(gl_FragColor.rgb, color.rgb, _mix * uMixing), gl_FragColor.a);',
-          '  }',
+          // color.rgb 已预乘 color.a。用 uMixing 缩放覆盖权重，alpha 不被二次相乘。
+          // 最终 = 场景*(1 - color.a*mixing) + color.rgb*mixing（color.rgb 已预乘 color.a）。
+          '  float _a = clamp(color.a * uMixing, 0.0, 1.0);',
+          '  gl_FragColor = vec4(scene.rgb * (1.0 - _a) + color.rgb * uMixing, scene.a);',
           '  #include <tonemapping_fragment>',
           '  #include <colorspace_fragment>',
           '}'

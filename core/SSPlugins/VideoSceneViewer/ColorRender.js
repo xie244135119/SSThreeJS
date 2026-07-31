@@ -72,9 +72,18 @@ class ColorRender extends RenderStep {
 
     // this.renderTarget.viewport = new Vector4(0, 0, screen.width, screen.height);
     // ColorRender 用 RawShaderMaterial 写入视频的 sRGB 字节（不注入编码转换）。
-    // RT 标为 sRGB：纹理内部格式 SRGB8_ALPHA8，BlendRender(ShaderMaterial) 采样时
+    // RT 标为 sRGB：纹理内部格式 SRGB8_ALPHA8，BlendRender(ShaderPass/ShaderMaterial) 采样时
     // 由硬件自动做 sRGB->linear 解码，得到正确的 linear 视频色参与混合。
-    // 若标 Linear 会跳过解码，sRGB 字节被当 linear -> 视频偏亮、投影边缘出现白边。
+    //
+    // ── 颜色管理契约（勿动 colorSpace）──────────────────────────────
+    // 本 RT 的 SRGBColorSpace 与上游 VideoTexture 的【NoColorSpace】是一对绑定契约：
+    //   VideoTexture(NoColor) ──写入 sRGB 字节──▶ 本 RT(SRGB) ──采样解码──▶ BlendRender(linear)
+    // 整链路恰好一次 sRGB→linear 解码，颜色正确。
+    // 任意一侧单独改动都会破坏平衡：
+    //   - 本 RT 改 Linear：跳过解码，sRGB 字节被当 linear → 视频偏亮、投影边缘白边。
+    //   - VideoTexture 改 SRGB：采样先解码一次，写 SRGB RT 后 BlendRender 又解码一次
+    //     → 双重解码 → 画面偏暗、边缘淡出发灰。
+    // 如要重构颜色管线，VideoTexture.colorSpace 与本 RT.colorSpace 必须【成对】同步调整。
     this.renderTarget.colorSpace = THREE.SRGBColorSpace;
     // initialize 已建 material，同步 _lastN，避免首次 update 误判 N 变化重建
     this._lastN = this.depthTextureArray.length;

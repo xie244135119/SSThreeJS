@@ -49,6 +49,17 @@ class VideoSceneViewer {
     this.cameras = [];
     this.helpers = new THREE.Group();
     this._mode = VideoSceneViewer.FUSION;
+    // 置零投影矩阵：用于隐藏某路视频。必须是【全零矩阵】而非 new Matrix4()（后者默认是单位阵）。
+    // 全零 -> visible() 里 position=vec4(0,0,0,0) -> 0/0=NaN -> 所有 >= / <= 比较对 NaN 返回 false
+    // -> 直接 return vec4(0,0,0,0)（不命中视锥=贡献0=隐藏），不采样视频/深度纹理，边缘虚化无色。
+    // 若误用单位阵，fragCoord=worldPos/2+0.5 会落进 [0,1] 误命中，用错误 UV 采样视频纹理，
+    // 在 VideoMask alpha 中间值的虚化带泄漏成灰色蒙版。
+    this._zeroProjScreenMatrix = new THREE.Matrix4().set(
+      0, 0, 0, 0,
+      0, 0, 0, 0,
+      0, 0, 0, 0,
+      0, 0, 0, 0
+    );
     // 每批最大视频路数：运行时按 GPU 纹理单元上限自动算。
     // 每路占 2 个纹理单元（uDepthTexture + uVideoTexture），再加共享 uBgTexture 1 个 + 1 个余量。
     // maxBatchSize = floor((units - 2) / 2)，下限 4。桌面独显 units=32 -> 15；集显 units=16 -> 7。
@@ -364,9 +375,9 @@ class VideoSceneViewer {
       const start = b * batchSize;
       const end = Math.min(start + batchSize, n);
       const step = new ColorRender(this.renderer, this.camera, this.scene);
-      step.projScreenMatrixArray = this.depthSteps
+      step.projScreenMatrixArray = this.cameras
         .slice(start, end)
-        .map((_, i) => this.cameras[start + i].calcProjScreenMatrix());
+        .map((c) => (c.visible === false ? this._zeroProjScreenMatrix : c.calcProjScreenMatrix()));
       step.depthTextureArray = this.depthSteps.slice(start, end).map((d) => d.texture());
       step.videoTextureArray = this.cameras.slice(start, end).map((c) => c.texture);
       step.quadHomographyArray = this.cameras.slice(start, end).map((c) => c.calcQuadHomography());
@@ -991,7 +1002,12 @@ class VideoSceneViewer {
       cameraData.helper.update();
       const info = this._colorStepForCamera(index);
       if (info) {
-        info.step.projScreenMatrixArray[info.inBatch] = cameraData.calcProjScreenMatrix();
+        // visible=false 时投影矩阵置零 -> 片元不命中视锥 -> 该路贡献 0 = 隐藏，
+        // 不重建 shader，实时切换可见性。可见时用真实投影矩阵。
+        const projMat = cameraData.visible === false
+          ? this._zeroProjScreenMatrix
+          : cameraData.calcProjScreenMatrix();
+        info.step.projScreenMatrixArray[info.inBatch] = projMat;
         // quadCorners 变化时重算 Homography（拖拽/外部修改后跟随生效）
         info.step.quadHomographyArray[info.inBatch] = cameraData.calcQuadHomography();
         info.step.update();

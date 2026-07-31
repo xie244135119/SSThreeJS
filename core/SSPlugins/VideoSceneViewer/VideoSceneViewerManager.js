@@ -2,7 +2,7 @@
  * Author  Kayson.Wan
  * Date  2023-06-01 14:35:19
  * LastEditors  Kayson.Wan
- * LastEditTime  2026-07-27 18:24:58
+ * LastEditTime  2026-07-30 17:36:50
  * Description
  */
 import * as THREE from 'three';
@@ -112,6 +112,33 @@ export default class VideoSceneViewerManager {
     // 修复【开启后画面不动 / 无视频投射】：closeVideoFusion 里 stopAnimate 取消了融合的 rAF，
     // 这里重建后必须重新启动 animate()，否则融合渲染循环已停，画面不刷新、鼠标拖动也无响应。
     this.videoSceneView.animate();
+  };
+
+  /**
+   * 设置某路视频可见性（实时切换，不重建 shader）。
+   * @param cameraName 相机名
+   * @param visible true=显示，false=隐藏
+   */
+  setCameraVisible = (cameraName, visible) => {
+    const vsv = this.videoSceneView;
+    if (!vsv) return;
+    const cam = vsv.cameras.find((c) => c?.camera?.name === cameraName);
+    if (!cam) return;
+    cam.visible = visible;
+    vsv.updateCameraData?.();
+  };
+
+  /**
+   * "只看此路"：隐藏其它所有路，只显示指定相机；传 null 则全部显示。
+   * @param cameraName 相机名，null/undefined 取消隔离（全部显示）
+   */
+  isolateCamera = (cameraName) => {
+    const vsv = this.videoSceneView;
+    if (!vsv) return;
+    vsv.cameras.forEach((c) => {
+      c.visible = cameraName ? c.camera?.name === cameraName : true;
+    });
+    vsv.updateCameraData?.();
   };
 
   /**
@@ -258,18 +285,26 @@ export default class VideoSceneViewerManager {
   focusCamera = (cameraName, distance = 20) => {
     const ssObj = this.ssThreeJs?.ssThreeObject;
     if (!ssObj) return;
-    const cam = this.cameraData.find((item) => item.camera?.name === cameraName);
-    if (!cam) {
+    // 优先从当前实际开启的融合相机里找（openVideoFusion 可能只传了部分路），
+    // 找不到再回退到构造时的完整 cameraData。这样"只开此路"场景下也能命中。
+    const openedVC = this.videoSceneView?.cameras?.find((vc) => vc?.camera?.name === cameraName);
+    const camData = this.cameraData.find((item) => item.camera?.name === cameraName);
+    if (!openedVC && !camData) {
       console.warn(`【视角】未找到相机 ${cameraName}`);
       return;
     }
-    const calc = this._calcEyeFromCamera(cam, distance);
-    // eye.position 可选覆盖起点；target 一律由相机朝向自动算
-    const eyePos = cam.eye?.position;
-    const posVec =
-      eyePos && eyePos.x != null
-        ? new THREE.Vector3(eyePos.x, eyePos.y, eyePos.z)
-        : calc.position;
-    ssObj.setEye(posVec, calc.target, true, 0.8);
+    // 实际开启的 VideoCamera 优先（position/rotation 是当前真实值，含 GUI 拖拽后的状态）
+    const pos =
+      openedVC?.camera?.position || camData?.camera?.position || new THREE.Vector3(0, 0, 0);
+    const rot = openedVC?.camera?.rotation || camData?.camera?.rotation || { x: 0, y: 0, z: 0 };
+    const eyePos = camData?.eye?.position;
+    // 用四元数从 (0,0,-1) 求朝向，兼容 rot 是 Euler（VideoCamera）或 {x,y,z}（config 数据）
+    const euler = new THREE.Euler(rot.x || 0, rot.y || 0, rot.z || 0, (rot && rot.order) || 'XYZ');
+    const forward = new THREE.Vector3(0, 0, -1).applyEuler(euler);
+    const posVec = eyePos
+      ? new THREE.Vector3(eyePos.x, eyePos.y, eyePos.z)
+      : new THREE.Vector3(pos.x, pos.y, pos.z);
+    const target = posVec.clone().add(forward.multiplyScalar(distance));
+    ssObj.setEye(posVec, target, true, 0.8);
   };
 }
