@@ -217,13 +217,16 @@ class ColorRender extends RenderStep {
           '          }',
           '          vec4 vc = texture2D(img, warpedUV);',
           '          vec4 bg = texture2D(bgimg, warpedUV);',
-          // 白边根因：投影区是视频相机视锥的矩形投影，边界处 alpha 从 VideoMask 高值
-          // 突变到 0(矩形外不命中)，形成锐角矩形描边(视频边缘色)。
-          // 在矩形边界 0~0.04 内对 bg.a 做 smoothstep 衰减，让边界 alpha 平滑淡出，
-          // 消除锐角白边；内圈 VideoMask 圆形虚化保留。edge = 距 [0,1] 四边的最近距离。
-          '          vec2 ed = min(fragCoord.xy, 1.0 - fragCoord.xy);',
-          '          float edge = min(ed.x, ed.y);',
-          '          float fade = smoothstep(0.0, 0.04, edge);',
+          // 锐边根因：视频区域（warpedUV 的 [0,1] 矩形）边界处 alpha 从 VideoMask 高值
+          // 突变到 0（超界 return 透明），形成锐角矩形描边（视频边缘色）。
+          // 在【视频区域边界】0~0.04 内对 bg.a 做 smoothstep 衰减，让边界 alpha 平滑淡出，
+          // 消除锐边；内圈 VideoMask 圆形虚化保留。
+          // 必须用 warpedUV（视频实际采样区）而非 fragCoord.xy（投影矩形）算 edge：
+          // 四点校正把视频压缩到中间后，投影矩形边界与视频区域边界已分离，
+          // 按 fragCoord 算 fade 会在视频区域边界处 ≈1 不衰减，留下一条视频边缘色的四边形线。
+          '          vec2 wed = min(warpedUV, 1.0 - warpedUV);',
+          '          float wedge = min(wed.x, wed.y);',
+          '          float fade = smoothstep(0.0, 0.04, wedge);',
           '          return vec4( vc.rgb , bg.a * fade);',
           '        }',
           '    }',
