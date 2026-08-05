@@ -584,6 +584,16 @@ class VideoSceneViewer {
   }
 
   clear = () => {
+    // 修复【关闭融合后残留帧/重开崩溃】：clear 释放相机（VideoCamera.dispose 把
+    // camera 置 null 并 scene.remove）但未清选中态，导致：
+    //   1) quadPinOverlay 仍 _visible + currCameraData.camera=null -> 下一帧 render()
+    //      末尾 updateRefFromFrustum(null,...) 读 null.projectionMatrixInverse 崩溃；
+    //   2) transformControl 仍 attach 已移出场景的相机 -> "must be a part of the scene graph"。
+    // 故释放相机前先 detach + 隐藏 overlay + 清空选中态，杜绝残留。
+    this.transformControl?.detach?.();
+    this.quadPinOverlay?.hide?.();
+    this.currSelectObj = null;
+    this.currCameraData = null;
     // 修复【clear 漏删 bug】：原实现 for 循环里对同一数组 splice(i,1) 后 i++，
     // 会跳过下一个元素导致漏删/越界。改为倒序遍历或一次性置空。
     for (let i = this.cameras.length - 1; i >= 0; i--) {
