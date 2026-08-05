@@ -416,6 +416,11 @@ export default class SSThreeJs {
           case 'opt':
             promise = this.loadGltfOptKTX(config.opt);
             break;
+          case 'ply':
+            // ply 走自定义路径：loadPly 返回 Mesh（非 GLTF），
+            // 其 traverse 逻辑在下方 instanceof THREE.Object3D 分支命中。
+            promise = this.loadPly(config.ply, config);
+            break;
           default:
             break;
         }
@@ -522,6 +527,57 @@ export default class SSThreeJs {
           this.ssLoadingManager.threeLoadingManager
         )
       );
+
+  /**
+   * load ply
+   * PLYLoader 返回 BufferGeometry（非 Object3D），这里包成 Mesh 返回，便于走统一
+   * modelQueue 流程（traverse 加阴影、onAfterRender 入场景）。
+   *  - 头部无 normal => computeVertexNormals
+   *  - 有顶点色 => MeshStandardMaterial.vertexColors=true（config.vertexColors 可显式覆盖）
+   *  - 材质参数取 config.material（PlyMaterialOptions），未传用默认 PBR
+   * 缓存：与 loadGltfDraco 等一致，走 SSLoadingManager.getModelDataByUrl（IndexedDB
+   * 命中复用 / 未命中下载并入库，带下载进度），再 SSLoader.loadPlyBuffer 解析。
+   * 进度条：getModelDataByUrl 的下载阶段已显示进度，但 PLYLoader.parse 是同步解析、
+   * 无后续纹理等异步资源，不像 gltf 那样会经 FileLoader 的 itemStart/itemEnd 触发
+   * threeLoadingManager.onLoad 隐藏进度条。故在此配一对 itemStart/itemEnd 平衡计数，
+   * 让 onLoad 正常触发，进度条自行消失（与 three 内部 Loader.load 行为一致）。
+   * @param path ply 路径
+   * @param config 模型条目（取 vertexColors / material）
+   * @returns Promise<THREE.Mesh>
+   */
+  loadPly: (path: string, config?: SSModelQueueItem) => Promise<THREE.Mesh> = (path, config) => {
+    const manager = this.ssLoadingManager.threeLoadingManager;
+    // 配一对 itemStart/itemEnd：parse 同步完成即 itemEnd，使 onLoad 触发隐藏进度条
+    manager.itemStart(path);
+    return this.ssLoadingManager
+      .getModelDataByUrl(path)
+      .then((data: ArrayBuffer) => SSLoader.loadPlyBuffer(data, manager))
+      .then((geometry) => {
+        geometry.computeVertexNormals();
+        const hasColor = geometry.getAttribute('color') != null;
+        const mcfg = (config?.material || {}) as any;
+        const useVertexColors =
+          typeof config?.vertexColors === 'boolean' ? config.vertexColors : hasColor;
+        const material = new THREE.MeshStandardMaterial({
+          vertexColors: useVertexColors,
+          roughness: mcfg.roughness ?? 0.62,
+          metalness: mcfg.metalness ?? 0.0,
+          envMapIntensity: mcfg.envMapIntensity ?? 0.9,
+          flatShading: mcfg.flatShading ?? false,
+          color: mcfg.color != null ? new THREE.Color(mcfg.color) : new THREE.Color('#ffffff'),
+          emissive:
+            mcfg.emissive != null ? new THREE.Color(mcfg.emissive) : new THREE.Color('#000000'),
+          emissiveIntensity: mcfg.emissiveIntensity ?? 0,
+          transparent: mcfg.transparent ?? false,
+          opacity: mcfg.opacity ?? 1,
+          wireframe: mcfg.wireframe ?? false
+        });
+        const mesh = new THREE.Mesh(geometry, material);
+        mesh.name = config?.title || 'PlyModel';
+        return mesh;
+      })
+      .finally(() => manager.itemEnd(path));
+  };
 
   /**
    * add orbitControl

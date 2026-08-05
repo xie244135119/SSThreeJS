@@ -13,6 +13,11 @@ export default [
     component: './pages/scene'
   },
   {
+    name: 'PLY 查看器',
+    path: '/plyloader',
+    component: './pages/plyloader'
+  },
+  {
     name: '热力图测试',
     path: '/heatmap',
     component: './pages/heatmap'

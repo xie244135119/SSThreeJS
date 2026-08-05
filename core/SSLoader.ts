@@ -9,6 +9,7 @@ import { SVGLoader, SVGResult } from 'three/examples/jsm/loaders/SVGLoader';
 import { FontLoader } from 'three/examples/jsm/loaders/FontLoader';
 import { TextGeometry, TextGeometryParameters } from 'three/examples/jsm/geometries/TextGeometry';
 import { MeshoptDecoder } from 'three/examples/jsm/libs/meshopt_decoder.module';
+import { PLYLoader } from 'three/examples/jsm/loaders/PLYLoader';
 
 export default class SSLoader {
   static dracoLoader = null;
@@ -49,6 +50,32 @@ export default class SSLoader {
       objloader.setMaterials(materil);
       return objloader.loadAsync(aObjPath);
     });
+  };
+
+  /**
+   * load ply
+   * PLYLoader 返回 BufferGeometry（非 Object3D），仅含 position/normal/uv/color 属性。
+   * PLY 头部通常无 normal，调用方拿到 geometry 后需自行 computeVertexNormals。
+   * 顶点色（若有）已转 float[0,1] 并标记 SRGBColorSpace，赋给材质 vertexColors=true 即用。
+   * @param path ply 路径
+   * @param manager 加载器
+   * @returns BufferGeometry
+   */
+  static loadPly = (path: string, manager?: THREE.LoadingManager) => {
+    const plyloader = new PLYLoader(manager);
+    return plyloader.loadAsync(path);
+  };
+
+  /**
+   * load ply from buffer（已预下载到内存/IndexedDB 的二进制）
+   * PLYLoader.parse 直接解析 ArrayBuffer，返回 BufferGeometry。
+   * @param buffer ArrayBuffer
+   * @param manager 加载器
+   * @returns BufferGeometry
+   */
+  static loadPlyBuffer = (buffer: ArrayBuffer | string, manager?: THREE.LoadingManager) => {
+    const plyloader = new PLYLoader(manager);
+    return Promise.resolve(plyloader.parse(buffer));
   };
 
   /**
