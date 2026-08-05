@@ -1,32 +1,15 @@
-/*
- * Author  Kayson.Wan
- * Date  2024-07-12 11:31:59
- * LastEditors  Kayson.Wan
- * LastEditTime  2026-07-02 18:20:28
- * Description 张江科学会堂
- */
 import * as THREE from 'three';
 import { BlendFunction } from 'postprocessing';
 
 export default {
-  // 实体模型镜头初始视角位置
-  entityCameraInitialPosition: {
-    x: 2499259.7150648776,
-    y: 153.71003485381038,
-    z: 5849079.669596614
-  },
-
-  // 实体模型场景中心目标位置
-  entiySceneInitialPosition: { x: 37.34309912655562, y: 22.80866533381508, z: 5.801774535538348 },
-
   /**
    * 新版配置
    */
   modelQueue: [
     {
-      title: 'terrain',
-      type: 'draco',
-      draco: '/models/logo标签.glb'
+      title: '开关站',
+      // path: '/models/A0开关站.glb'
+      path: '/models/10kV配电房0724.glb'
     }
   ],
 
@@ -120,10 +103,10 @@ export default {
       环境: { controllers: { tone曝光度: 1, toneMapping: 4 }, folders: {} },
       灯光: {
         controllers: {
-          环境光强度: 0.5,
-          环境光颜色: '#fafafa',
+          环境光强度: 2,
+          环境光颜色: '#ffffff',
           启用平行光: true,
-          平行光强度: 1,
+          平行光强度: 2,
           平行光颜色: '#fffbe5',
           平行光位置x: 10,
           平行光位置y: 10,

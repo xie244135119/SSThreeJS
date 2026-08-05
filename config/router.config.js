@@ -13,6 +13,11 @@ export default [
     component: './pages/scene'
   },
   {
+    name: '视频融合',
+    path: '/videoview',
+    component: './pages/videoview'
+  },
+  {
     name: 'PLY 查看器',
     path: '/plyloader',
     component: './pages/plyloader'

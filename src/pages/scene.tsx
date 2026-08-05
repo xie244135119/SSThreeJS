@@ -1,177 +1,69 @@
 import React, { useEffect, useRef } from 'react';
-// import SSThreejs, { THREE, ThreeEvent } from '../../core/index';
-// import PostProcessUtil from '../../core/PostProcessUtil';
 
-import MeshReflectorMaterial from '../../core/SSMaterial/MeshReflectorMaterial';
-// import SSWater from '../../core/Water/SSWater';
 import SSThreeJs, { THREE, SSCssRenderer, SSThreeLoop, SSThreeTool } from '../../core/index';
-// import SceneSetting from './ssthreejs.setting.json';
-import SSPickPointMode from '../../core/SSModule/pickpoint.module';
-import SSLightModule from '../../core/SSModule/light.module';
-import VideoSceneViewerManager from '../../core/SSPlugins/VideoSceneViewer/VideoSceneViewerManager';
-import videoBlendImg from '../../core/assets/default_ground1.png';
-// import SSEvent from '../../core/SSEvent';
-import PostProcessPlugin from '../../core/SSPlugins/PostProcessPlugin';
-import SSWatchLookModule from '../../core/SSModule/watchlook.module';
-import { SSMesh } from '../../core/index';
 import BaseLightSetting from '../../core/SSPlugins/BaseLightSetting';
-
-import GUI from 'lil-gui';
+import PostProcessPlugin from '../../core/SSPlugins/PostProcessPlugin';
 import { BlendFunction, ToneMappingMode } from 'postprocessing';
 import sceneConfig from './scene.config';
 
 export default function ParentIndex(props) {
-  // eslint-disable-next-line react/prop-types
-  //
   const jsRef = useRef(new SSThreeJs());
 
-  // 测试 SS
-  const testcssrender = () => {
-    SSThreeTool.addLine(
-      {
-        x: 0,
-        y: 0,
-        z: 0
-      },
-      {
-        x: 4,
-        y: 4,
-        z: 4
-      }
-    );
-  };
-
-  // --------反射---------
-  const reflectorTest = () => {
-    const { ssThreeObject } = jsRef.current;
-    // 透過geometry以及material來建立Mesh物件
-    const geometry2 = new THREE.PlaneGeometry(60, 60, 1, 1);
-    const material2 = new THREE.MeshBasicMaterial();
-    const mesh2 = new THREE.Mesh(geometry2, material2);
-    // 將材質置換成MeshReflectorMaterial
-    // 添加到程式碼
-    const fadingReflectorOptions = {
-      mixBlur: 2,
-      mixStrength: 1.5,
-      resolution: 2048, // 材質圖的解析度
-      blur: [0, 0], // 高斯模糊的材質解析度為何
-      minDepthThreshold: 0.7, // 從多遠的地方開始淡出
-      maxDepthThreshold: 2, // 到多遠的地方會淡出到沒畫面
-      depthScale: 2,
-      depthToBlurRatioBias: 2,
-      mirror: 0,
-      distortion: 2,
-      mixContrast: 2,
-      reflectorOffset: 0, // 鏡面跟物理中間是否要留一段距離才開始反射
-      bufferSamples: 8
-    };
-    mesh2.material = new MeshReflectorMaterial(
-      ssThreeObject.threeRenderer,
-      ssThreeObject.threeCamera,
-      ssThreeObject.threeScene,
-      mesh2,
-      fadingReflectorOptions
-    );
-    ssThreeObject.threeScene.add(mesh2);
-    mesh2.position.y = 0.1;
-    mesh2.position.x = 5;
-    // 旋轉mesh角度以作為地面
-    mesh2.rotateX(Math.PI * -0.5);
-  };
-
-  // 测试 360全景相机
-  const test360Video = () => {
-    const video = document.createElement('video');
-    video.preload = true;
-    video.autoplay = true;
-    video.loop = true;
-    video.src = '/360video.mp4';
-
-    setTimeout(() => {
-      video.play();
-      console.log(' 视频开始播放 ');
-    }, 5000);
-    const videotexture = new THREE.VideoTexture(video);
-    videotexture.minFilter = THREE.LinearFilter;
-    videotexture.colorSpace = THREE.SRGBColorSpace;
-    // videotexture.format = THREE.PixelFormat;
-    window.videotexture = videotexture;
-
-    //
-    const materialArray = [];
-    // materialArray.push(new THREE.MeshBasicMaterial({ color: 0x0051ba }))
-    // materialArray.push(new THREE.MeshBasicMaterial({ color: 0x0051ba }))
-    // materialArray.push(new THREE.MeshBasicMaterial({ color: 0x0051ba }))
-    // materialArray.push(new THREE.MeshBasicMaterial({ color: 0x0051ba }))
-    const material = new THREE.MeshBasicMaterial({
-      map: videotexture,
-      side: THREE.DoubleSide
-      // color: 'red'
-    });
-    materialArray.push(material);
-    // materialArray.push(new THREE.MeshBasicMaterial({ color: 0xff51ba }))
-
-    const geo = new THREE.SphereGeometry(5);
-    const mesh = new THREE.Mesh(geo, material);
-    mesh.position.set(1, 5, 1);
-    mesh.name = '360全景视频';
-    jsRef.current.ssThreeObject.threeScene.add(mesh);
-
-    // 调整相机
-    jsRef.current.setModelPosition(mesh.position, mesh.position);
-  };
-
   useEffect(() => {
-    jsRef.current.setup('threecontainer');
-    jsRef.current.ssThreeObject.threeScene.background = new THREE.Color(0, 0, 0);
-    jsRef.current.addDymaicDebug();
-
-    const lightSetting = new BaseLightSetting(jsRef.current, null, false);
-
-    const plane = new THREE.PlaneGeometry(5, 5);
-    const planeMaterial = new THREE.MeshBasicMaterial({});
-    const planeMesh = new THREE.Mesh(plane, planeMaterial);
-    planeMesh.rotation.set(-Math.PI / 2, 0, 0);
-    jsRef.current.ssThreeObject.threeScene.add(planeMesh);
-    // 几何体
-    const geomertry = new THREE.BoxGeometry(1, 1, 1);
-    const material = new THREE.MeshStandardMaterial({
-      color: new THREE.Color(1, 1, 1)
-      // side: THREE.DoubleSide
+    jsRef.current.setup('threecontainer', {
+      antialias: true
     });
-    const mesh = new THREE.Mesh(geomertry, material);
-    mesh.position.set(0, 0.5, 0);
-    mesh.name = 'TestBox';
-    jsRef.current.ssThreeObject.threeScene.add(mesh);
+    jsRef.current.ssThreeObject.threeScene.background = new THREE.Color(0, 0, 0);
+    updateOrbitControlSetting();
+
+    // 第三参数 false：不建光照调试 GUI、不加阴影相机 CameraHelper（避免白线框）
+    const lightSetting = new BaseLightSetting(jsRef.current, sceneConfig.baseLighting, false);
 
     jsRef.current.addSun();
 
-    // // 加载场景配置中的模型队列
-    // const modelQueue = sceneConfig?.modelQueue || [];
-    // jsRef.current.loadModelQueue(
-    //   modelQueue,
-    //   (objs) => {
-    //     // 全部加载完成
-    //     // eslint-disable-next-line no-console
-    //     console.log('【scene】modelQueue 加载完成', objs?.length);
-    //   },
-    //   null,
-    //   (option, obj) => {
-    //     // 单个模型加载完成，加入场景
-    //     if (obj instanceof THREE.Object3D) {
-    //       jsRef.current.ssThreeObject.threeScene.add(obj);
-    //     } else if (obj?.scene instanceof THREE.Object3D) {
-    //       jsRef.current.ssThreeObject.threeScene.add(obj.scene);
-    //     }
-    //   }
-    // );
+    // modelQueue 简化写法归一化：支持 { title, path } 简写，按扩展名自动识别 type，
+    // 并把 path 填到 loadModelQueue 按 type 读取的字段。
+    type ModelQueueItemInput = Partial<Record<string, any>> & { path?: string };
+    const EXT_TO_FIELD: Record<string, string> = {
+      fbx: 'fbx',
+      obj: 'obj',
+      opt: 'opt',
+      ply: 'ply'
+    };
+    const normalizeModelQueue = (list?: ModelQueueItemInput[]) =>
+      (list || []).map((item: ModelQueueItemInput) => {
+        if (!item || typeof item !== 'object') return item;
+        if (item.type) return item;
+        if (!item.path) return item;
+        const ext = item.path
+          .split('?')[0]
+          .split('#')[0]
+          .toLowerCase()
+          .match(/\.([a-z0-9]+)$/);
+        const extName = ext?.[1] || '';
+        const type = EXT_TO_FIELD[extName] || 'draco';
+        const field = type;
+        return { ...item, type, [field]: item.path };
+      });
+
+    const modelQueue = normalizeModelQueue(sceneConfig?.modelQueue);
+    jsRef.current.loadModelQueue(
+      modelQueue,
+      (objs) => {
+        console.log('【scene】modelQueue 加载完成', objs?.length);
+      },
+      undefined,
+      (option, obj) => {
+        if (obj instanceof THREE.Object3D) {
+          jsRef.current.ssThreeObject.threeScene.add(obj);
+        } else if (obj?.scene instanceof THREE.Object3D) {
+          jsRef.current.ssThreeObject.threeScene.add(obj.scene);
+        }
+      }
+    );
 
     //  后处理
     const postSetting = {
-      // 0.172 起 three 的 renderer.toneMapping 只在直接渲染到屏幕时生效，
-      // 渲染到 EffectComposer 的 render target 时不再应用（见 three.module.js
-      // getParameters：toneMapping 仅 currentRenderTarget===null 时取 renderer.toneMapping）。
-      // 因此必须由 ToneMappingEffect 负责色调映射，否则 Sky/HDR 场景因无 tone map 被压暗变黑。
       toneMappingEffect: {
         blendFunction: BlendFunction.NORMAL,
         mode: ToneMappingMode.ACES_FILMIC
@@ -194,100 +86,36 @@ export default function ParentIndex(props) {
         blur: false
       },
       lut3DEffect: { blendFunction: BlendFunction.SOFT_LIGHT, tetrahedralInterpolation: false },
-      vignetteEffect: {
-        blendFunction: 23,
-        technique: 0,
-        offset: 0.5,
-        darkness: 0.5
-      },
+      vignetteEffect: { blendFunction: 23, technique: 0, offset: 0.5, darkness: 0.5 },
       smaaEffect: { preset: 1, edgeDetectionMode: 2, predicationMode: 0 },
       hueSaturationEffect: { blendFunction: 9, hue: 0, saturation: 0.25 },
       brightnessContrastEffect: { blendFunction: 23, brightness: 0, contrast: 0 }
     };
     const postProcessPlugin = new PostProcessPlugin(jsRef.current.ssThreeObject);
-    postProcessPlugin.fromJson(postSetting);
+    // postProcessPlugin.fromJson(postSetting);
     // postProcessPlugin.addDebug();
-
-    // testcssrender();
-
-    reflectorTest();
-
-    // js.closeWebglRender();
-
-    // 视频融合Data
-    // const videoFusionData = [
-    //   {
-    //     camera: {
-    //       name: '视频融合_test',
-    //       fov: 27,
-    //       aspect: 1,
-    //       near: 0.1,
-    //       far: 164,
-    //       position: { x: 0.7180480205018174, y: 1.2705360638579253, z: 2.052677400678885 },
-    //       rotation: { x: -0.6313513526773442, y: 0.20934010887576412, z: 0.1507975959985109 },
-    //       target: { x: 0, y: 0, z: 0 }
-    //     },
-    //     video: { poster: videoBlendImg, stream: '' },
-    //     // video: { poster: '', stream: './public/threeTextures/videoBlendVideoTest3.mp4' },
-    //     eye: {
-    //       position: { x: -22.26714020755176, y: 96.87804310841558, z: -144.87257420359424 },
-    //       target: { x: -21.692831852230174, y: 96.54080558055747, z: -93.53923082919695 }
-    //     }
-    //   }
-    // ];
-    // // 视频融合
-    // const videoBlend = new VideoSceneViewerManager(jsRef.current, videoFusionData, true);
-    // videoBlend.openVideoFusion(videoFusionData);
-
-    // // // 引用配置
-    // jsRef.current.ssModuleCenter.registerModules([
-    //   SSPickPointMode,
-    //   SSLightModule,
-    //   // SSPostProcessManagerModule,
-    //   // SSWater,
-    //   SSWatchLookModule
-    //   // VideoSceneViewerManager
-    // ]);
-    // jsRef.current.ssModuleCenter.import(SceneSetting);
-    // // 开启调试
-    // jsRef.current.ssModuleCenter.openDebugModel();
-    //
-    // test360Video();
-
-    /**
-     * @type {SSPostProcessManagerModule}
-     */
-    // const ssPostProcessManagerModule = jsRef.current.ssModuleCenter.getModuleByClassName(
-    //   'SSPostProcessManagerModule'
-    // );
-
-    //  jsRef.current.threeEvent.addEventListener(SSEvent.SSEventType.CLICK, (event) => {
-    //   const models = jsRef.current.ssThreeObject.getModelsByPoint(event);
-    //   if (models.length > 0) {
-    //     const castObj = models[0].object;
-    //     console.log('models[0].object ', models[0].object);
-    //     ssPostProcessManagerModule.outlineObjects([castObj]);
-    //   }
-    // });
 
     return () => {
       jsRef.current.destroy();
     };
   }, []);
 
-  /**
-   * 测试水材质
-   */
-  const testWater = () => {
-    const water = SSMesh.WaterMesh.fromOptions(100, 100);
-    jsRef.current.ssThreeObject.threeScene.add(water);
-    jsRef.current.ssTransformControl.attach(water);
+  // 鼠标控制器设置
+  const updateOrbitControlSetting = () => {
+    const controls = jsRef.current.ssThreeObject.threeOrbitControl;
+    if (!controls) return;
+    controls.enablePan = true;
+    controls.screenSpacePanning = true;
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.2;
+    controls.minDistance = 1;
+    controls.maxDistance = 10000;
+    controls.update();
   };
 
   return (
-    <div>
-      <span>三维测试</span>
-      <div id="threecontainer" style={{ height: 800 }} />
+    <div style={{ position: 'relative', width: '100vw', height: '100vh', overflow: 'hidden' }}>
+      <div id="threecontainer" style={{ position: 'absolute', inset: 0 }} />
     </div>
   );
 }
