@@ -263,14 +263,24 @@ class VideoSceneViewer {
       // 存原始 stream/poster 供导出配置用（video.src 运行时会被规范化/清空，不可靠）
       camera.stream = item.video.stream || '';
       camera.poster = item.video.poster || '';
-      // 修复【视频不投射】：只设 video.src 不会触发加载流程，
-      // 浏览器不会为已存在的 src 自动 fetch；必须显式调用 load() 才会触发
-      // canplay/canplaythrough 事件链（VideoCamera 在此事件里才会建 VideoTexture 并派发
-      // TEXTURE_UPDATED，否则融合用的始终是 poster 静态纹理，视频永远投不上去）。
-      camera.video.src = item.video.stream;
-      camera.video.load();
-      // 部分浏览器要求在用户交互上下文里 play，这里兜底尝试播放。
-      camera.video.play?.().catch?.(() => {});
+      // 视频来源分流：item.video.token 非空 → h5s 接管 video（WebSocket+MSE 喂帧，不设 video.src）；
+      // 否则走原 URL 路径（video.src + load，靠 canplaythrough 建 VideoTexture）。
+      if (item.video.token) {
+        camera.attachH5s({
+          host: item.video.h5sHost,
+          token: item.video.token,
+          session: item.video.session
+        });
+      } else {
+        // 修复【视频不投射】：只设 video.src 不会触发加载流程，
+        // 浏览器不会为已存在的 src 自动 fetch；必须显式调用 load() 才会触发
+        // canplay/canplaythrough 事件链（VideoCamera 在此事件里才会建 VideoTexture 并派发
+        // TEXTURE_UPDATED，否则融合用的始终是 poster 静态纹理，视频永远投不上去）。
+        camera.video.src = item.video.stream;
+        camera.video.load();
+        // 部分浏览器要求在用户交互上下文里 play，这里兜底尝试播放。
+        camera.video.play?.().catch?.(() => {});
+      }
 
       this.cameras.push(camera);
       this.scene.add(camera.camera);
@@ -533,8 +543,16 @@ class VideoSceneViewer {
     // 存原始 stream/poster 供导出配置用
     _camera.stream = data.video.stream || '';
     _camera.poster = data.video.poster || '';
-    //   camera.video.src = item.video.stream;
-    _camera.video.src = '';
+    // 视频来源分流（与 initialize 一致）：token 非空走 h5s，否则清空 src 等待后续设置
+    if (data.video.token) {
+      _camera.attachH5s({
+        host: data.video.h5sHost,
+        token: data.video.token,
+        session: data.video.session
+      });
+    } else {
+      _camera.video.src = '';
+    }
     this.cameras.push(_camera);
 
     // CameraHelper
@@ -1243,10 +1261,17 @@ class VideoSceneViewer {
     }
     const obj = {
       camera: cameraObj,
-      video: {
-        poster: this.currCameraData.poster || '',
-        stream: this.currCameraData.stream || ''
-      }
+      video: this.currCameraData.sourceType === 'h5s'
+        ? {
+            poster: this.currCameraData.poster || '',
+            h5sHost: this.currCameraData.h5sHost || '',
+            token: this.currCameraData.stream || '',
+            session: this.currCameraData.h5sSession || ''
+          }
+        : {
+            poster: this.currCameraData.poster || '',
+            stream: this.currCameraData.stream || ''
+          }
     };
     return JSON.stringify(obj, null, 2);
   };

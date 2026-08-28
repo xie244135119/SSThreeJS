@@ -1,0 +1,51 @@
+.robotCameraWrap {
+  width: 1600px;
+  height: 900px;
+  padding: 10px;
+  overflow: hidden;
+  background: url('./assets/Camera-bj.png') left top no-repeat;
+  position: relative;
+
+  .ControlBtn {
+    position: absolute;
+    left: 10px;
+    bottom: 10px;
+    width: calc(100% - 20px);
+    height: 100px;
+    background-color: rgba(0, 0, 0, 0.7);
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding-left: 14px; // 为了平衡 .btnItem的margin-right: 14px;
+    .btnItem {
+      color: #fff;
+      font-size: 34px;
+      width: 168px;
+      height: 42px;
+      line-height: 42px;
+      text-align: center;
+      background: url('./assets/btn-bg.png');
+      margin-right: 14px;
+      cursor: pointer;
+      transition: all 0.3s;
+      img {
+        margin-right: 14px;
+      }
+      &:hover {
+        color: #bbd5ff;
+        font-weight: 500;
+        transform: scale(1.1);
+      }
+    }
+  }
+
+  .Perspective {
+    position: absolute;
+    left: 50%;
+    bottom: 140px;
+    transform: translate(-50%, 0);
+    width: 122px;
+    height: 122px;
+  }
+}

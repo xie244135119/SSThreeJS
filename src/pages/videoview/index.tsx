@@ -200,10 +200,13 @@ export default function VideoView() {
       const item: any = c;
       const d: any = dft;
       if (item.camera) {
+        // 完整结构：video 字段整体透传（含 token/h5sHost/session 等 h5s 字段），
+        // poster 空时用统一封面图填充
         const video = { ...(item.video || {}) };
         if (!video.poster) video.poster = videoBlendImg;
         return { camera: item.camera, video };
       }
+      // 扁平结构：把 h5s 字段一并收进 video（与完整结构对齐，供 viewer 分流）
       return {
         camera: {
           name: item.name,
@@ -217,7 +220,10 @@ export default function VideoView() {
         },
         video: {
           poster: videoBlendImg,
-          stream: item.stream
+          stream: item.stream,
+          ...(item.token ? { token: item.token } : {}),
+          ...(item.h5sHost ? { h5sHost: item.h5sHost } : {}),
+          ...(item.session ? { session: item.session } : {})
         }
       };
     });

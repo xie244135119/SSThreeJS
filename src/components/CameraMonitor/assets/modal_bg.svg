@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="484px" height="304px" viewBox="0 0 484 304" preserveAspectRatio='none meet' version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <title>边框</title>
+    <defs>
+        <polygon id="path-1" points="6.00703378e-14 0 484 0 484 304 6.00703378e-14 304"></polygon>
+        <filter x="-0.6%" y="-1.0%" width="101.2%" height="102.0%" filterUnits="objectBoundingBox" id="filter-2">
+            <feGaussianBlur stdDeviation="3" in="SourceAlpha" result="shadowBlurInner1"></feGaussianBlur>
+            <feOffset dx="0" dy="0" in="shadowBlurInner1" result="shadowOffsetInner1"></feOffset>
+            <feComposite in="shadowOffsetInner1" in2="SourceAlpha" operator="arithmetic" k2="-1" k3="1" result="shadowInnerInner1"></feComposite>
+            <feColorMatrix values="0 0 0 0 0   0 0 0 0 0.66698747   0 0 0 0 0.800384964  0 0 0 0.8 0" type="matrix" in="shadowInnerInner1"></feColorMatrix>
+        </filter>
+    </defs>
+    <g id="安徽合肥数字孪生项目" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="01变电站全景" transform="translate(-602.000000, -236.000000)">
+            <g id="汇总数据" transform="translate(100.000000, 236.000000)">
+                <g id="边框" transform="translate(502.000000, 0.000000)">
+                    <g id="Rectangle-path" opacity="0.8">
+                        <use fill="#00262E" fill-rule="evenodd" xlink:href="#path-1"></use>
+                        <use fill="black" fill-opacity="1" filter="url(#filter-2)" xlink:href="#path-1"></use>
+                    </g>
+                    <g id="左">
+                        <rect id="矩形" fill="#4DCCD1" x="0" y="42" width="1" height="94"></rect>
+                        <path d="M6,0 L6,1 L1,1 L1,6 L0,6 L0,0 L6,0 Z" id="形状结合" fill="#00EAFF"></path>
+                        <path d="M6,298 L6,299 L1,299 L1,304 L0,304 L0,298 L6,298 Z" id="形状结合" fill="#00EAFF" transform="translate(3.000000, 301.000000) scale(1, -1) translate(-3.000000, -301.000000) "></path>
+                    </g>
+                    <g id="右" transform="translate(478.000000, 0.000000)" fill="#00EAFF">
+                        <path d="M6,0 L6,1 L1,1 L1,6 L0,6 L0,0 L6,0 Z" id="形状结合" transform="translate(3.000000, 3.000000) scale(-1, 1) translate(-3.000000, -3.000000) "></path>
+                        <path d="M6,298 L6,299 L1,299 L1,304 L0,304 L0,298 L6,298 Z" id="形状结合" transform="translate(3.000000, 301.000000) scale(-1, -1) translate(-3.000000, -301.000000) "></path>
+                    </g>
+                    <g id="上" transform="translate(174.000000, 0.000000)" fill="#43B2BF">
+                        <rect id="矩形" x="0" y="0" width="6" height="2"></rect>
+                        <rect id="矩形" x="260" y="0" width="6" height="2"></rect>
+                        <rect id="矩形" x="14" y="0" width="14" height="2"></rect>
+                        <rect id="矩形" x="238" y="0" width="14" height="2"></rect>
+                        <rect id="矩形" opacity="0.482910156" x="36" y="0" width="194" height="1"></rect>
+                        <rect id="矩形" x="36" y="0" width="80" height="2"></rect>
+                    </g>
+                    <g id="下" transform="translate(1.000000, 299.000000)">
+                        <line x1="0" y1="1" x2="330" y2="1" id="Shape" stroke="#006D80" stroke-width="0.5"></line>
+                        <path d="M348,0 L351,2 L337,2 L334,0 L348,0 Z M369,0 L372,2 L358,2 L355,0 L369,0 Z M390,0 L393,2 L379,2 L376,0 L390,0 Z M441,0 L444,2 L400,2 L397,0 L441,0 Z" id="形状结合" fill="#43B2BF" fill-rule="nonzero"></path>
+                        <polygon id="Shape" fill="#006D80" fill-rule="nonzero" points="462 4 462 5 324 5 324 4"></polygon>
+                    </g>
+                </g>
+            </g>
+        </g>
+    </g>
+</svg>

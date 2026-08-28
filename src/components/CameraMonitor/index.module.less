@@ -1,0 +1,283 @@
+.background {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  transition: all 0.3s ease;
+  flex-shrink: 0;
+
+  .closeBtn {
+    position: absolute;
+    right: 40px;
+    cursor: pointer;
+    z-index: 10;
+  }
+
+  .zoomIcon {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    z-index: 10;
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    width: 80px;
+    height: 80px;
+    color: #88c5ff;
+    background-color: #0b50b4;
+    cursor: pointer;
+
+    &:hover {
+      transform: scale(1.1);
+    }
+  }
+
+  .headerTitle {
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    border-bottom: 1px solid #307ad9;
+    width: 100%;
+    height: 80px;
+    font-size: 42px;
+    font-weight: bold;
+    color: #fff;
+  }
+
+  .contentview {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    justify-content: center;
+    align-items: center;
+    background-color: rgb(17 43 63 / 100%);
+    flex: 1;
+    box-sizing: border-box;
+
+    .contentCorner {
+      position: absolute;
+      width: 10px;
+      height: 10px;
+    }
+
+    .contentCorner:nth-child(1) {
+      top: 0;
+      left: 0;
+      border-top: 1px solid #307ad9;
+      border-left: 1px solid #307ad9;
+    }
+
+    .contentCorner:nth-child(2) {
+      top: 0;
+      right: 0;
+      border-top: 1px solid #307ad9;
+      border-right: 1px solid #307ad9;
+    }
+
+    .contentCorner:nth-child(3) {
+      bottom: 0;
+      left: 0;
+      border-bottom: 1px solid #307ad9;
+      border-left: 1px solid #307ad9;
+    }
+
+    .contentCorner:nth-child(4) {
+      right: 0;
+      bottom: 0;
+      border-right: 1px solid #307ad9;
+      border-bottom: 1px solid #307ad9;
+    }
+
+    .videoview {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      width: calc(100% - 20px);
+      height: calc(100% - 20px);
+      object-fit: fill;
+    }
+
+    .loadingtext {
+      font-size: 35px;
+      color: white;
+    }
+
+    .perspectivecontrol {
+      position: absolute;
+      bottom: 200px;
+      left: 50%;
+      width: 122px;
+      height: 122px;
+      transform: translate(-50%, -30px);
+      scale: 1.6;
+    }
+
+    .operationview {
+      position: absolute;
+      right: 10px;
+      bottom: 10px;
+      left: 10px;
+      display: flex;
+      flex-direction: row;
+      justify-content: center;
+      align-items: center;
+      height: 102px;
+      background-color: rgb(0 0 0 / 50%);
+      scale: 1;
+
+      .btnItem {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin-right: 14px;
+        width: 220px;
+        font-size: 34px;
+        text-align: center;
+        color: #fff;
+        background: url('./assets/btn-bg.png');
+        background-size: 100% 100%;
+        transition: all 0.3s;
+        aspect-ratio: 168/42;
+        line-height: 42px;
+        cursor: pointer;
+
+        img {
+          margin-right: 14px;
+        }
+
+        &:hover {
+          font-weight: 500;
+          color: #bbd5ff;
+          transform: scale(1.1);
+        }
+      }
+
+      .talkview {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        display: flex;
+        flex-direction: row;
+        justify-content: center;
+        align-items: center;
+        border-radius: 50%;
+        width: 60px;
+        height: 60px;
+        background-color: #2d5e9b;
+        cursor: pointer;
+
+        &:active {
+          background-color: rgb(25 80 180 / 80%);
+          transform: scale(1.1);
+          cursor: wait;
+        }
+      }
+
+      .talkviewactive {
+        background-color: #1934fe;
+        transform: scale(1.2);
+        cursor: wait;
+      }
+    }
+
+    .timeRulerContainer {
+      position: absolute;
+      bottom: 100px;
+      left: 0;
+      width: calc(100% - 20px);
+    }
+  }
+
+  :global {
+    .ant-picker-outside {
+      height: 55px !important;
+    }
+
+    .ant-picker-time-panel-cell-inner {
+      font-family: DINPro-light !important;
+      color: #fff !important;
+    }
+
+    .ant-picker-header {
+      font-family: DINPro-light !important;
+      color: #fff !important;
+    }
+
+    .ant-picker-dropdown .ant-picker-content th {
+      font-family: DINPro-light !important;
+      color: #fff !important;
+    }
+    /* stylelint-disable-next-line no-invalid-double-slash-comments */
+    // 左侧时间面板时间选中的范围
+    .ant-picker-cell-in-range:not(.ant-picker-cell-disabled):before {
+      background: transparent !important;
+    }
+
+    .ant-picker-header button {
+      font-family: DINPro-light !important;
+      color: #fff !important;
+    }
+
+    .ant-picker-cell-in-view {
+      font-family: DINPro-light !important;
+      color: #fff !important;
+    }
+
+    .ant-picker-cell {
+      color: rgb(192 228 255 / 50%) !important;
+    }
+    /* stylelint-disable-next-line no-invalid-double-slash-comments */
+    // 右侧时分秒
+    .ant-picker-time-panel-column
+      > li.ant-picker-time-panel-cell-selected
+      .ant-picker-time-panel-cell-inner {
+      background: rgb(4 144 244) !important;
+    }
+    /* stylelint-disable-next-line no-invalid-double-slash-comments */
+    // 选中的日期
+    .ant-picker-dropdown
+      .ant-picker-cell-in-view.ant-picker-cell-range-start:not(.ant-picker-cell-disabled)
+      .ant-picker-cell-inner {
+      background: rgb(4 144 244) !important;
+    }
+
+    .ant-picker-dropdown
+      .ant-picker-cell-in-view.ant-picker-cell-range-start:not(.ant-picker-cell-disabled)::before {
+      background: rgb(0 255 255 / 10%) !important;
+    }
+
+    .ant-picker-input > input {
+      font-family: DINPro-light !important;
+      color: #fff !important;
+    }
+
+    .anticon {
+      color: #fff !important;
+    }
+
+    .ant-radio-group-solid
+      .ant-radio-button-wrapper-checked:not(.ant-radio-button-wrapper-disabled) {
+      background: #187bf3 !important;
+    }
+
+    .ant-radio-button-wrapper:not(:first-child)::before {
+      background-color: transparent !important;
+    }
+  }
+}
+
+.datePickerPopup {
+  :global {
+    .ant-picker-panel-layout {
+      background: url('./assets/date-bg.png') no-repeat !important;
+      background-size: 100% 100% !important;
+    }
+  }
+}
+
+.noBg {
+  background: none !important;
+}

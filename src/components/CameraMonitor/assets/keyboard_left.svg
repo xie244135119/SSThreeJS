@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="16px" height="31px" viewBox="0 0 16 31" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <title>左</title>
+    <defs>
+        <radialGradient cx="49.5180018%" cy="51.2486049%" fx="49.5180018%" fy="51.2486049%" r="78.6579476%" gradientTransform="translate(0.495180,0.512486),scale(0.526407,1.000000),rotate(115.939247),scale(1.000000,2.105636),translate(-0.495180,-0.512486)" id="radialGradient-1">
+            <stop stop-color="#00D9CE" stop-opacity="0" offset="0%"></stop>
+            <stop stop-color="#00CCC2" offset="100%"></stop>
+        </radialGradient>
+        <polygon id="path-2" points="15.0516287 4.37491831 20.1852087 10.1680372 10.5506487 10.1680372"></polygon>
+        <filter x="-57.1%" y="-94.9%" width="214.2%" height="289.9%" filterUnits="objectBoundingBox" id="filter-3">
+            <feGaussianBlur stdDeviation="5.5" in="SourceAlpha" result="shadowBlurInner1"></feGaussianBlur>
+            <feOffset dx="0" dy="0" in="shadowBlurInner1" result="shadowOffsetInner1"></feOffset>
+            <feComposite in="shadowOffsetInner1" in2="SourceAlpha" operator="arithmetic" k2="-1" k3="1" result="shadowInnerInner1"></feComposite>
+            <feColorMatrix values="0 0 0 0 0.126   0 0 0 0 0.9   0 0 0 0 0.8613  0 0 0 0.5 0" type="matrix" in="shadowInnerInner1"></feColorMatrix>
+        </filter>
+    </defs>
+    <g id="安徽合肥数字孪生项目" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="05-1智能巡检_指哪看哪" transform="translate(-583.000000, -276.000000)" fill-rule="nonzero">
+            <g id="编组-2" transform="translate(112.000000, 200.000000)">
+                <g id="控制台-按钮" transform="translate(451.000000, 66.000000)">
+                    <g id="控制" transform="translate(19.594937, 2.177215)">
+                        <g id="左右" transform="translate(23.854430, 23.383834) rotate(90.000000) translate(-23.854430, -23.383834) translate(8.854430, -0.116166)">
+                            <g id="左" transform="translate(15.000000, 38.810127) scale(1, -1) translate(-15.000000, -38.810127) translate(0.000000, 30.810127)">
+                                <path d="M20.0902829,15.6265368 L29.8646864,5.61264389 C21.3376231,-1.86993656 8.7076786,-1.86966228 0.180972508,5.61282674 L9.95430439,15.6256225 C13.01461,13.5289494 17.0318527,13.5302294 20.0902829,15.6265368 Z" id="Shape" fill="url(#radialGradient-1)"></path>
+                                <g id="Shape">
+                                    <use fill="#FFFDFD" xlink:href="#path-2"></use>
+                                    <use fill="black" fill-opacity="1" filter="url(#filter-3)" xlink:href="#path-2"></use>
+                                </g>
+                            </g>
+                        </g>
+                    </g>
+                </g>
+            </g>
+        </g>
+    </g>
+</svg>

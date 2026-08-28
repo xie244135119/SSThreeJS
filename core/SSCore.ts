@@ -349,7 +349,8 @@ export default class SSThreeJs {
     const render = new THREE.WebGLRenderer(options);
     render.shadowMap.enabled = true;
     render.shadowMap.type = THREE.PCFSoftShadowMap;
-    render.setPixelRatio(window.devicePixelRatio);
+    // render.setPixelRatio(window.devicePixelRatio);
+    render.setPixelRatio(Math.min(2, window.devicePixelRatio || 1));
     // 模拟、逼近高动态范围（HDR）效果 LinearToneMapping 为默认值，线性色调映射。
     // render.toneMapping = THREE.ACESFilmicToneMapping;
     // render.toneMappingExposure = 1;

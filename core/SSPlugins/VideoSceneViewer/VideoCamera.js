@@ -13,6 +13,9 @@ import {
   VideoTexture
 } from 'three';
 import { computeQuadHomographyElements } from './computeQuadHomographyElements';
+// h5s 流：H5sStream 接管 video 元素，WebSocket + MediaSource 喂帧，不走 video.src
+// 动态 import 会打断 three 构建期同步语义，这里顶层静态引入即可（与 CameraMonitor 同源路径）。
+import H5sStream from '@/js/h5s/h5stream';
 
 /**
  * @class BlendRender
@@ -48,6 +51,20 @@ class VideoCamera extends EventDispatcher {
      */
     this.stream = '';
     this.poster = '';
+
+    /**
+     * 视频来源类型：'url'（HTTP/RTSP，靠 video.src + canplaythrough）或
+     * 'h5s'（H5sStream 接管 video，WebSocket + MediaSource 喂帧）。
+     * 由 attachH5s() 置为 'h5s'，缺省 'url' 走原 URL 路径，零行为变化。
+     * @type {'url' | 'h5s'}
+     */
+    this.sourceType = 'url';
+
+    /**
+     * h5s 播放器实例（仅 sourceType==='h5s' 时存在），随 dispose/clear 释放。
+     * @type {H5sStream | null}
+     */
+    this.h5s = null;
 
     /**
      * 是否参与视频投影。false 时该路投影矩阵置零（不命中视锥=贡献0=隐藏），
@@ -127,38 +144,46 @@ class VideoCamera extends EventDispatcher {
     this.video.addEventListener(
       'canplaythrough',
       () => {
-        // console.log('canplaythrough...', event);
-        // 释放上一份 poster 静态纹理，避免反复开关融合累积泄漏
-        this.texture?.dispose?.();
-        this.texture = new VideoTexture(this.video);
-        this.texture.wrapS = ClampToEdgeWrapping;
-        this.texture.wrapT = ClampToEdgeWrapping;
-        this.texture.minFilter = LinearFilter;
-        this.texture.magFilter = LinearFilter;
-        this.texture.format = RGBAFormat;
-        this.texture.needsUpdate = true;
-        // ── 颜色管理契约（勿动 colorSpace）──────────────────────────────
-        // 此处【故意不设】 this.texture.colorSpace，保持默认 NoColorSpace。
-        // 视频帧像素本身就是 sRGB 字节，NoColorSpace 让 three 在采样时不解码，
-        // ColorRender 片元直接拿到 sRGB 原始字节写入 RT；再由 ColorRender 的
-        // renderTarget 标记 SRGBColorSpace，BlendRender 采样该 RT 时由硬件
-        // 自动做一次 sRGB→linear 解码。整条链路正好【一次解码】，颜色正确。
-        //
-        // 若给此处设 colorSpace = SRGBColorSpace，则采样 VideoTexture 时先解码一次，
-        // 写入 SRGB RT 后 BlendRender 采样又解码一次 → 【双重解码】→ 画面整体偏暗、
-        // 视频边缘淡出带发灰（与“alpha 平方”灰底叠加后尤其明显）。
-        // 故：无论 three 版本如何变化，此处 colorSpace 必须保持 NoColorSpace。
-        // 同理 poster 静态纹理（VideoSceneViewer.initialize 里 TextureLoader.load）也
-        // 走默认 SRGBColorSpace，但因 poster 仅是加载前占位、视频就绪后即被替换，
-        // 其解码路径不影响实际融合画面。
-
-        this.dispatchEvent({
-          type: VideoCamera.TEXTURE_UPDATED,
-          texture: this.texture
-        });
+        this._installVideoTexture();
       },
       false
     );
+  }
+
+  /**
+   * 把当前 this.video 包成 VideoTexture 并派发 TEXTURE_UPDATED。
+   * 两条来源共用：URL 路径在 canplaythrough 触发；h5s 路径在 MSE 首帧到达时触发。
+   * 释放上一份 poster 静态纹理，避免反复开关融合累积泄漏。
+   */
+  _installVideoTexture() {
+    // 释放上一份 poster 静态纹理，避免反复开关融合累积泄漏
+    this.texture?.dispose?.();
+    this.texture = new VideoTexture(this.video);
+    this.texture.wrapS = ClampToEdgeWrapping;
+    this.texture.wrapT = ClampToEdgeWrapping;
+    this.texture.minFilter = LinearFilter;
+    this.texture.magFilter = LinearFilter;
+    this.texture.format = RGBAFormat;
+    this.texture.needsUpdate = true;
+    // ── 颜色管理契约（勿动 colorSpace）──────────────────────────────
+    // 此处【故意不设】 this.texture.colorSpace，保持默认 NoColorSpace。
+    // 视频帧像素本身就是 sRGB 字节，NoColorSpace 让 three 在采样时不解码，
+    // ColorRender 片元直接拿到 sRGB 原始字节写入 RT；再由 ColorRender 的
+    // renderTarget 标记 SRGBColorSpace，BlendRender 采样该 RT 时由硬件
+    // 自动做一次 sRGB→linear 解码。整条链路正好【一次解码】，颜色正确。
+    //
+    // 若给此处设 colorSpace = SRGBColorSpace，则采样 VideoTexture 时先解码一次，
+    // 写入 SRGB RT 后 BlendRender 采样又解码一次 → 【双重解码】→ 画面整体偏暗、
+    // 视频边缘淡出带发灰（与“alpha 平方”灰底叠加后尤其明显）。
+    // 故：无论 three 版本如何变化，此处 colorSpace 必须保持 NoColorSpace。
+    // 同理 poster 静态纹理（VideoSceneViewer.initialize 里 TextureLoader.load）也
+    // 走默认 SRGBColorSpace，但因 poster 仅是加载前占位、视频就绪后即被替换，
+    // 其解码路径不影响实际融合画面。
+
+    this.dispatchEvent({
+      type: VideoCamera.TEXTURE_UPDATED,
+      texture: this.texture
+    });
   }
 
   /**
@@ -173,18 +198,65 @@ class VideoCamera extends EventDispatcher {
     this.helper?.dispose?.();
     // PerspectiveCamera 无显式 dispose，置空即可
     this.camera = null;
-    // 停止并清理 video 元素：removeAttribute('src') + load() 中断解码释放网络/解码资源，
-    // DOM 事件监听随 video 置空失去引用而被 GC 回收
     if (this.video) {
-      try {
-        this.video.pause();
-      } catch (e) {}
-      try {
-        this.video.removeAttribute('src');
-        this.video.load();
-      } catch (e) {}
+      // h5s 路径：H5sStream.destory 内部已断开 WebSocket + 清理 MediaSource（removeSourceBuffer
+      // + revoke blob src）。这里若再 video.removeAttribute('src')/load() 会二次打断已清理的
+      // MediaSource，部分浏览器抛 AbortError；故 h5s 分支只 pause + 置空，URL 分支维持原清理。
+      if (this.sourceType === 'h5s') {
+        try {
+          this.video.pause();
+        } catch (e) {}
+      } else {
+        try {
+          this.video.pause();
+        } catch (e) {}
+        try {
+          this.video.removeAttribute('src');
+          this.video.load();
+        } catch (e) {}
+      }
       this.video = null;
     }
+    // h5s 播放器随 video 一起释放（video 已置空，destory 内部不再访问 video.src）
+    if (this.h5s) {
+      try {
+        this.h5s.destory();
+      } catch (e) {}
+      this.h5s = null;
+    }
+  }
+
+  /**
+   * 用 h5s 接管 this.video：H5sStream 建立 WebSocket + MediaSource，靠 appendBuffer 喂帧，
+   * 不设 video.src。MSE 首帧到达会触发 'loadeddata'，在其回调里建 VideoTexture 并派发
+   * TEXTURE_UPDATED，与 URL 路径的 canplaythrough 行为对齐。
+   * 调用方：VideoSceneViewer.initialize/addCamera 在 item.video.token 非空时调用。
+   * @param {{host:string, token:string, session?:string}} opts
+   */
+  attachH5s({ host, token, session }) {
+    this.sourceType = 'h5s';
+    // stream 字段语义保留给导出配置（h5s 路径导出 token，见 _buildExportConfig）
+    this.stream = token || '';
+    // 存原始连接参数供 GUI 导出配置往返一致（h5s 路径导出 h5sHost/token/session）
+    this.h5sHost = host || '';
+    this.h5sSession = session || '';
+    if (!host || !token) {
+      console.warn('[VideoCamera.attachH5s] 缺少 host 或 token，h5s 流无法启动', { host, token });
+      return;
+    }
+    // 首帧钩子：MSE 喂入首帧触发 loadeddata（比 playing 更早、只触发一次足够建纹理）。
+    // three 的 VideoTexture 构造时已注册 requestVideoFrameCallback，后续帧由其自动刷新
+    // needsUpdate，无需在此持续更新。
+    const onFirstFrame = () => {
+      this.video.removeEventListener('loadeddata', onFirstFrame);
+      this._installVideoTexture();
+    };
+    this.video.addEventListener('loadeddata', onFirstFrame);
+
+    this.h5s = new H5sStream(this.video, host);
+    this.h5s.session = session || '';
+    this.h5s.token = token;
+    this.h5s.play();
   }
 
   /**

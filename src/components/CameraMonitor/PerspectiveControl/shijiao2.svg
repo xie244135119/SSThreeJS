@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Generator: Adobe Illustrator 25.0.0, SVG Export Plug-In . SVG Version: 6.00 Build 0)  -->
+<svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+	 viewBox="0 0 1366 768" style="enable-background:new 0 0 1366 768;" xml:space="preserve">
+<style type="text/css">
+	.st0{fill:#FFFFFF;}
+</style>
+<g id="图层_1">
+	
+		<image style="overflow:visible;" width="122" height="122" xlink:href="shijiao.png"  transform="matrix(1 0 0 1 609.9222 299.9837)">
+	</image>
+</g>
+<g id="top">
+	<path class="st0" d="M633.4,312.3c0,0,36.7-26.9,74.5,0.9l-22.8,24.2c0,0-14.6-8.9-27.1,0L633.4,312.3z"/>
+</g>
+<g id="left">
+	<path class="st0" d="M620.4,326.6c0,0-26,39.7,2.7,71.8l24.2-23.9c0,0-6.8-11.2-1.6-23L620.4,326.6z"/>
+</g>
+<g id="right">
+	<path class="st0" d="M696.3,350.8l24.4-24.2c0,0,27.3,37.6-2.3,71.8l-23.9-23.7C694.5,374.7,700.7,366.5,696.3,350.8z"/>
+</g>
+<g id="bottom">
+	<path class="st0" d="M661.2,386.4c0,0,10.3,4.3,18.7,0l24.4,24.2c0,0-28.3,25.5-67.2,0L661.2,386.4z"/>
+</g>
+<g id="center">
+	<polygon class="st0" points="670.7,343.7 654.6,361 670.7,377.2 687.7,361 	"/>
+</g>
+</svg>

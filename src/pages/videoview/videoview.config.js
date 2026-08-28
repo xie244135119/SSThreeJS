@@ -25,6 +25,31 @@ export default {
    * 超过 maxBatchSize（运行时按 GPU 纹理单元自动算）路时自动分批，突破单 shader 纹理单元上限。
    * 每路显式带 rotation（不依赖 defaults 兜底，便于单路独立调整）。
    */
+  /**
+   * 视频来源支持两种（在 video 字段区分）：
+   *   - URL/RTSP：写 video.stream（HTTP mp4 / RTSP），融合靠 video.src + canplaythrough 建纹理。
+   *   - h5s：写 video.token（非空即走 h5s）+ video.h5sHost + video.session，
+   *     融合由 H5sStream 接管 video，WebSocket + MediaSource 喂帧，不设 video.src。
+   *   两种可混用；同一物理摄像头的机位标定（position/rotation/quadCorners/distortion）可复用。
+   *
+   * h5s 示例路（与下方 110kV1Fmen 同一物理机位，标定复用；填入真实 host/token/session 后启用）：
+   * {
+   *   camera: {
+   *     name: '110kV1Fmen-h5s',
+   *     fov: 40, aspect: 1.7, near: 0.1, far: 10,
+   *     position: { x: -25.174694, y: 2.69667, z: -6.528583 },
+   *     rotation: { x: -2.735928, y: 0.017867, z: 3.132658 },
+   *     quadCorners: [[0, 0], [1, 0], [1, 1], [0, 1]],
+   *     distortion: { enabled: true, k1: -0.04, k2: 0, cx: 0, cy: 0, scale: 1 }
+   *   },
+   *   video: {
+   *     poster: '/core/assets/default_ground1.png',
+   *     h5sHost: 'http://127.0.0.1:8080',  // h5s 服务地址（含端口）
+   *     token: '<h5s-token>',               // h5s 摄像头 token（token 非空即识别为 h5s 流）
+   *     session: '<h5s-session>'           // h5s 登录 session，无登录可留空串
+   *   }
+   * },
+   */
   videoFusion: {
     // 统一相机参数（个别路可在 cameras[] 里覆盖）
     defaults: {
@@ -40,7 +65,7 @@ export default {
     cameras: [
       {
         camera: {
-          name: '110kV1Fmen',
+          name: '110kV1Fmen-h5s',
           fov: 40,
           aspect: 1.7,
           near: 0.1,
@@ -56,10 +81,35 @@ export default {
           distortion: { enabled: true, k1: -0.04, k2: 0, cx: 0, cy: 0, scale: 1 }
         },
         video: {
+          // 'ws://???/api/v1/h5swsapi?token=???'
           poster: '/core/assets/default_ground1.png',
-          stream: '/videos/110kv/GJHZZX110KV_110kV1Fmen--0-02b49f7c-aa5c-4d33-a2c5-fb4f9500374c.mp4'
+          h5sHost: '', // h5s 服务地址（含端口）
+          token: '', // h5s 摄像头 token（token 非空即识别为 h5s 流）
+          session: '<h5s-session>' // h5s 登录 session，无登录可留空串
         }
       },
+      // {
+      //   camera: {
+      //     name: '110kV1Fmen',
+      //     fov: 40,
+      //     aspect: 1.7,
+      //     near: 0.1,
+      //     far: 10,
+      //     position: { x: -25.174694, y: 2.69667, z: -6.528583 },
+      //     rotation: { x: -2.735928, y: 0.017867, z: 3.132658 },
+      //     quadCorners: [
+      //       [0, 0],
+      //       [1, 0],
+      //       [1, 1],
+      //       [0, 1]
+      //     ],
+      //     distortion: { enabled: true, k1: -0.04, k2: 0, cx: 0, cy: 0, scale: 1 }
+      //   },
+      //   video: {
+      //     poster: '/core/assets/default_ground1.png',
+      //     stream: '/videos/110kv/GJHZZX110KV_110kV1Fmen--0-02b49f7c-aa5c-4d33-a2c5-fb4f9500374c.mp4'
+      //   }
+      // },
       // {
       //   camera: {
       //     name: '110kV1Ftd1',
